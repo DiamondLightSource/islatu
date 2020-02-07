@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-setup.py for kinisi
+setup.py for islatu
 
 @author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 """
