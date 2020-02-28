@@ -90,6 +90,7 @@ def _parse(file_path):
                 titles = line.split()
             if count > 0:
                 data_lines.append(line.split())
+    f_open.close()
     # Sort the data_lines list of lists to transpore and make into a dict where
     # the keys are the titles.
     for j in range(len(data_lines[0])):

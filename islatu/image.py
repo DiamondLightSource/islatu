@@ -31,7 +31,9 @@ class Image(object):
         Class initialisation
         """
         self.file_path = file_path
-        array = np.array(PILIm.open(file_path))
+        im = PILIm.open(file_path)
+        array = np.array(im)
+        im.close()
         if transpose:
             array = array.T
         array[np.where(array <= 0)] = 0
