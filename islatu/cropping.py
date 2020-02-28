@@ -9,7 +9,7 @@ The cropping options for the data reduction islatu pipeline.
 import numpy as np
 
 
-def crop_2d(image, x_start, x_end, y_start, y_end):
+def crop_2d(array, x_start, x_end, y_start, y_end):
     """
     Crop the data (`image`) with some given start and stop point.
 
@@ -24,11 +24,11 @@ def crop_2d(image, x_start, x_end, y_start, y_end):
     Returns:
         (array_like): A cropped intensity map.
     """
-    cropped_image = image[x_start:x_end, y_start:y_end]
-    return cropped_image
+    cropped_array = array[x_start:x_end, y_start:y_end]
+    return cropped_array
 
 
-def crop_around_peak_2d(image, x_size=20, y_size=20):
+def crop_around_peak_2d(array, array_e=None, x_size=10, y_size=10):
     """
     Crop the data (`image`) around the most intense peak, creating an array
     of dimensions [x_size, y_size].
@@ -40,14 +40,23 @@ def crop_around_peak_2d(image, x_size=20, y_size=20):
     Returns:
         (array_like): A cropped intensity map.
     """
-    max_inten = np.unravel_index(np.argmax(image, axis=None), image.shape)
+    max_inten = np.unravel_index(np.argmax(array, axis=None), array.shape)
     half_x_size = int(x_size / 2)
     half_y_size = int(y_size / 2)
-    cropped_image = crop_2d(
-        image,
-        max_inten[0]-half_x_size,
-        max_inten[0]+half_x_size,
-        max_inten[1]-half_y_size,
-        max_inten[1]+half_y_size
+    cropped_array = crop_2d(
+        array,
+        max_inten[0] - half_x_size,
+        max_inten[0] + half_x_size,
+        max_inten[1] - half_y_size,
+        max_inten[1] + half_y_size,
     )
-    return cropped_image
+    if array_e is not None:
+        cropped_array_error = crop_2d(
+            array_e,
+            max_inten[0] - half_x_size,
+            max_inten[0] + half_x_size,
+            max_inten[1] - half_y_size,
+            max_inten[1] + half_y_size,
+        )
+        return cropped_array, cropped_array_error
+    return cropped_array

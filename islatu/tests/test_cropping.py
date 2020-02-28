@@ -45,8 +45,8 @@ class TestCropping(unittest.TestCase):
         """
         initial_array = np.ones((50, 50))
         initial_array[25, 25] = 100
-        expected_array = np.ones((20, 20))
-        expected_array[10, 10] = 100
+        expected_array = np.ones((10, 10))
+        expected_array[5, 5] = 100
         result = cropping.crop_around_peak_2d(initial_array)
         assert_almost_equal(result, expected_array)
 
@@ -56,9 +56,11 @@ class TestCropping(unittest.TestCase):
         """
         initial_array = np.ones((50, 50))
         initial_array[25, 25] = 100
-        expected_array = np.ones((10, 10))
-        expected_array[5, 5] = 100
-        result = cropping.crop_around_peak_2d(initial_array, 10, 10)
+        expected_array = np.ones((20, 20))
+        expected_array[10, 10] = 100
+        result = cropping.crop_around_peak_2d(
+            initial_array, x_size=20, y_size=20
+        )
         assert_almost_equal(result, expected_array)
 
     def test_crop_around_peak_2d_c(self):
@@ -69,5 +71,21 @@ class TestCropping(unittest.TestCase):
         initial_array[25, 25] = 100
         expected_array = np.ones((10, 20))
         expected_array[5, 10] = 100
-        result = cropping.crop_around_peak_2d(initial_array, 10, 20)
+        result = cropping.crop_around_peak_2d(
+            initial_array, x_size=10, y_size=20
+        )
         assert_almost_equal(result, expected_array)
+
+    def test_crop_around_peak_2d_error(self):
+        """
+        Test crop_around_peak_2d with uncertainty.
+        """
+        initial_array = np.ones((50, 50))
+        initial_array[25, 25] = 100
+        initial_array_e = initial_array * 0.1
+        expected_array = np.ones((10, 10))
+        expected_array[5, 5] = 100
+        expected_array_e = expected_array * 0.1
+        result = cropping.crop_around_peak_2d(initial_array, initial_array_e)
+        assert_almost_equal(result[0], expected_array)
+        assert_almost_equal(result[1], expected_array_e)
