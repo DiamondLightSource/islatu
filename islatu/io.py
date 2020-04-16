@@ -6,46 +6,19 @@ IO for islatu
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey
 
-import numpy as np
 import pandas as pd
 
 
-class I07Dat:
-    """
-    i07 dat file parsing.
-
-    Attributes:
-        file_path (str): The location of the ``.dat`` file on disk.
-    """
-
-    def __init__(self, file_path):
-
-        self.file_path = file_path
-        self.metadata, self.data = _parse(self.file_path)
-
-    @property
-    def q_vectors(self):
-        if isinstance(self.data, pd.DataFrame):
-            return np.array(self.data["qdcd"])
-        else:
-            raise ValueError("No")
-
-    @property
-    def images(self):
-        if isinstance(self.data, pd.DataFrame):
-            return self.data["file"]
-
-
-def _parse(file_path):
+def i07_dat_parser(file_path):
     """
     Parsing the .dat file from I07.
 
     Args:
         (str): The ``.dat`` file to be read.
-    
+
     Returns:
-        (dict): The metadata from the ``.dat`` file. 
-        (pd.DataFrame): The data from the ``.dat`` file. 
+        (dict): The metadata from the ``.dat`` file.
+        (pd.DataFrame): The data from the ``.dat`` file.
     """
     f_open = open(file_path, "r")
     # Neither the data nor the metadata are being read yet.

@@ -9,14 +9,15 @@ The background subtraction for the islatu pipeline
 import numpy as np
 from scipy.stats import multivariate_normal
 from scipy.optimize import curve_fit
-from uncertainties import ufloat
+from uncertainties import unumpy as unp
 
 
 def bivariate_normal(data, mu_1, mu_2, sigma_1, sigma_2, offset, factor):
     """
-    Function to produce a bivariate normal distribution. 
+    Function to produce a bivariate normal distribution.
 
-    Note: the covariance of the two dimensions is assumed to be zero to unsure greater stability.
+    Note: the covariance of the two dimensions is assumed to be zero to
+    unsure greater stability.
 
     Args:
         data (array_like): Abscissa data
@@ -26,9 +27,9 @@ def bivariate_normal(data, mu_1, mu_2, sigma_1, sigma_2, offset, factor):
         sigma_2 (float): Variance in dimension 1
         offset (float): Offset from the 0 for the ordinate
         factor (float): Multiplicative factor for area of normal
-    
+
     Returns:
-        (array_like): Flatten ordinate data for bivariate normal distribution. 
+        (array_like): Flatten ordinate data for bivariate normal distribution.
     """
     pos = np.empty(data[0].shape + (2,))
     pos[:, :, 0] = data[0]
@@ -39,13 +40,13 @@ def bivariate_normal(data, mu_1, mu_2, sigma_1, sigma_2, offset, factor):
 
 def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
     """
-    Fit a two-dimensional Gaussian function with some ordinate offset to an image with an
-    uncertainty and return the offset.
+    Fit a two-dimensional Gaussian function with some ordinate offset to an
+    image with an uncertainty and return the offset.
 
     Args:
         image (array_like): The data to fit the Gaussian to.
-        image_e (array_like): The data uncertainty. 
-        p0 (list, optional): An initial guess at the parameters. 
+        image_e (array_like): The data uncertainty.
+        p0 (list, optional): An initial guess at the parameters.
         bounds (tuple_of_list, optional): Bounds for the fitting.
 
     Returns:
@@ -65,14 +66,16 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
             0,
             [
                 image.shape[0],
-                image[1],
+                image.shape[1],
                 100,
                 100,
                 image.max(),
                 image.max() * 10,
             ],
         )
-    abscissa = np.array(np.mgrid[0 : len(image[0]) : 1, 0 : len(image[1]) : 1])
+    abscissa = np.array(
+        np.mgrid[0:image.shape[0]:1, 0:image.shape[1]:1]
+    )
     popt, pcov = curve_fit(
         bivariate_normal,
         abscissa,
@@ -83,4 +86,4 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
         maxfev=2000 * (len(p0) + 1),
     )
     p_sigma = np.sqrt(np.diag(pcov))
-    return ufloat(popt[4], p_sigma[4])
+    return unp.uarray(popt, p_sigma), 4, 2

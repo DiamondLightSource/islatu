@@ -13,6 +13,7 @@ Distributed under the terms of the MIT License
 import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_equal
+from uncertainties import unumpy as unp
 from islatu import background
 
 
@@ -46,7 +47,10 @@ class TestBackground(unittest.TestCase):
         )
         to_fit = background.bivariate_normal(abscissa, 0, 0, 1, 1, 15, 10)
         to_fit = to_fit.reshape((100, 100))
-        to_fit_e = to_fit * 0.1
+        to_fit_e = to_fit * 0.0001
 
         result = background.fit_gaussian_2d(to_fit, to_fit_e)
-        assert_almost_equal(15, result.n)
+        assert_equal(isinstance(result[0], np.ndarray), True)
+        assert_equal(result[0].size, 6)
+        assert_equal(4, result[1])
+        assert_equal(2, result[2])
