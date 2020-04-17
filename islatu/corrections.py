@@ -1,30 +1,37 @@
 """
-The corrections module for the islatu pipeline
+Corrections to be performed on the reflectometry data.
 """
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey
+# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
+import numpy as np
 from scipy.stats import norm
 from uncertainties import unumpy as unp
 
 
-def geometry_correction(beam_width, sample_size, theta):
+def footprint_correction(beam_width, sample_size, theta):
     """
-    Factor by which intensity should be multiplied in the area correction.
+    The factor by which the intensity should be multiplied to account for the
+    scattering geometry, where the beam is Gaussian in shape.
 
     Args:
-        beam_width (float): Width of incident beam.
-        sample_size (ufloat): Width of sample.
-        theta (float): Incident angle.
+        beam_width (float): Width of incident beam, in metres.
+        sample_size (uncertainties.core.Variable): Width of sample in the
+            dimension of the beam, in metres.
+        theta (float): Incident angle, in degrees.
 
     Returns:
-        (ufloat): Correction factor.
+        (uncertainties.core.Variable): Correction factor.
     """
-    beam = norm(loc=0, scale=beam_width / 2)
-    ts = sample_size * unp.sin(unp.radians(theta)) / 2
-    uncertainty = beam.cdf(
-        unp.nominal_values(ts) + unp.std_devs(ts)
-    ) - beam.cdf(unp.nominal_values(ts) - unp.std_devs(ts))
-    return unp.uarray(beam.cdf(unp.nominal_values(ts)), uncertainty / 2)
+    beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
+    length = sample_size * unp.sin(unp.radians(theta))
+    mid = unp.nominal_values(length) / 2.0 / beam_sd
+    upper = (unp.nominal_values(length) + unp.std_devs(length)) / 2.0 / beam_sd
+    lower = (unp.nominal_values(length) - unp.std_devs(length)) / 2.0 / beam_sd
+    probability = 2.0 * (
+        unp.uarray(norm.cdf(mid), (norm.cdf(upper) - norm.cdf(lower)) / 2)
+        - 0.5
+    )
+    return probability

@@ -1,10 +1,10 @@
 """
-The cropping options for the data reduction islatu pipeline.
+Options for the cropping of detector images.
 """
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey
+# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
 import numpy as np
 
@@ -15,7 +15,7 @@ def crop_2d(array, x_start, x_end, y_start, y_end):
 
     Args:
         image (array_like): The intensity map collected by the 2
-        dimensional detector.
+            dimensional detector.
         x_start (int): Start point in x-axis.
         x_end (int): End point in x-axis.
         y_start (int): Start point in y-axis.
@@ -35,7 +35,7 @@ def crop_around_peak_2d(array, array_e=None, x_size=10, y_size=10):
 
     Args:
         image (array_like): The intensity map collected by the 2
-        dimensional detector.
+            dimensional detector.
 
     Returns:
         (array_like): A cropped intensity map.

@@ -1,45 +1,68 @@
 """
-The image class for the islatu pipeline
+The two-dimension detector generates images of the reflected
+intensity. The purpose of this class is the investigation and manipulation
+of these images.
 """
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey
+# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
 import numpy as np
+from matplotlib.pyplot import imshow
 from PIL import Image as PILIm
 from uncertainties import unumpy as unp
 
 
-class Image(object):
+class Image:
     """
     The image class
 
     Attributes:
         file_path (str): The file path for the image.
+        data (pd.DataFrame): Experimental data about the measurement.
+        metadata (dict): Metadata regarding the measurement.
         array (array_like): The image described as an array.
         bkg (uncertainties.cores.Variable): The background that was
             subtracted from the image.
+        n_pixels (float): The width of the peak in number of pixels, used
+            to calculate an uncertainty in q on the detector.
 
     Args:
         file_path (str): The file path for the image.
+        data (pd.DataFrame, optional): Experimental data about the
+            measurement. Defaults to ``None``.
+        metadata (dict, optional): Metadata regarding the measurement.
+            Defaults to ``None``.
         transpose (bool, optional): Should the data be rotated by 90 degrees?
+            Defaults to ``False``.
+        hot_pixel_threshold (int, optional): The number of counts above
+            which a pixel should be assessed to determine if it is hot.
+            Defaults to ``200000``.
     """
 
-    def __init__(self, file_path, data=None, metadata=None, transpose=False):
+    def __init__(
+        self,
+        file_path,
+        data=None,
+        metadata=None,
+        transpose=False,
+        hot_pixel_threshold=200000,
+    ):
         """
-        Class initialisation
+        Initialisation of the Image class, includes running hot pixel
+        check and assigning uncertainties.
         """
         self.file_path = file_path
         self.data = data
         self.metadata = metadata
-        im = PILIm.open(file_path)
-        array = np.array(im)
-        im.close()
+        img = PILIm.open(file_path)
+        array = np.array(img)
+        img.close()
         if transpose:
             array = array.T
         # Remove dead pixels
-        array = _find_hot_pixels(array)
+        array = _find_hot_pixels(array, threshold=hot_pixel_threshold)
         array[np.where(array > 500000)] = 0
         array[np.where(array < 0)] = 0
         array_error = np.sqrt(array)
@@ -105,7 +128,7 @@ class Image(object):
         Returns:
             (array_like): Image array.
         """
-        return self.array
+        return imshow(self.n)
 
     def __str__(self):
         """
@@ -137,11 +160,11 @@ class Image(object):
                 the data and therefore remove the background.
             **kwargs (dict): The function keyword arguments.
         """
-        self.bkg_popt, bkg_idx, pixel_idx = background_subtraction_function(
+        bkg_popt, bkg_idx, pixel_idx = background_subtraction_function(
             self.n, self.s, **kwargs
         )
-        self.bkg = self.bkg_popt[bkg_idx]
-        self.n_pixel = self.bkg_popt[pixel_idx]
+        self.bkg = bkg_popt[bkg_idx]
+        self.n_pixel = bkg_popt[pixel_idx]
         self.array -= self.bkg
 
     def sum(self, axis=None):
@@ -157,23 +180,39 @@ class Image(object):
 
 def _find_hot_pixels(array, threshold=200000):
     """
-    Find some dead pixels and mask them.
+    Find some dead pixels and assign them with some local average value.
+
+    Args:
+        array (np.ndarray): NumPy array describing the image.
+        threshold (int, optional): The number of counts above which a pixel
+            should be assessed to determine if it is hot. Defaults to
+            ``200000``.
+
+    Returns:
+        (np.ndarray): NumPy array where hot pixels have been removed.
     """
     sorted_array = np.sort(array.flatten())[::-1]
     for i in sorted_array:
-        if i >= 200000:
-            coords = np.where(array == i)
-            a = np.copy(
-                array[
-                    coords[0][0] - 1:coords[0][0] + 2,
-                    coords[1][0] - 1:coords[1][0] + 2,
-                ]
-            )
-            a[1, 1] = 0
-            local_average = np.nanmean(a)
-            local_std = np.nanstd(a)
+        if i >= threshold:
+            pos_a, pos_b = np.where(array == i)
+            lower_a = pos_a[0] - 1
+            upper_a = pos_a[0] + 2
+            lower_b = pos_b[0] - 1
+            upper_b = pos_b[0] + 2
+            if pos_a[0] == 0:
+                lower_a = 0
+            elif pos_a[0] == array.shape[0] - 1:
+                upper_a = array.shape[0]
+            if pos_b[0] == 0:
+                lower_b = 0
+            elif pos_b[0] == array.shape[1] - 1:
+                upper_b = array.shape[1]
+            local = np.copy(array[lower_a:upper_a, lower_b:upper_b])
+            local[np.where(local == i)] = 0
+            local_average = np.mean(local)
+            local_std = np.std(local)
             if i > local_average + 2 * local_std:
-                array[coords] = local_average
+                array[pos_a[0], pos_b[0]] = local_average
         else:
             break
     return array

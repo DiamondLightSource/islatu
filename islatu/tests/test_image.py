@@ -1,22 +1,20 @@
 """
-Tests for image module
-
-Copyright (c) Andrew R. McCluskey
-
-Distributed under the terms of the MIT License
-
-@author: Andrew R. McCluskey
+Tests for corrections module
 """
 
+# Copyright (c) Andrew R. McCluskey
+# Distributed under the terms of the MIT License
+# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 # pylint: disable=R0201
 
 import unittest
 import numpy as np
 import io
+from PIL import Image as PILIm
 from numpy.testing import assert_almost_equal, assert_equal
 from uncertainties import unumpy as unp
 from islatu.image import Image
-from islatu import cropping, background
+from islatu import cropping, background, image
 
 EXAMPLE_FILE = (
     "0.   0.   1.   1.   4. 113. 117.   7.   1.   0. \n"
@@ -27,7 +25,7 @@ EXAMPLE_FILE = (
     "3.5800e+02 3.4490e+04 3.1763e+04 9.1100e+02 "
     "5.5000e+01 7.0000e+00 \n"
     "2.0000e+00 2.0000e+00 9.0000e+00 2.0000e+01 "
-    "9.6300e+02 9.0385e+04 5.5515e+04 1.4450e+03 "
+    "9.6300e+02 6.5535e+04 5.5515e+04 1.4450e+03 "
     "8.2000e+01 1.0000e+01 \n"
     "2.000e+00 2.000e+00 3.000e+00 2.100e+01 "
     "1.080e+02 5.337e+03 3.077e+03 1.900e+02 "
@@ -35,6 +33,45 @@ EXAMPLE_FILE = (
     "0.   2.   1.   2.  27. 697. 324.  25.   6.   0. \n"
     "0.   2.   1.   3.  16. 525. 245.  15.   4.   3. \n"
     "0.   0.   0.   1.   4. 355. 167.   4.   1.   0."
+)
+
+EXAMPLE_HOT_PIXEL = (
+    "5.   0.   1.   1.   4. 113. 117.   7.   1.   0. \n"
+    "0.   0.   0.   3.   4. 127. 144.   9.   2.   0. \n"
+    "2.   0.   5.000e+04   7.   7. 232. 271.  13.   5.   2. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "0.   0.   0.   1.   4. 355. 167.   4.   1.   0."
+)
+
+EXAMPLES_HOT_PIXEL_CORNERA = (
+    "5.000e+04   0.   1.   1.   4. 113. 117.   7.   1.   0. \n"
+    "0.   0.   0.   3.   4. 127. 144.   9.   2.   0. \n"
+    "2.   0.   5.   7.   7. 232. 271.  13.   5.   2. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "0.   0.   0.   1.   4. 355. 167.   4.   1.   0."
+)
+
+EXAMPLES_HOT_PIXEL_CORNERB = (
+    "5.   0.   1.   1.   4. 113. 117.   7.   1.   0. \n"
+    "0.   0.   0.   3.   4. 127. 144.   9.   2.   0. \n"
+    "2.   0.   5.   7.   7. 232. 271.  13.   5.   2. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
+    "1.   0.   5.   6.  31. 672. 703.  55.  9.   3. \n"
+    "0.   0.   0.   1.   4. 355. 167.   4.   1.   5.0000e+04"
 )
 
 
@@ -47,19 +84,78 @@ class TestImage(unittest.TestCase):
         """
         Test file reading
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         data = io.StringIO(EXAMPLE_FILE)
         expected_image = np.loadtxt(data)
         assert_equal((10, 10), test_image.shape)
         assert_almost_equal(expected_image, test_image.n)
 
+    def test_hot_pixel(self):
+        """
+        Test file reading
+        """
+        b = io.StringIO(EXAMPLE_HOT_PIXEL)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
+        test_image = image._find_hot_pixels(test_image.n, threshold=6e03)
+        data = io.StringIO(EXAMPLE_HOT_PIXEL)
+        expected_image = np.loadtxt(data)
+        expected_image[2, 2] = 2.333333333333
+        assert_equal((10, 10), test_image.shape)
+        assert_almost_equal(expected_image, test_image)
+
+    def test_hot_pixel_corner_a(self):
+        """
+        Test a hot pixel in the top left corner
+        """
+        b = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERA)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
+        test_image = image._find_hot_pixels(test_image.n, threshold=6e03)
+        data = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERA)
+        expected_image = np.loadtxt(data)
+        expected_image[0, 0] = 0
+        assert_equal((10, 10), test_image.shape)
+        assert_almost_equal(expected_image, test_image)
+
+    def test_hot_pixel_corner_b(self):
+        """
+        Test a hot pixel in the bottom right corner
+        """
+        b = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERB)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
+        test_image = image._find_hot_pixels(test_image.n, threshold=6e03)
+        data = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERB)
+        expected_image = np.loadtxt(data)
+        expected_image[9, 9] = 3.25
+        assert_equal((10, 10), test_image.shape)
+        assert_almost_equal(expected_image, test_image)
+
     def test_init_with_transpose(self):
         """
         Test for transposing with reading
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data, transpose=True)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf, transpose=True)
         data = io.StringIO(EXAMPLE_FILE)
         expected_image = np.loadtxt(data, unpack=True)
         assert_equal((10, 10), test_image.shape)
@@ -69,8 +165,12 @@ class TestImage(unittest.TestCase):
         """
         Test nominal values
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         data = io.StringIO(EXAMPLE_FILE)
         expected_image = np.loadtxt(data)
         assert_equal((10, 10), test_image.shape)
@@ -81,8 +181,12 @@ class TestImage(unittest.TestCase):
         """
         Test standard devs
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         data = io.StringIO(EXAMPLE_FILE)
         load = np.loadtxt(data)
         expected_image = np.sqrt(load)
@@ -95,8 +199,12 @@ class TestImage(unittest.TestCase):
         """
         Test repr
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         data = io.StringIO(EXAMPLE_FILE)
         load = np.loadtxt(data)
         expected_image_e = np.sqrt(load)
@@ -110,8 +218,12 @@ class TestImage(unittest.TestCase):
         """
         Test str
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         data = io.StringIO(EXAMPLE_FILE)
         load = np.loadtxt(data)
         expected_image_e = np.sqrt(load)
@@ -125,8 +237,12 @@ class TestImage(unittest.TestCase):
         """
         Test crop
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         test_image.crop(cropping.crop_around_peak_2d, x_size=2, y_size=2)
         assert_equal((2, 2), test_image.shape)
 
@@ -134,8 +250,12 @@ class TestImage(unittest.TestCase):
         """
         Test background_subtraction
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         test_image.background_subtraction(background.fit_gaussian_2d)
         assert_equal((10, 10), test_image.shape)
 
@@ -143,7 +263,11 @@ class TestImage(unittest.TestCase):
         """
         Test sum
         """
-        data = io.StringIO(EXAMPLE_FILE)
-        test_image = Image(data)
+        b = io.StringIO(EXAMPLE_FILE)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf)
         assert_equal(isinstance(test_image.sum().n, float), True)
         assert_equal(isinstance(test_image.sum().s, float), True)

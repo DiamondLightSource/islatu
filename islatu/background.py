@@ -1,10 +1,12 @@
 """
-The background subtraction for the islatu pipeline
+Background substraction is a necssary component of reflectometry reduction,
+where the background scattering is removed from the reflected intensity.
 """
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey
+# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
+# pylint: disable=R0913,C0103
 
 import numpy as np
 from scipy.stats import multivariate_normal
@@ -14,44 +16,55 @@ from uncertainties import unumpy as unp
 
 def bivariate_normal(data, mu_1, mu_2, sigma_1, sigma_2, offset, factor):
     """
-    Function to produce a bivariate normal distribution.
+    Produce a bivariate normal distribution.
 
     Note: the covariance of the two dimensions is assumed to be zero to
     unsure greater stability.
 
     Args:
-        data (array_like): Abscissa data
-        mu_1 (float): Mean in dimension 0
-        mu_2 (float): Mean in dimension 1
-        sigma_1 (float): Variance in dimension 0
-        sigma_2 (float): Variance in dimension 1
-        offset (float): Offset from the 0 for the ordinate
-        factor (float): Multiplicative factor for area of normal
+        data (array_like): Two-dimensional abscissa data.
+        mu_1 (float): Mean in dimension 0 (horizontal).
+        mu_2 (float): Mean in dimension 1 (vertical).
+        sigma_1 (float): Variance in dimension 0 (horizontal).
+        sigma_2 (float): Variance in dimension 1 (vertical).
+        offset (float): Offset from the 0 for the ordinate, this is the
+            background level.
+        factor (float): Multiplicative factor for area of normal distribution.
 
     Returns:
-        (array_like): Flatten ordinate data for bivariate normal distribution.
+        (array_like): Flattened ordinate data for bivariate normal
+            distribution.
     """
+    # Setting the data up in the correct format
     pos = np.empty(data[0].shape + (2,))
     pos[:, :, 0] = data[0]
     pos[:, :, 1] = data[1]
-    rv = multivariate_normal([mu_1, mu_2], [[sigma_1, 0], [0, sigma_2]])
-    return offset + rv.pdf(pos).flatten() * factor
+    # Creation of the bivariate normal distribution
+    binormal = multivariate_normal([mu_1, mu_2], [[sigma_1, 0], [0, sigma_2]])
+    return offset + binormal.pdf(pos).flatten() * factor
 
 
 def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
     """
     Fit a two-dimensional Gaussian function with some ordinate offset to an
-    image with an uncertainty and return the offset.
+    image with an uncertainty and return the results, index of offset and
+    vertical distribution width.
 
     Args:
         image (array_like): The data to fit the Gaussian to.
         image_e (array_like): The data uncertainty.
-        p0 (list, optional): An initial guess at the parameters.
-        bounds (tuple_of_list, optional): Bounds for the fitting.
+        p0 (list, optional): An initial guess at the parameters. Defaults to
+        values based on the image.
+        bounds (tuple_of_list, optional): Bounds for the fitting. Defaults to
+        values based on the image.
 
     Returns:
-        (uncertainties.core.Variable): The offset and associated uncertainty.
+        (np.ndarray): The results (with uncertainties) for each of the 6
+            parameters fit.
+        (int): The index of the offset.
+        (int): The index of the vertical distribution width.
     """
+    # Setting default values
     if p0 is None:
         p0 = [
             image.shape[0] / 2,
@@ -74,8 +87,9 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
             ],
         )
     abscissa = np.array(
-        np.mgrid[0:image.shape[0]:1, 0:image.shape[1]:1]
+        np.mgrid[0 : image.shape[0] : 1, 0 : image.shape[1] : 1]
     )
+    # Perform the fitting
     popt, pcov = curve_fit(
         bivariate_normal,
         abscissa,
@@ -85,5 +99,6 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
         p0=p0,
         maxfev=2000 * (len(p0) + 1),
     )
+    # Determine uncertainty from covarience matrix
     p_sigma = np.sqrt(np.diag(pcov))
     return unp.uarray(popt, p_sigma), 4, 2

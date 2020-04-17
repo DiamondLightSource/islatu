@@ -65,10 +65,10 @@ class ReflData:
             self.R[i] = ufloat(im.sum().n, im.sum().s)
             self.n_pixels[i] = im.n_pixel.n
 
-    def geometry_correction(self, beam_width, sample_size):
+    def footprint_correction(self, beam_width, sample_size):
         """
         """
-        self.R *= corrections.geometry_correction(
+        self.R /= corrections.footprint_correction(
             beam_width, sample_size, self.theta
         )
 

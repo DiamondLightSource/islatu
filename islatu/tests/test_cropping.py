@@ -1,13 +1,10 @@
 """
-Tests for cropping module
-
-Copyright (c) Andrew R. McCluskey
-
-Distributed under the terms of the MIT License
-
-@author: Andrew R. McCluskey
+Tests for corrections module
 """
 
+# Copyright (c) Andrew R. McCluskey
+# Distributed under the terms of the MIT License
+# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 # pylint: disable=R0201
 
 import unittest
