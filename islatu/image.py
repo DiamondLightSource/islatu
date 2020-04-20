@@ -8,6 +8,7 @@ of these images.
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
+from os.path import sep
 import numpy as np
 from matplotlib.pyplot import imshow
 from PIL import Image as PILIm
@@ -56,7 +57,17 @@ class Image:
         self.file_path = file_path
         self.data = data
         self.metadata = metadata
-        img = PILIm.open(file_path)
+        try:
+            img = PILIm.open(file_path)
+        except FileNotFoundError:
+            try:
+                file_path = file_path.split(sep)[-1]
+                img = PILIm.open(file_path)
+                self.file_path = file_path
+            except FileNotFoundError:
+                file_path = file_path.split(sep)[-2:]
+                img = PILIm.open(sep.join(file_path))
+                self.file_path = sep.join(file_path) 
         array = np.array(img)
         img.close()
         if transpose:

@@ -9,6 +9,7 @@ IO for islatu
 import pandas as pd
 
 
+
 def i07_dat_parser(file_path):
     """
     Parsing the .dat file from I07.
@@ -20,7 +21,6 @@ def i07_dat_parser(file_path):
         (dict): The metadata from the ``.dat`` file.
         (pd.DataFrame): The data from the ``.dat`` file.
     """
-    f_open = open(file_path, "r")
     # Neither the data nor the metadata are being read yet.
     data_reading = False
     metadata_reading = False

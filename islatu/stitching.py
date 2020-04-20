@@ -11,6 +11,13 @@ from uncertainties import unumpy as unp
 
 
 def correct_attentuation(q_list, r_list):
+    """
+    Correct the attentuation level between a a series of elements in lists.
+
+    Args:
+
+    Returns:
+    """
     for i in range(len(r_list) - 1):
         overlap_start = q_list[i + 1][0].n
         overlap_end = q_list[i][-1].n
@@ -44,10 +51,13 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     Find the total external reflection region and normalise this to 1.
     """
     q = unp.nominal_values(q_vectors)
-    max_q = q[q < 0.1].size
-    end_of_ter_index = np.argmax(
-        np.abs(np.gradient(unp.nominal_values(reflected_intensity)[:max_q]))
-    )
+    max_q_idx = q[np.where(q < max_q)].size
+    if max_q_idx <= 1:
+        end_of_ter_index = 1
+    else:
+        end_of_ter_index = np.argmax(
+            np.abs(np.gradient(unp.nominal_values(reflected_intensity)[:max_q_idx]))
+        )
     if end_of_ter_index == 0:
         end_of_ter_index = 1
     ter_region_mean_r = reflected_intensity[:end_of_ter_index].mean()

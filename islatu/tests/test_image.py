@@ -195,25 +195,6 @@ class TestImage(unittest.TestCase):
         assert_almost_equal(expected_image, test_image.std_devs)
         assert_almost_equal(expected_image, test_image.s)
 
-    def test_repr(self):
-        """
-        Test repr
-        """
-        b = io.StringIO(EXAMPLE_FILE)
-        buf = io.BytesIO()
-        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
-        im.save(buf, format="png")
-        buf.seek(0)
-        test_image = Image(buf)
-        data = io.StringIO(EXAMPLE_FILE)
-        load = np.loadtxt(data)
-        expected_image_e = np.sqrt(load)
-        expected_image_e[np.where(load == 0)] = 1
-        assert_almost_equal(load, unp.nominal_values(test_image.__repr__()))
-        assert_almost_equal(
-            expected_image_e, unp.std_devs(test_image.__repr__())
-        )
-
     def test_str(self):
         """
         Test str
