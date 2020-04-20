@@ -7,9 +7,11 @@ Tests for corrections module
 # author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 # pylint: disable=R0201
 
+import os
 import unittest
 import numpy as np
 import io
+import islatu
 from PIL import Image as PILIm
 from numpy.testing import assert_almost_equal, assert_equal
 from uncertainties import unumpy as unp

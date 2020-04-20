@@ -6,6 +6,7 @@ The corrections module for the islatu pipeline
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey
 
+from os import path 
 import numpy as np
 from scipy.constants import physical_constants
 from scipy.interpolate import splev
@@ -23,6 +24,7 @@ class ReflData:
         self.q = unp.uarray(
             self.data[q_axis_name], np.zeros(self.data[q_axis_name].size)
         )
+        self.data = self._check_files_exist()
         self.theta = unp.uarray(
             self.data[theta_axis_name],
             np.zeros(self.data[theta_axis_name].size),
@@ -33,6 +35,32 @@ class ReflData:
         )
         self.n_pixels = np.zeros(self.data[q_axis_name].size)
 
+    def _check_files_exist(self):
+        """
+        Check that image files exist
+        """
+        iterator = _get_iterator(unp.nominal_values(self.q), False)
+        for i in iterator:
+            im_file = self.data["file"][i]
+            if path.isfile(im_file):
+                continue
+            else:
+                im_file = self.data["file"][i].split(path.sep)[-2:]
+                im_file = path.join(im_file[0], im_file[1])
+                im_file = path.join(path.dirname(self.file_path), im_file)
+                if path.isfile(im_file):
+                    self.data.iloc[i, self.data.keys().get_loc("file")] = im_file
+                    continue
+                else:
+                    im_file = self.data["file"][i].split(path.sep)[-1]
+                    im_file = path.join(path.dirname(self.file_path), im_file)
+                    if path.isfile(im_file):
+                        self.data.iloc[i, self.data.keys().get_loc("file")] = im_file                       
+                        continue
+                    else:
+                        raise FileNotFoundError("The following image file could not be found: {}.".format(self.data["file"][i]))
+        return self.data
+
     def crop_and_bkg_sub(
         self,
         crop_function,
@@ -41,17 +69,7 @@ class ReflData:
         bkg_sub_kwargs=None,
         progress=True,
     ):
-        iterator = range(len(self.q))
-        if progress:
-            try:
-                from tqdm import tqdm
-
-                iterator = tqdm(range(len(self.q)))
-            except ModuleNotFoundError:
-                print(
-                    "For the progress bar, you need to have the tqdm package "
-                    "installed. No progress bar will be shown"
-                )
+        iterator = _get_iterator(unp.nominal_values(self.q), progress)
         for i in iterator:
             im = image.Image(self.data["file"][i], self.data, self.metadata)
             if crop_kwargs is None:
@@ -121,3 +139,18 @@ class ReflData:
                 normalisation data.
         """
         self.R /= splev(unp.nominal_values(self.q), itp)
+
+
+def _get_iterator(q, progress):
+    iterator = range(len(q))
+    if progress:
+        try:
+            from tqdm import tqdm
+
+            iterator = tqdm(range(len(q)))
+        except ModuleNotFoundError:
+            print(
+                "For the progress bar, you need to have the tqdm package "
+                "installed. No progress bar will be shown"
+            )
+    return iterator
