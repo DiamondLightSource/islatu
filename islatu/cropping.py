@@ -28,7 +28,7 @@ def crop_2d(array, x_start, x_end, y_start, y_end):
     return cropped_array
 
 
-def crop_around_peak_2d(array, array_e=None, x_size=10, y_size=10):
+def crop_around_peak_2d(array, array_e=None, x_size=20, y_size=20):
     """
     Crop the data (`image`) around the most intense peak, creating an array
     of dimensions [x_size, y_size].
