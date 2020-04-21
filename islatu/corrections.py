@@ -1,5 +1,6 @@
 """
-Corrections to be performed on the reflectometry data.
+Reflectometry data must be corrected as a part of reduction. 
+These functions facilitate this, including the footprint and DCD q-variance corrections.
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -9,6 +10,8 @@ Corrections to be performed on the reflectometry data.
 import numpy as np
 from scipy.stats import norm
 from uncertainties import unumpy as unp
+from islatu.io import i07_dat_parser
+from scipy.interpolate import splrep
 
 
 def footprint_correction(beam_width, sample_size, theta):
@@ -35,3 +38,20 @@ def footprint_correction(beam_width, sample_size, theta):
         - 0.5
     )
     return probability
+
+
+def get_interpolator(file_path, parser, q_flag='qdcd_', intensity_flag='adc2'):
+    """
+    Get an interpolator object from scipy, this is useful for the DCD q-normalisation step.
+
+    Args:
+        file_path (str): File path to the normalisation file.
+        parser (callable): Parser function for the normalisation file.
+        q_flag (str, optional): Label for the q-value in the normalisation file. Defaults to ``'qdcd_'``.
+        intensity_flag (str, optional): Label for the intensity in the normalisation file. Defaults to ``'adc2'``.
+
+    Returns:
+        (scipy.interpolator): Interpolation object. 
+    """
+    normalisation_data = parser(file_path)[1]
+    return splrep(normalisation_data[q_flag], normalisation_data[intensity_flag])

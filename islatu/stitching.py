@@ -10,7 +10,7 @@ import numpy as np
 from uncertainties import unumpy as unp
 
 
-def correct_attentuation(q_list, r_list):
+def correct_attentuation(scan_list):
     """
     Correct the attentuation level between a a series of elements in lists.
 
@@ -18,31 +18,31 @@ def correct_attentuation(q_list, r_list):
 
     Returns:
     """
-    for i in range(len(r_list) - 1):
-        overlap_start = q_list[i + 1][0].n
-        overlap_end = q_list[i][-1].n
+    for i in range(len(scan_list) - 1):
+        overlap_start = scan_list[i + 1].q[0].n
+        overlap_end = scan_list[i].q[-1].n
 
-        overlap_start_index = np.argmin(np.abs(q_list[i] - overlap_start))
-        overlap_end_index = np.argmin(np.abs(q_list[i + 1] - overlap_end))
+        overlap_start_index = np.argmin(np.abs(scan_list[i].q - overlap_start))
+        overlap_end_index = np.argmin(np.abs(scan_list[i + 1].q - overlap_end))
 
-        target_r = r_list[i][overlap_start_index:]
-        vary_r = r_list[i + 1][: overlap_end_index + 1]
+        target_r = scan_list[i].R[overlap_start_index:]
+        vary_r = scan_list[i + 1].R[: overlap_end_index + 1]
 
         ratio = target_r.mean() / vary_r.mean()
 
-        r_list[i + 1] *= ratio
-    return r_list
+        scan_list[i + 1].R *= ratio
+    return scan_list
 
 
-def concatenate(q_list, r_list):
+def concatenate(scan_list):
     """
     Concatenate each of the datasets together.
     """
     reflected_intensity = np.array([])
     q_vectors = np.array([])
-    for i in range(len(r_list)):
-        reflected_intensity = np.append(reflected_intensity, r_list[i])
-        q_vectors = np.append(q_vectors, q_list[i])
+    for i in range(len(scan_list)):
+        reflected_intensity = np.append(reflected_intensity, scan_list[i].R)
+        q_vectors = np.append(q_vectors, scan_list[i].q)
     return q_vectors, reflected_intensity
 
 

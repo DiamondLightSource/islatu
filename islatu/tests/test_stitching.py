@@ -7,9 +7,11 @@ Tests for refl_data module
 # author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
 import unittest
+from os import path
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_equal
-from islatu import stitching
+import islatu
+from islatu import stitching, refl_data, io
 from uncertainties import unumpy
 
 
@@ -28,20 +30,26 @@ class TestStitcher(unittest.TestCase):
         x2 = np.arange(8, 18, 1)
         dx2 = np.copy(x2) * 0.05
 
-        r_list = [unumpy.uarray(y1, dy1), unumpy.uarray(y2, dy2)]
-        q_list = [unumpy.uarray(x1, dx1), unumpy.uarray(x2, dx2)]
+        scan1 = refl_data.Scan(path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat'), io.i07_dat_parser)
+        scan2 = refl_data.Scan(path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat'), io.i07_dat_parser)
+
+        scan1.q = unumpy.uarray(x1, dx1) 
+        scan1.R = unumpy.uarray(y1, dy1) 
+        scan2.q = unumpy.uarray(x2, dx2) 
+        scan2.R = unumpy.uarray(y2, dy2) 
+        scan_list = [scan1, scan2]
 
         exp_y1 = np.ones(10) * 10
         exp_dy1 = np.ones(10)
         exp_y2 = np.ones(10) * 10
         exp_dy2 = np.append(np.ones(3), np.ones(7) * 1.2909944)
 
-        r_list = stitching.correct_attentuation(q_list, r_list)
+        scan_list = stitching.correct_attentuation(scan_list)
 
-        assert_almost_equal(unumpy.nominal_values(r_list[0]), exp_y1)
-        assert_almost_equal(unumpy.std_devs(r_list[0]), exp_dy1)
-        assert_almost_equal(unumpy.nominal_values(r_list[1]), exp_y2)
-        assert_almost_equal(unumpy.std_devs(r_list[1]), exp_dy2)
+        assert_almost_equal(unumpy.nominal_values(scan_list[0].R), exp_y1)
+        assert_almost_equal(unumpy.std_devs(scan_list[0].R), exp_dy1)
+        assert_almost_equal(unumpy.nominal_values(scan_list[1].R), exp_y2)
+        assert_almost_equal(unumpy.std_devs(scan_list[1].R), exp_dy2)
 
     def test_concatenate(self):
         y1 = np.ones(10) * 10
@@ -54,13 +62,19 @@ class TestStitcher(unittest.TestCase):
         x2 = np.arange(8, 18, 1)
         dx2 = np.copy(x2) * 0.05
 
-        r_list = [unumpy.uarray(y1, dy1), unumpy.uarray(y2, dy2)]
-        q_list = [unumpy.uarray(x1, dx1), unumpy.uarray(x2, dx2)]
+        scan1 = refl_data.Scan(path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat'), io.i07_dat_parser)
+        scan2 = refl_data.Scan(path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat'), io.i07_dat_parser)
+
+        scan1.q = unumpy.uarray(x1, dx1) 
+        scan1.R = unumpy.uarray(y1, dy1) 
+        scan2.q = unumpy.uarray(x2, dx2) 
+        scan2.R = unumpy.uarray(y2, dy2) 
+        scan_list = [scan1, scan2]
 
         exp_y1 = unumpy.uarray(np.append(y1, y2), np.append(dy1, dy2))
         exp_x1 = unumpy.uarray(np.append(x1, x2), np.append(dx1, dx2))
 
-        q, r = stitching.concatenate(q_list, r_list)
+        q, r = stitching.concatenate(scan_list)
 
         assert_almost_equal(
             unumpy.nominal_values(r), unumpy.nominal_values(exp_y1))

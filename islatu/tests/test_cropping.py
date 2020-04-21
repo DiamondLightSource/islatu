@@ -44,7 +44,7 @@ class TestCropping(unittest.TestCase):
         initial_array[25, 25] = 100
         expected_array = np.ones((10, 10))
         expected_array[5, 5] = 100
-        result = cropping.crop_around_peak_2d(initial_array)
+        result = cropping.crop_around_peak_2d(initial_array, x_size=10, y_size=10)
         assert_almost_equal(result, expected_array)
 
     def test_crop_around_peak_2d_b(self):
@@ -56,7 +56,7 @@ class TestCropping(unittest.TestCase):
         expected_array = np.ones((20, 20))
         expected_array[10, 10] = 100
         result = cropping.crop_around_peak_2d(
-            initial_array, x_size=20, y_size=20
+            initial_array
         )
         assert_almost_equal(result, expected_array)
 
@@ -83,6 +83,6 @@ class TestCropping(unittest.TestCase):
         expected_array = np.ones((10, 10))
         expected_array[5, 5] = 100
         expected_array_e = expected_array * 0.1
-        result = cropping.crop_around_peak_2d(initial_array, initial_array_e)
+        result = cropping.crop_around_peak_2d(initial_array, initial_array_e, x_size=10, y_size=10)
         assert_almost_equal(result[0], expected_array)
         assert_almost_equal(result[1], expected_array_e)

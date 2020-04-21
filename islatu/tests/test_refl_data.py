@@ -22,7 +22,7 @@ class TestReflData(TestCase):
 
     def test_init_a(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser)
+        r = refl_data.Scan(file_name, io.i07_dat_parser)
         assert_equal(len(r.data["file"]), 3)
         assert_equal(r.data["file"][0], "islatu/tests/test_files/location/pilatus1/tiff_a.tif")
         assert_equal(r.data["file"][1], "islatu/tests/test_files/location/pilatus1/tiff_b.tif")
@@ -30,7 +30,7 @@ class TestReflData(TestCase):
 
     def test_init_b(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_b.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser)
+        r = refl_data.Scan(file_name, io.i07_dat_parser)
         assert_equal(len(r.data["file"]), 3)
         assert_equal(r.data["file"][0], path.join(path.dirname(islatu.__file__), "tests/test_files/pilatus1/tiff_a.tif"))
         assert_equal(r.data["file"][1], path.join(path.dirname(islatu.__file__), "tests/test_files/pilatus1/tiff_b.tif"))
@@ -38,7 +38,7 @@ class TestReflData(TestCase):
 
     def test_init_c(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_c.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser)
+        r = refl_data.Scan(file_name, io.i07_dat_parser)
         assert_equal(len(r.data["file"]), 3)
         assert_equal(r.data["file"][0], path.join(path.dirname(islatu.__file__), "tests/test_files/tiff_a.tif"))
         assert_equal(r.data["file"][1], path.join(path.dirname(islatu.__file__), "tests/test_files/tiff_b.tif"))
@@ -50,11 +50,11 @@ class TestReflData(TestCase):
         """
         with self.assertRaises(FileNotFoundError):
             file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_d.dat')
-            r = refl_data.ReflData(file_name, io.i07_dat_parser)
+            r = refl_data.Scan(file_name, io.i07_dat_parser)
 
     def test_crop_bkg(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser) 
+        r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
         a2 = np.zeros((3))
         np.any(np.not_equal(unp.nominal_values(r.R), a2))
@@ -63,7 +63,7 @@ class TestReflData(TestCase):
 
     def test_crop_bkg_kwargs(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser)
+        r = refl_data.Scan(file_name, io.i07_dat_parser)
         p0 = [
             5,
             5,
@@ -80,7 +80,7 @@ class TestReflData(TestCase):
 
     def test_footprint(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser) 
+        r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
         r_store = r.R
         r.footprint_correction(100e-6, 100e-3)
@@ -88,7 +88,7 @@ class TestReflData(TestCase):
 
     def test_transmission(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser) 
+        r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
         r_store = r.R
         r.transmission_normalisation()
@@ -99,7 +99,7 @@ class TestReflData(TestCase):
         normalisation_metadata, normalisation_data = io.i07_dat_parser(file_name)
         itp = splrep(normalisation_data['qdcd_'], normalisation_data['adc2'])
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser) 
+        r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
         r_store = r.R
         r.qdcd_normalisation(itp)
@@ -107,7 +107,7 @@ class TestReflData(TestCase):
 
     def test_q_uncertainty_a(self):
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
-        r = refl_data.ReflData(file_name, io.i07_dat_parser) 
+        r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
         q_store = unp.nominal_values(r.q)
         r.q_uncertainty_from_pixel()

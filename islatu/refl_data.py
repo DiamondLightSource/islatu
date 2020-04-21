@@ -12,10 +12,61 @@ from scipy.constants import physical_constants
 from scipy.interpolate import splev
 from uncertainties import ufloat
 from uncertainties import unumpy as unp
-from islatu import corrections, image
+from islatu import corrections, image, stitching
 
+class Profile:
+    def __init__(self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"):
+        self.scans = []
+        for f in file_paths:
+            self.scans.append(Scan(f, parser, q_axis_name, theta_axis_name))
+        self.q = None
+        self.R = None
+        
+    def crop_and_bkg_sub(
+        self,
+        crop_function,
+        bkg_sub_function,
+        crop_kwargs=None,
+        bkg_sub_kwargs=None,
+        progress=True,
+    ):
+        for s in self.scans:
+            s.crop_and_bkg_sub(crop_function, bkg_sub_function, crop_kwargs, bkg_sub_kwargs, progress)
+    
+    def footprint_correction(self, beam_width, sample_size):
+        for s in self.scans:
+            s.footprint_correction(beam_width, sample_size)
 
-class ReflData:
+    def transmission_normalisation(self):
+        for s in self.scans:
+            s.transmission_normalisation()
+        self.scans = stitching.correct_attentuation(self.scans)
+
+    def q_uncertainty_from_pixel(
+        self,
+        number_of_pixels=None,
+        detector_distance=None,
+        energy=None,
+        pixel_size=172e-6,
+    ): 
+        for s in self.scans:
+            s.q_uncertainty_from_pixel(number_of_pixels, detector_distance, energy, pixel_size)
+    
+    def qdcd_normalisation(self, itp):
+        for s in self.scans:
+            s.qdcd_normalisation(itp)
+    
+    def concatenate(self):
+        self.q, self.R = stitching.concatenate(self.scans)
+
+    def normalise_ter(self, max_q=0.1):
+        self.R = stitching.normalise_ter(self.q, self.R, max_q)
+
+    def rebin(self, new_q=None, number_of_q_vectors=400):
+        self.q, self.R = stitching.rebin(self.q, self.R, new_q, number_of_q_vectors)
+        
+
+class Scan:
     def __init__(
         self, file_path, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"
     ):

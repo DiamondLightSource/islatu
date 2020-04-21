@@ -1,6 +1,8 @@
 """
 Background substraction is a necssary component of reflectometry reduction,
 where the background scattering is removed from the reflected intensity.
+
+Herein are some function to enable that for a two-dimensional detector image.
 """
 
 # Copyright (c) Andrew R. McCluskey
