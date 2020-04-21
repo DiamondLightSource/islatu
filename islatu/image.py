@@ -1,6 +1,7 @@
 """
 The two-dimension detector generates images of the reflected
-intensity. The purpose of this class is the investigation and manipulation
+intensity. 
+The purpose of this class is the investigation and manipulation
 of these images.
 """
 
@@ -17,10 +18,10 @@ from uncertainties import unumpy as unp
 
 class Image:
     """
-    The image class
+    This class stores information about the detector images.
 
     Attributes:
-        file_path (str): The file path for the image.
+        file_path (str): File path for the image.
         data (pd.DataFrame): Experimental data about the measurement.
         metadata (dict): Metadata regarding the measurement.
         array (array_like): The image described as an array.
@@ -78,7 +79,7 @@ class Image:
         Get the nominal values of the image array.
 
         Returns:
-            (array_like): Nominal values of image.
+            (np.ndarray): Nominal values of image.
         """
         return unp.nominal_values(self.array)
 
@@ -88,7 +89,7 @@ class Image:
         Get the standard deviation values of the image array.
 
         Returns:
-            (array_like): Standard deviation values of image.
+            (np.ndarray): Standard deviation values of image.
         """
         return unp.std_devs(self.array)
 
@@ -98,7 +99,7 @@ class Image:
         Get the nominal values of the image array.
 
         Returns:
-            (array_like): Nominal values of image.
+            (np.ndarray): Nominal values of image.
         """
         return unp.nominal_values(self.array)
 
@@ -108,7 +109,7 @@ class Image:
         Get the standard deviation values of the image array.
 
         Returns:
-            (array_like): Standard deviation values of image.
+            (np.ndarray): Standard deviation values of image.
         """
         return unp.std_devs(self.array)
 
@@ -122,21 +123,30 @@ class Image:
         """
         return unp.nominal_values(self.array).shape
 
+    def show(self):
+        """
+        Show the image.
+
+        Return:
+            (mpl.Figure): Matplotlib imshow of array.
+        """
+        return im.show(self.n)
+
     def __repr__(self):
         """
         Custom representation.
 
         Returns:
-            (array_like): Image array.
+            (np.ndarray): Image array.
         """
-        return imshow(self.n)
+        return self.array
 
     def __str__(self):
         """
         Custom string.
 
         Returns:
-            (array_like): Image array.
+            (np.ndarray): Image array.
         """
         return self.array
 

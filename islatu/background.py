@@ -61,10 +61,10 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
         values based on the image.
 
     Returns:
-        (np.ndarray): The results (with uncertainties) for each of the 6
-            parameters fit.
-        (int): The index of the offset.
-        (int): The index of the vertical distribution width.
+        (tuple): tuple containing:
+            - (np.ndarray): The results (with uncertainties) for each of the 6 parameters fit.
+            - (int): The index of the offset.
+            - (int): The index of the vertical distribution width.
     """
     # Setting default values
     if p0 is None:

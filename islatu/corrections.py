@@ -40,18 +40,18 @@ def footprint_correction(beam_width, sample_size, theta):
     return probability
 
 
-def get_interpolator(file_path, parser, q_flag='qdcd_', intensity_flag='adc2'):
+def get_interpolator(file_path, parser, q_axis_name='qdcd_', intensity_axis_name='adc2'):
     """
     Get an interpolator object from scipy, this is useful for the DCD q-normalisation step.
 
     Args:
         file_path (str): File path to the normalisation file.
         parser (callable): Parser function for the normalisation file.
-        q_flag (str, optional): Label for the q-value in the normalisation file. Defaults to ``'qdcd_'``.
-        intensity_flag (str, optional): Label for the intensity in the normalisation file. Defaults to ``'adc2'``.
+        q_axis_name (str, optional): Label for the q-value in the normalisation file. Defaults to ``'qdcd_'``.
+        intensity_axis_name (str, optional): Label for the intensity in the normalisation file. Defaults to ``'adc2'``.
 
     Returns:
         (scipy.interpolator): Interpolation object. 
     """
     normalisation_data = parser(file_path)[1]
-    return splrep(normalisation_data[q_flag], normalisation_data[intensity_flag])
+    return splrep(normalisation_data[q_axis_name], normalisation_data[intensity_axis_name])

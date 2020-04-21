@@ -1,5 +1,5 @@
 """
-IO for islatu
+Parsers for inputing experiental files.
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -17,8 +17,9 @@ def i07_dat_parser(file_path):
         (str): The ``.dat`` file to be read.
 
     Returns:
-        (dict): The metadata from the ``.dat`` file.
-        (pd.DataFrame): The data from the ``.dat`` file.
+        (tuple): tuple containing:
+            - (dict): The metadata from the ``.dat`` file.
+            - (pd.DataFrame): The data from the ``.dat`` file.
     """
     f_open = open(file_path, "r")
     # Neither the data nor the metadata are being read yet.

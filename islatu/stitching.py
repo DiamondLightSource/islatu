@@ -1,11 +1,10 @@
 """
-This class is designed to perform the stitching of multiple
-X-ray reflectometry datasets together
-
-Last updated: 2019-12-18
-
-Author: Andrew McCluskey (andrew.mccluskey@diamond.ac.uk)
+As reflectometry measurements typicall consist of multiple scans at different attenutation, we must stitch these together.
 """
+
+# Copyright (c) Andrew R. McCluskey
+# Distributed under the terms of the MIT License
+# author: Andrew R. McCluskey
 import numpy as np
 from uncertainties import unumpy as unp
 
@@ -15,8 +14,10 @@ def correct_attentuation(scan_list):
     Correct the attentuation level between a a series of elements in lists.
 
     Args:
+        scans (list of islatu.refl_data.Scan): Reflectometry scans.
 
     Returns:
+        (list of islatu.refl_data.Scan): Reflectometry scans with attenuation corrected.
     """
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n
@@ -37,6 +38,14 @@ def correct_attentuation(scan_list):
 def concatenate(scan_list):
     """
     Concatenate each of the datasets together.
+
+    Args:
+        scans (list of islatu.refl_data.Scan): Reflectometry scans.
+
+    Returns:
+        (tuple): tuple containing:
+            - (np.ndarray): q-values.
+            - (np.ndarray): Reflected intensities.
     """
     reflected_intensity = np.array([])
     q_vectors = np.array([])
@@ -49,6 +58,12 @@ def concatenate(scan_list):
 def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     """
     Find the total external reflection region and normalise this to 1.
+
+    Args:
+        max_q (float): The maximum q to be included in finding the critical angle.
+
+    Returns:
+        (np.ndarray): Reflected intensities.
     """
     q = unp.nominal_values(q_vectors)
     max_q_idx = q[np.where(q < max_q)].size
@@ -70,8 +85,14 @@ def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400):
     Rebin the data on a logarithmic q-scale.
 
     Args:
-        number_of_q_vectors (int, default = 200): The max number of
-            q-vectors to be using initially in the rebinning of the data.
+        new_q (np.ndarray): Array of potential q-values. Defaults to ``None``.
+        number_of_q_vectors (int, optional): The max number of
+            q-vectors to be using initially in the rebinning of the data. Defaults to ``400``.
+
+    Returns:
+        (tuple): tuple containing:
+            - (np.ndarray): q-values.
+            - (np.ndarray): Reflected intensities.
     """
     if new_q is not None:
         new_q = new_q

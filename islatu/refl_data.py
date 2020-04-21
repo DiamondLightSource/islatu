@@ -1,5 +1,6 @@
 """
-The corrections module for the islatu pipeline
+The refl_data module includes two classes, ``Profile`` and ``Scan`` which 
+are integral to the use of ``islatu`` for the reduction of x-ray reflectometry data. 
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -15,12 +16,66 @@ from uncertainties import unumpy as unp
 from islatu import corrections, image, stitching
 
 class Profile:
+    """
+    This class stores information about the reflectometry profile.
+
+    Attributes:
+        scans (list of islatu.refl_data.Scan): Reflectometry scans that make up the profile.
+        q_vectors (np.ndarray): q-vectors from the reflectometry scan, populated after concatentation.
+        reflected_intensity (np.ndarray): Reflected intensities from the reflectometry scan, populated after concatentation.
+    
+    Args:
+        file_paths (list): List of files, one for each reflectometry scan.
+        parser (callable): Parser function for the reflectometry scan files.
+        q_axis_name (str): Label for the q-axis in the scan. Defaults to ``'q_axis_name'``. 
+        theta_axis_name (str, optional): Label for the theta axis in the scan. Defaults to ``'dcdtheta'``.
+    """
     def __init__(self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"):
         self.scans = []
         for f in file_paths:
             self.scans.append(Scan(f, parser, q_axis_name, theta_axis_name))
-        self.q = None
-        self.R = None
+        self.q_vectors = None
+        self.reflected_intensity = None
+
+    @property
+    def R(self):
+        """
+        Reflected intensity values.
+
+        Returns:
+            (np.ndarray) Intensity values.
+        """
+        return unp.nominal_values(self.reflected_intensity)
+
+    @property
+    def dR(self):
+        """
+        Reflected intensity uncertainties.
+
+        Returns:
+            (np.ndarray) Intensity uncertainties.
+        """
+        return unp.std_devs(self.reflected_intensity)
+
+    @property
+    def q(self):
+        """
+        q-value values.
+
+        Returns:
+            (np.ndarray) q-value values.
+        """
+        return unp.nominal_values(self.q_vectors)
+
+    @property
+    def dq(self):
+        """
+        q-value uncertainties.
+
+        Returns:
+            (np.ndarray) q-value uncertainties.
+        """
+        return unp.std_devs(self.q_vectors)
         
     def crop_and_bkg_sub(
         self,
@@ -30,14 +85,36 @@ class Profile:
         bkg_sub_kwargs=None,
         progress=True,
     ):
+        """
+        Class method for the ``islatu.refl_data.Scan.crop_and_bkg_sub`` method for each ``Scan`` in the list.
+
+        Args:
+            crop_function (callable): Cropping function to be used.
+            bkg_sub_function (callable): Background subtraction function to be used. 
+            crop_kwargs (dict, optional): Keyword arguments for the cropping function. Defaults to ``None``.
+            bkg_sub_kwargs (dict, optional): Keyword arguments for the background subtraction function. Defaults to ``None``.
+            progress (bool, optional): Show a progress bar. Requires the ``tqdm`` package. Defaults to ``True``.
+        """
         for s in self.scans:
             s.crop_and_bkg_sub(crop_function, bkg_sub_function, crop_kwargs, bkg_sub_kwargs, progress)
     
     def footprint_correction(self, beam_width, sample_size):
+        """
+        Class method for ``islatu.refl_data.Scan.footprint_correction`` for each member of the `scans` list. 
+
+        Args:
+            beam_width (float): Width of incident beam, in metres.
+            sample_size (uncertainties.core.Variable): Width of sample in the
+                dimension of the beam, in metres.
+            theta (float): Incident angle, in degrees.
+        """
         for s in self.scans:
             s.footprint_correction(beam_width, sample_size)
 
     def transmission_normalisation(self):
+        """
+        Perform the transmission correction (islatu.refl_data.Scan.transmission_normalisation) for each member of the `scans` list and fine attenutation correction (islatu.stitching.correction_attenutation). 
+        """
         for s in self.scans:
             s.transmission_normalisation()
         self.scans = stitching.correct_attentuation(self.scans)
@@ -49,21 +126,57 @@ class Profile:
         energy=None,
         pixel_size=172e-6,
     ): 
+        """
+        Class method for ``islatu.refl_data.Scan.q_uncertainty_from_pixel`` for each member of the `scans` list.
+
+        Args:
+            number_of_pixels (float)
+            detector_distance (float): metres
+            energy (float): keV
+            pixel_size (float, optional): metres
+
+        Returns:
+            q_uncertainty: (float)
+        """
         for s in self.scans:
             s.q_uncertainty_from_pixel(number_of_pixels, detector_distance, energy, pixel_size)
     
     def qdcd_normalisation(self, itp):
+        """
+        Class method for ``islatu.refl_data.Scan.qdcd_normalisation`` for each member of the `scans` list.
+
+        Args:
+            normalisation_file (str): The ``.dat`` file that contains the
+                normalisation data.
+        """
         for s in self.scans:
             s.qdcd_normalisation(itp)
     
     def concatenate(self):
-        self.q, self.R = stitching.concatenate(self.scans)
+        """
+        Class method for ``islatu.stitching.concatenate``. 
+        """
+        self.q_vectors, self.reflected_intensity = stitching.concatenate(self.scans)
 
     def normalise_ter(self, max_q=0.1):
-        self.R = stitching.normalise_ter(self.q, self.R, max_q)
+        """
+        Class method for ``islatu.stitching.normalise_ter``.
+
+        Args:
+            max_q (float): The maximum q to be included in finding the critical angle.
+        """
+        self.reflected_intensity = stitching.normalise_ter(self.q_vectors, self.reflected_intensity, max_q)
 
     def rebin(self, new_q=None, number_of_q_vectors=400):
-        self.q, self.R = stitching.rebin(self.q, self.R, new_q, number_of_q_vectors)
+        """
+        Class method for ``islatu.stitching.rebin``. 
+
+        Args:
+            new_q (np.ndarray): Array of potential q-values. Defaults to ``None``.
+            number_of_q_vectors (int, optional): The max number of
+                q-vectors to be using initially in the rebinning of the data. Defaults to ``400``.
+        """
+        self.q_vectors, self.reflected_intensity = stitching.rebin(self.q_vectors, self.reflected_intensity, new_q, number_of_q_vectors)
         
 
 class Scan:
@@ -120,6 +233,16 @@ class Scan:
         bkg_sub_kwargs=None,
         progress=True,
     ):
+        """
+        Class method for the ``islatu.refl_data.Scan.crop_and_bkg_sub`` method for each ``Scan`` in the list.
+
+        Args:
+            crop_function (callable): Cropping function to be used.
+            bkg_sub_function (callable): Background subtraction function to be used. 
+            crop_kwargs (dict, optional): Keyword arguments for the cropping function. Defaults to ``None``.
+            bkg_sub_kwargs (dict, optional): Keyword arguments for the background subtraction function. Defaults to ``None``.
+            progress (bool, optional): Show a progress bar. Requires the ``tqdm`` package. Defaults to ``True``.
+        """
         iterator = _get_iterator(unp.nominal_values(self.q), progress)
         for i in iterator:
             im = image.Image(self.data["file"][i], self.data, self.metadata)
@@ -136,6 +259,13 @@ class Scan:
 
     def footprint_correction(self, beam_width, sample_size):
         """
+        Class method for ``islatu.corrections.footprint_correction``. 
+
+        Args:
+            beam_width (float): Width of incident beam, in metres.
+            sample_size (uncertainties.core.Variable): Width of sample in the
+                dimension of the beam, in metres.
+            theta (float): Incident angle, in degrees.
         """
         self.R /= corrections.footprint_correction(
             beam_width, sample_size, self.theta
@@ -143,6 +273,7 @@ class Scan:
 
     def transmission_normalisation(self):
         """
+        Perform the transmission correction. 
         """
         self.R /= float(self.metadata["transmission"][0])
 
@@ -193,6 +324,16 @@ class Scan:
 
 
 def _get_iterator(q, progress):
+    """
+    Create a q-value iterator.
+
+    Args:
+        q (np.ndarray): q-values.
+        progress (bool): Show progress bar.
+    
+    Returns:
+        (range or tqdm.std.tqdm): Iterator object. 
+    """
     iterator = range(len(q))
     if progress:
         try:
