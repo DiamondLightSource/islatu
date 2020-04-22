@@ -3,4 +3,9 @@ numpy
 matplotlib
 scipy
 tqdm
-dynesty
+uncertainties
+nbsphinx
+jupyter-sphinx
+sphinx_rtd_theme
+coverage
+coveralls
