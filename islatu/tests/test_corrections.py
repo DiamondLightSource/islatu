@@ -17,7 +17,6 @@ class TestCorrections(TestCase):
     """
     Unit tests for corrections module
     """
-
     def test_geometry_correction(self):
         """
         Test the implementation of the geometry correction.

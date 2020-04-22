@@ -199,6 +199,18 @@ class Scan:
         )
         self.n_pixels = np.zeros(self.data[q_axis_name].size)
 
+    def __str__(self):
+        """
+        Custom string output
+        """
+        return 'The file: {} contains {} images from q = {} to q = {}.'.format(self.file_path, self.q.size, self.q[0].n, self.q[-1].n)
+
+    def __repr__(self):
+        """
+        Custom repr output
+        """
+        return self.__str__() 
+
     def _check_files_exist(self):
         """
         Check that image files exist

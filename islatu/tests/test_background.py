@@ -17,7 +17,6 @@ class TestBackground(TestCase):
     """
     Unit tests for background module
     """
-
     def test_bivariate_normal(self):
         """
         A simple test for the generation of a bivariate normal distribution.
