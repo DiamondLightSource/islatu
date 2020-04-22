@@ -19,8 +19,10 @@ class TestReflData(TestCase):
     """
     Unit tests for refl_data module
     """
-
     def test_init_a(self):
+        """
+        Test init with correct file path
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser)
         assert_equal(len(r.data["file"]), 3)
@@ -29,6 +31,9 @@ class TestReflData(TestCase):
         assert_equal(r.data["file"][2], "islatu/tests/test_files/location/pilatus1/tiff_c.tif")
 
     def test_init_b(self):
+        """
+        Test init with -2: file path correct
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_b.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser)
         assert_equal(len(r.data["file"]), 3)
@@ -37,6 +42,9 @@ class TestReflData(TestCase):
         assert_equal(r.data["file"][2], path.join(path.dirname(islatu.__file__), "tests/test_files/pilatus1/tiff_c.tif"))
 
     def test_init_c(self):
+        """
+        Test init with -1 file path correct
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_c.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser)
         assert_equal(len(r.data["file"]), 3)
@@ -46,13 +54,16 @@ class TestReflData(TestCase):
 
     def test_init_d(self):
         """
-        Test initialisation with bad ci_points.
+        Test init with wrong file path
         """
         with self.assertRaises(FileNotFoundError):
             file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_d.dat')
             r = refl_data.Scan(file_name, io.i07_dat_parser)
 
     def test_crop_bkg(self):
+        """
+        Test crop and bkg sub
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
@@ -62,6 +73,9 @@ class TestReflData(TestCase):
         np.any(np.not_equal(r.n_pixels, a2))
 
     def test_crop_bkg_kwargs(self):
+        """
+        Test crop and bkg sub with kwargs
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser)
         p0 = [
@@ -79,6 +93,9 @@ class TestReflData(TestCase):
         np.any(np.not_equal(r.n_pixels, a2))
 
     def test_footprint(self):
+        """
+        Test footprint corrections
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
@@ -87,6 +104,9 @@ class TestReflData(TestCase):
         np.any(np.not_equal(unp.nominal_values(r.R), unp.nominal_values(r_store)))
 
     def test_transmission(self):
+        """
+        Test transmission correction
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
@@ -95,6 +115,9 @@ class TestReflData(TestCase):
         np.any(np.not_equal(unp.nominal_values(r.R), unp.nominal_values(r_store)))
 
     def test_qdcd_normalisation(self):
+        """
+        Test qdcd normalisation
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/qdcd_norm.dat')
         normalisation_metadata, normalisation_data = io.i07_dat_parser(file_name)
         itp = splrep(normalisation_data['qdcd_'], normalisation_data['adc2'])
@@ -105,7 +128,10 @@ class TestReflData(TestCase):
         r.qdcd_normalisation(itp)
         np.any(np.not_equal(unp.nominal_values(r.R), unp.nominal_values(r_store)))
 
-    def test_q_uncertainty_a(self):
+    def test_q_uncertainty(self):
+        """
+        Test q_uncertainty from pixel
+        """
         file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/test_a.dat')
         r = refl_data.Scan(file_name, io.i07_dat_parser) 
         r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)

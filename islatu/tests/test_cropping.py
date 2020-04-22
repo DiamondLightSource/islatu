@@ -17,7 +17,6 @@ class TestCropping(unittest.TestCase):
     """
     Unit tests for cropping module
     """
-
     def test_crop_2d_a(self):
         """
         Test crop_2d.
@@ -29,7 +28,7 @@ class TestCropping(unittest.TestCase):
 
     def test_crop_2d_b(self):
         """
-        Test crop_2d.
+        Test crop_2d with rectanglar crop.
         """
         initial_array = np.ones((50, 50))
         expected_array = np.ones((20, 10))
@@ -38,7 +37,7 @@ class TestCropping(unittest.TestCase):
 
     def test_crop_around_peak_2d_a(self):
         """
-        Test crop_around_peak_2d with defaults.
+        Test crop_around_peak_2d with custom.
         """
         initial_array = np.ones((50, 50))
         initial_array[25, 25] = 100
@@ -49,7 +48,7 @@ class TestCropping(unittest.TestCase):
 
     def test_crop_around_peak_2d_b(self):
         """
-        Test crop_around_peak_2d with custom.
+        Test crop_around_peak_2d with defaults.
         """
         initial_array = np.ones((50, 50))
         initial_array[25, 25] = 100

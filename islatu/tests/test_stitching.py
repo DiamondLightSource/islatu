@@ -20,6 +20,9 @@ class TestStitcher(unittest.TestCase):
     Unit tests for stitching module
     """
     def test_correct_attentuation(self):
+        """
+        Test correction of attenutation
+        """
         y1 = np.ones(10) * 10
         dy1 = np.ones(10)
         y2 = np.ones(10) * 5
@@ -52,6 +55,9 @@ class TestStitcher(unittest.TestCase):
         assert_almost_equal(unumpy.std_devs(scan_list[1].R), exp_dy2)
 
     def test_concatenate(self):
+        """
+        Test concatenation
+        """
         y1 = np.ones(10) * 10
         dy1 = np.ones(10)
         y2 = np.ones(10) * 5
@@ -88,6 +94,9 @@ class TestStitcher(unittest.TestCase):
             unumpy.std_devs(exp_x1))
 
     def test_normalise_ter(self):
+        """
+        Test normalisation to 1
+        """
         y = [1e9, 1e9, 1e9, 3.16e8, 1.29e8, 6.25e7, 3.37e7, 2.00e7]
         dy = [1e7, 1e7, 1e7, 3.16e6, 1.29e6, 6.25e5, 3.37e5, 2.00e5]
 
@@ -107,6 +116,9 @@ class TestStitcher(unittest.TestCase):
              0.0014896, 0.0007217, 0.0003891, 0.0002309])
 
     def test_normalise_ter_a(self):
+        """
+        Test normalisation to 1 where only one point is before cut-off
+        """
         y = [1e9, 1e9, 1e9, 3.16e8, 1.29e8, 6.25e7, 3.37e7, 2.00e7]
         dy = [1e7, 1e7, 1e7, 3.16e6, 1.29e6, 6.25e5, 3.37e5, 2.00e5]
 
@@ -126,6 +138,9 @@ class TestStitcher(unittest.TestCase):
              0.0018243, 0.0008839, 0.0004766, 0.0002828])
 
     def test_normalise_ter_b(self):
+        """
+        Test normalisation to 1 where the gradient max is after the first point
+        """
         y = [1e9, 1.29e8, 6.25e7, 3.37e7, 2.00e7]
         dy = [1e7, 1.29e6, 6.25e5, 3.37e5, 2.00e5]
 
@@ -144,6 +159,9 @@ class TestStitcher(unittest.TestCase):
             [0., 0.0018243, 0.0008839, 0.0004766, 0.0002828])
 
     def test_rebin(self):
+        """
+        Test rebin with specific q
+        """
         reflected_intensity = unumpy.uarray(
             np.arange(1, 9, 1), np.arange(1, 9, 1) * 0.1)
         q_vectors = unumpy.uarray(
@@ -159,6 +177,9 @@ class TestStitcher(unittest.TestCase):
         assert_almost_equal(unumpy.nominal_values(q), exp_x)
 
     def test_rebin_a(self):
+        """
+        Test rebin with default
+        """
         reflected_intensity = unumpy.uarray(
             np.arange(1, 9, 1), np.arange(1, 9, 1) * 0.1)
         q_vectors = unumpy.uarray(

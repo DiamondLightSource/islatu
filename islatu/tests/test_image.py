@@ -81,7 +81,6 @@ class TestImage(unittest.TestCase):
     """
     Unit tests for Image class
     """
-
     def test_init(self):
         """
         Test file reading
@@ -99,7 +98,7 @@ class TestImage(unittest.TestCase):
 
     def test_hot_pixel(self):
         """
-        Test file reading
+        Test hot pixel in image
         """
         b = io.StringIO(EXAMPLE_HOT_PIXEL)
         buf = io.BytesIO()
