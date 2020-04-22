@@ -6,11 +6,13 @@ Tests for corrections module
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
+from os import path
 from unittest import TestCase
 import numpy as np
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_equal
 from uncertainties import ufloat
-from islatu import corrections
+import islatu
+from islatu import corrections, io
 
 
 class TestCorrections(TestCase):
@@ -30,3 +32,14 @@ class TestCorrections(TestCase):
         )
         assert_almost_equal(result[0].n, 0.006558435584346212)
         assert_almost_equal(result[1].n, 0.1305814681032167)
+
+    def test_get_interpolator(self):
+        """
+        Test the get interpolator
+        """
+        file_name = path.join(path.dirname(islatu.__file__), 'tests/test_files/qdcd_norm.dat')
+        itp = corrections.get_interpolator(file_name, io.i07_dat_parser)
+        assert_equal(isinstance(itp, tuple), True)
+        assert_equal(isinstance(itp[0], np.ndarray), True)
+        assert_equal(isinstance(itp[1], np.ndarray), True)
+        assert_equal(isinstance(itp[2], int), True)

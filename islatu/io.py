@@ -74,5 +74,10 @@ def i07_dat_parser(file_path):
                 list_to_add.append(float(data_lines[i][j]))
             except ValueError:
                 list_to_add.append(data_lines[i][j])
-        data_dict[titles[j]] = list_to_add
+        count = 0
+        if j >= len(titles):
+            data_dict[str(count)] = list_to_add
+            count += 1
+        else:
+            data_dict[titles[j]] = list_to_add
     return metadata_dict, pd.DataFrame(data_dict)

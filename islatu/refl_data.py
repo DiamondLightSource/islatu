@@ -181,29 +181,39 @@ class Profile:
 
 class Scan:
     def __init__(
-        self, file_path, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"
+        self, file_path, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta", energy=None
     ):
         self.file_path = file_path
         self.metadata, self.data = parser(self.file_path)
-        self.q = unp.uarray(
-            self.data[q_axis_name], np.zeros(self.data[q_axis_name].size)
-        )
+        if q_axis_name is None:
+            h = physical_constants["Planck constant in eV s"][0] * 1e-3
+            c = physical_constants["speed of light in vacuum"][0] * 1e10
+            if energy is None:
+                energy = self.metadata['dcm1energy'][0]
+            q = energy * 4 * np.pi * unp.sin(unp.radians(self.data[theta_axis_name])) / (h * c)
+            self.q = unp.uarray(
+                q, np.zeros(self.data[theta_axis_name].size)
+            )
+        else:
+            self.q = unp.uarray(
+                self.data[q_axis_name], np.zeros(self.data[q_axis_name].size)
+            )
         self.data = self._check_files_exist()
         self.theta = unp.uarray(
             self.data[theta_axis_name],
             np.zeros(self.data[theta_axis_name].size),
         )
         self.R = unp.uarray(
-            np.zeros(self.data[q_axis_name].size),
-            np.zeros(self.data[q_axis_name].size),
+            np.zeros(self.q.size),
+            np.zeros(self.q.size),
         )
-        self.n_pixels = np.zeros(self.data[q_axis_name].size)
+        self.n_pixels = np.zeros(self.q.size)
 
     def __str__(self):
         """
         Custom string output
         """
-        return 'The file: {} contains {} images from q = {} to q = {}.'.format(self.file_path, self.q.size, self.q[0].n, self.q[-1].n)
+        return 'The file: {} contains {} images from q = {:.4f} to q = {:.4f}.'.format(self.file_path, self.q.size, self.q[0].n, self.q[-1].n)
 
     def __repr__(self):
         """
