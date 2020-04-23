@@ -12,18 +12,17 @@ import numpy as np
 
 def crop_2d(array, x_start, x_end, y_start, y_end):
     """
-    Crop the data (`array`) with some given start and stop point.
+    Crop the data (:py:attr:`array`) with some given start and stop point.
 
     Args:
-        array (np.ndarray): The intensity map collected by the 2
-            dimensional detector.
-        x_start (int): Start point in x-axis.
-        x_end (int): End point in x-axis.
-        y_start (int): Start point in y-axis.
-        y_end (int): End point in y-axis.
+        array (:py:attr:`array_like`): The intensity map collected by the 2 dimensional detector.
+        x_start (:py:attr:`int`): Start point in x-axis.
+        x_end (:py:attr:`int`): End point in x-axis.
+        y_start (:py:attr:`int`): Start point in y-axis.
+        y_end (:py:attr:`int`): End point in y-axis.
 
     Returns:
-        (np.ndarray): A cropped intensity map.
+        :py:attr:`array_like`: A cropped intensity map.
     """
     cropped_array = array[x_start:x_end, y_start:y_end]
     return cropped_array
@@ -35,14 +34,13 @@ def crop_around_peak_2d(array, array_e=None, x_size=20, y_size=20):
     of dimensions [x_size, y_size].
 
     Args:
-        array (np.ndarray): Intensity map collected by the 2
-            dimensional detector.
-        array_e (np.ndarray): Uncertainty map collected by the 2-D detector.
-        x_size (int, optional): Size of the cropped image in x-axis. Defaults to 20.
-        y_size (int, optional): Size of the cropped image in y-axis. Defaults to 20. 
+        array (:py:attr:`array_like`): Intensity map collected by the 2 dimensional detector.
+        array_e (:py:attr:`array_like`): Uncertainty map collected by the 2-D detector.
+        x_size (:py:attr:`int`, optional): Size of the cropped image in x-axis. Defaults to :py:attr:`20`.
+        y_size (:py:attr:`int`, optional): Size of the cropped image in y-axis. Defaults to :py:attr:`20`. 
 
     Returns:
-        (np.ndarray): A cropped intensity map.
+        :py:attr:`array_like`: A cropped intensity map.
     """
     max_inten = np.unravel_index(np.argmax(array, axis=None), array.shape)
     half_x_size = int(x_size / 2)

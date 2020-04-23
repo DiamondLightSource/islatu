@@ -1,8 +1,6 @@
 """
-The two-dimension detector generates images of the reflected
-intensity. 
-The purpose of this class is the investigation and manipulation
-of these images.
+The two-dimension detector generates images of the reflected intensity. 
+The purpose of this class is the investigation and manipulation of these images.
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -21,26 +19,19 @@ class Image:
     This class stores information about the detector images.
 
     Attributes:
-        file_path (str): File path for the image.
-        data (pd.DataFrame): Experimental data about the measurement.
-        metadata (dict): Metadata regarding the measurement.
-        array (array_like): The image described as an array.
-        bkg (uncertainties.cores.Variable): The background that was
-            subtracted from the image.
-        n_pixels (float): The width of the peak in number of pixels, used
-            to calculate an uncertainty in q on the detector.
+        file_path (:py:attr:`str`): File path for the image.
+        data (:py:class:`pandas.DataFrame`): Experimental data about the measurement.
+        metadata (:py:attr:`dict`): Metadata regarding the measurement.
+        array (:py:attr:`array_like`): The image described as an array.
+        bkg (:py:class:`uncertainties.cores.Variable`): The background that was subtracted from the image.
+        n_pixels (:py:attr:`float`): The width of the peak in number of pixels, used to calculate an uncertainty in q on the detector.
 
     Args:
-        file_path (str): The file path for the image.
-        data (pd.DataFrame, optional): Experimental data about the
-            measurement. Defaults to ``None``.
-        metadata (dict, optional): Metadata regarding the measurement.
-            Defaults to ``None``.
-        transpose (bool, optional): Should the data be rotated by 90 degrees?
-            Defaults to ``False``.
-        hot_pixel_threshold (int, optional): The number of counts above
-            which a pixel should be assessed to determine if it is hot.
-            Defaults to ``200000``.
+        file_path (:py:attr:`str`): The file path for the image.
+        data (:py:class:`pandas.DataFrame`, optional): Experimental data about the measurement. Defaults to :py:attr:`None`.
+        metadata (:py:attr:`dict`, optional): Metadata regarding the measurement. Defaults to :py:attr:`None`.
+        transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False`.
+        hot_pixel_threshold (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`200000`.
     """
 
     def __init__(
@@ -52,8 +43,7 @@ class Image:
         hot_pixel_threshold=200000,
     ):
         """
-        Initialisation of the Image class, includes running hot pixel
-        check and assigning uncertainties.
+        Initialisation of the :py:class:`islatu.image.Image` class, includes running hot pixel check and assigning uncertainties.
         """
         self.file_path = file_path
         self.data = data
@@ -79,7 +69,7 @@ class Image:
         Get the nominal values of the image array.
 
         Returns:
-            (np.ndarray): Nominal values of image.
+            :py:attr:`array_like`: Nominal values of image.
         """
         return unp.nominal_values(self.array)
 
@@ -89,7 +79,7 @@ class Image:
         Get the standard deviation values of the image array.
 
         Returns:
-            (np.ndarray): Standard deviation values of image.
+            :py:attr:`array_like`: Standard deviation values of image.
         """
         return unp.std_devs(self.array)
 
@@ -99,7 +89,7 @@ class Image:
         Get the nominal values of the image array.
 
         Returns:
-            (np.ndarray): Nominal values of image.
+            :py:attr:`array_like`: Nominal values of image.
         """
         return unp.nominal_values(self.array)
 
@@ -109,7 +99,7 @@ class Image:
         Get the standard deviation values of the image array.
 
         Returns:
-            (np.ndarray): Standard deviation values of image.
+            :py:attr:`array_like`: Standard deviation values of image.
         """
         return unp.std_devs(self.array)
 
@@ -119,7 +109,7 @@ class Image:
         Array shape
 
         Returns:
-            (tuple_of_int): The shape of the image.
+            :py:attr:`tuple` of :py:attr:`int`: The shape of the image.
         """
         return unp.nominal_values(self.array).shape
 
@@ -128,7 +118,7 @@ class Image:
         Show the image.
 
         Return:
-            (mpl.Figure): Matplotlib imshow of array.
+            :py:class:`matplotlib.figure.Figure`: Matplotlib imshow of array.
         """
         return im.show(self.n)
 
@@ -137,7 +127,7 @@ class Image:
         Custom representation.
 
         Returns:
-            (np.ndarray): Image array.
+            :py:attr:`array_like`: Image array.
         """
         return self.array
 
@@ -146,7 +136,7 @@ class Image:
         Custom string.
 
         Returns:
-            (np.ndarray): Image array.
+            :py:attr:`array_like`: Image array.
         """
         return self.array
 
@@ -155,8 +145,8 @@ class Image:
         Perform an image crop based on some function.
 
         Args:
-            crop_function (callable): The function to crop the data.
-            **kwargs (dict): The function keyword arguments.
+            crop_function (:py:attr:`callable`): The function to crop the data.
+            **kwargs (:py:attr:`dict`): The crop function keyword arguments.
         """
         self.array = unp.uarray(*crop_function(self.n, self.s, **kwargs))
 
@@ -167,9 +157,8 @@ class Image:
         Perform a background subtraction based on some function.
 
         Args:
-            background_subtraction_function (callable): The function to model
-                the data and therefore remove the background.
-            **kwargs (dict): The function keyword arguments.
+            background_subtraction_function (:py:attr:`callable`): The function to model the data and therefore remove the background.
+            **kwargs (:py:attr:`dict`): The background substraction function keyword arguments.
         """
         bkg_popt, bkg_idx, pixel_idx = background_subtraction_function(
             self.n, self.s, **kwargs
@@ -183,8 +172,7 @@ class Image:
         Perform a summation on the image
 
         Args:
-            axis (int, optional): The axis of the array to perform the
-                summation over.
+            axis (:py:attr:`int`, optional): The axis of the array to perform the summation over. Defaults to :py:attr:`None`.
         """
         return self.array.sum(axis)
 
@@ -194,13 +182,11 @@ def _find_hot_pixels(array, threshold=200000):
     Find some dead pixels and assign them with some local average value.
 
     Args:
-        array (np.ndarray): NumPy array describing the image.
-        threshold (int, optional): The number of counts above which a pixel
-            should be assessed to determine if it is hot. Defaults to
-            ``200000``.
+        array (:py:attr:`array_like`): NumPy array describing the image.
+        threshold (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`200000`.
 
     Returns:
-        (np.ndarray): NumPy array where hot pixels have been removed.
+        :py:attr:`array_like`: NumPy array where hot pixels have been removed.
     """
     sorted_array = np.sort(array.flatten())[::-1]
     for i in sorted_array:

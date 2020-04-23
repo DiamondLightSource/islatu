@@ -1,5 +1,5 @@
 """
-Parsers for inputing experiental files.
+Parsers for inputing experimental files.
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -14,12 +14,12 @@ def i07_dat_parser(file_path):
     Parsing the .dat file from I07.
 
     Args:
-        (str): The ``.dat`` file to be read.
+        (:py:attr:`str`): The ``.dat`` file to be read.
 
     Returns:
-        (tuple): tuple containing:
-            - (dict): The metadata from the ``.dat`` file.
-            - (pd.DataFrame): The data from the ``.dat`` file.
+        :py:attr:`tuple`: Containing:
+            - :py:attr:`dict`: The metadata from the ``.dat`` file.
+            - :py:class:`pandas.DataFrame`: The data from the ``.dat`` file.
     """
     f_open = open(file_path, "r")
     # Neither the data nor the metadata are being read yet.

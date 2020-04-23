@@ -20,13 +20,12 @@ def footprint_correction(beam_width, sample_size, theta):
     scattering geometry, where the beam is Gaussian in shape.
 
     Args:
-        beam_width (float): Width of incident beam, in metres.
-        sample_size (uncertainties.core.Variable): Width of sample in the
-            dimension of the beam, in metres.
-        theta (float): Incident angle, in degrees.
+        beam_width (:py:attr:`float`): Width of incident beam, in metres.
+        sample_size (:py:class:`uncertainties.core.Variable`): Width of sample in the dimension of the beam, in metres.
+        theta (:py:attr:`float`): Incident angle, in degrees.
 
     Returns:
-        (uncertainties.core.Variable): Correction factor.
+        (:py:class:`uncertainties.core.Variable`): Correction factor.
     """
     beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
     length = sample_size * unp.sin(unp.radians(theta))
@@ -45,13 +44,16 @@ def get_interpolator(file_path, parser, q_axis_name='qdcd_', intensity_axis_name
     Get an interpolator object from scipy, this is useful for the DCD q-normalisation step.
 
     Args:
-        file_path (str): File path to the normalisation file.
-        parser (callable): Parser function for the normalisation file.
-        q_axis_name (str, optional): Label for the q-value in the normalisation file. Defaults to ``'qdcd_'``.
-        intensity_axis_name (str, optional): Label for the intensity in the normalisation file. Defaults to ``'adc2'``.
+        file_path (:py:attr:`str`): File path to the normalisation file.
+        parser (:py:attr:`callable`): Parser function for the normalisation file.
+        q_axis_name (:py:attr:`str`, optional): Label for the q-value in the normalisation file. Defaults to ``'qdcd_'``.
+        intensity_axis_name (:py:attr:`str`, optional): Label for the intensity in the normalisation file. Defaults to ``'adc2'``.
 
     Returns:
-        (scipy.interpolator): Interpolation object. 
+        :py:attr:`tuple`: Containing:
+            - :py:attr:`array_like`: Interpolation knots.
+            - :py:attr:`array_like`: B-spline coefficients.
+            - :py:attr:`int`: Degree of spline.
     """
     normalisation_data = parser(file_path)[1]
     return splrep(normalisation_data[q_axis_name], normalisation_data[intensity_axis_name])

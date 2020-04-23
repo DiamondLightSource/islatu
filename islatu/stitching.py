@@ -14,10 +14,10 @@ def correct_attentuation(scan_list):
     Correct the attentuation level between a a series of elements in lists.
 
     Args:
-        scans (list of islatu.refl_data.Scan): Reflectometry scans.
+        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`): Reflectometry scans.
 
     Returns:
-        (list of islatu.refl_data.Scan): Reflectometry scans with attenuation corrected.
+        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: Reflectometry scans with attenuation corrected.
     """
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n
@@ -40,12 +40,12 @@ def concatenate(scan_list):
     Concatenate each of the datasets together.
 
     Args:
-        scans (list of islatu.refl_data.Scan): Reflectometry scans.
+        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`): Reflectometry scans.
 
     Returns:
-        (tuple): tuple containing:
-            - (np.ndarray): q-values.
-            - (np.ndarray): Reflected intensities.
+        :py:attr:`tuple`: Containing:
+            - :py:attr:`array_like`: q-values.
+            - :py:attr:`array_like`: Reflected intensities.
     """
     reflected_intensity = np.array([])
     q_vectors = np.array([])
@@ -60,10 +60,10 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     Find the total external reflection region and normalise this to 1.
 
     Args:
-        max_q (float): The maximum q to be included in finding the critical angle.
+        max_q (:py:attr:`float`): The maximum q to be included in finding the critical angle.
 
     Returns:
-        (np.ndarray): Reflected intensities.
+        :py:attr:`array_like`: Reflected intensities.
     """
     q = unp.nominal_values(q_vectors)
     max_q_idx = q[np.where(q < max_q)].size
@@ -85,14 +85,13 @@ def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400):
     Rebin the data on a logarithmic q-scale.
 
     Args:
-        new_q (np.ndarray): Array of potential q-values. Defaults to ``None``.
-        number_of_q_vectors (int, optional): The max number of
-            q-vectors to be using initially in the rebinning of the data. Defaults to ``400``.
+        new_q (:py:attr:`array_like`): Array of potential q-values. Defaults to :py:attr:`None`.
+        number_of_q_vectors (:py:attr:`int`, optional): The max number of q-vectors to be using initially in the rebinning of the data. Defaults to :py:attr:`400`.
 
     Returns:
-        (tuple): tuple containing:
-            - (np.ndarray): q-values.
-            - (np.ndarray): Reflected intensities.
+        :py:attr:`tuple`: Containing:
+            - :py:attr:`array_like`: q-values.
+            - :py:attr:`array_like`: Reflected intensities.
     """
     if new_q is not None:
         new_q = new_q

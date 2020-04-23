@@ -1,6 +1,5 @@
 """
-The refl_data module includes two classes, ``Profile`` and ``Scan`` which 
-are integral to the use of ``islatu`` for the reduction of x-ray reflectometry data. 
+The refl_data module includes two classes, :py:class:`~islatu.refl_data.Profile` and :py:class:`~islatu.refl_data.Scan` that are integral to the use of :py:mod`islatu` for the reduction of x-ray reflectometry data. 
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -20,15 +19,15 @@ class Profile:
     This class stores information about the reflectometry profile.
 
     Attributes:
-        scans (list of islatu.refl_data.Scan): Reflectometry scans that make up the profile.
-        q_vectors (np.ndarray): q-vectors from the reflectometry scan, populated after concatentation.
-        reflected_intensity (np.ndarray): Reflected intensities from the reflectometry scan, populated after concatentation.
+        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`): Reflectometry scans that make up the profile.
+        q_vectors (:py:attr:`array_like`): q-vectors from the reflectometry scan, populated after concatentation.
+        reflected_intensity (:py:attr:`array_like`): Reflected intensities from the reflectometry scan, populated after concatentation.
     
     Args:
-        file_paths (list): List of files, one for each reflectometry scan.
-        parser (callable): Parser function for the reflectometry scan files.
-        q_axis_name (str): Label for the q-axis in the scan. Defaults to ``'q_axis_name'``. 
-        theta_axis_name (str, optional): Label for the theta axis in the scan. Defaults to ``'dcdtheta'``.
+        file_paths (:py:attr:`list`): List of files, one for each reflectometry scan.
+        parser (:py:attr:`callable`): Parser function for the reflectometry scan files.
+        q_axis_name (:py:attr:`str`, optional): Label for the q-axis in the scan. Defaults to :py:attr:`'q_axis_name'`. 
+        theta_axis_name (:py:attr:`str`, optional): Label for the theta axis in the scan. Defaults to :py:attr:`'dcdtheta'`.
     """
     def __init__(self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"):
         self.scans = []
@@ -43,7 +42,7 @@ class Profile:
         Reflected intensity values.
 
         Returns:
-            (np.ndarray) Intensity values.
+            :py:attr:`array_like`: Intensity values.
         """
         return unp.nominal_values(self.reflected_intensity)
 
@@ -53,7 +52,7 @@ class Profile:
         Reflected intensity uncertainties.
 
         Returns:
-            (np.ndarray) Intensity uncertainties.
+            :py:attr:`array_like`: Intensity uncertainties.
         """
         return unp.std_devs(self.reflected_intensity)
 
@@ -63,7 +62,7 @@ class Profile:
         q-value values.
 
         Returns:
-            (np.ndarray) q-value values.
+            :py:attr:`array_like`: q-value values.
         """
         return unp.nominal_values(self.q_vectors)
 
@@ -73,7 +72,7 @@ class Profile:
         q-value uncertainties.
 
         Returns:
-            (np.ndarray) q-value uncertainties.
+            :py:attr:`array_like`: q-value uncertainties.
         """
         return unp.std_devs(self.q_vectors)
         
@@ -86,34 +85,33 @@ class Profile:
         progress=True,
     ):
         """
-        Class method for the ``islatu.refl_data.Scan.crop_and_bkg_sub`` method for each ``Scan`` in the list.
+        Class method for the :func:`~islatu.refl_data.Scan.crop_and_bkg_sub` method for each :py:class:`~Scan` in the list.
 
         Args:
-            crop_function (callable): Cropping function to be used.
-            bkg_sub_function (callable): Background subtraction function to be used. 
-            crop_kwargs (dict, optional): Keyword arguments for the cropping function. Defaults to ``None``.
-            bkg_sub_kwargs (dict, optional): Keyword arguments for the background subtraction function. Defaults to ``None``.
-            progress (bool, optional): Show a progress bar. Requires the ``tqdm`` package. Defaults to ``True``.
+            crop_function (:py:attr:`callable`): Cropping function to be used.
+            bkg_sub_function (:py:attr:`callable`): Background subtraction function to be used. 
+            crop_kwargs (:py:attr:`dict`, optional): Keyword arguments for the cropping function. Defaults to :py:attr:`None`.
+            bkg_sub_kwargs (:py:attr:`dict`, optional): Keyword arguments for the background subtraction function. Defaults to :py:attr:`None`.
+            progress (:py:attr:`bool`, optional): Show a progress bar. Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
         """
         for s in self.scans:
             s.crop_and_bkg_sub(crop_function, bkg_sub_function, crop_kwargs, bkg_sub_kwargs, progress)
     
     def footprint_correction(self, beam_width, sample_size):
         """
-        Class method for ``islatu.refl_data.Scan.footprint_correction`` for each member of the `scans` list. 
+        Class method for :func:`~islatu.refl_data.Scan.footprint_correction` for each :py:class:`~Scan` in the list.
 
         Args:
-            beam_width (float): Width of incident beam, in metres.
-            sample_size (uncertainties.core.Variable): Width of sample in the
-                dimension of the beam, in metres.
-            theta (float): Incident angle, in degrees.
+            beam_width (:py:attr:`float`): Width of incident beam, in metres.
+            sample_size (:py:class:`uncertainties.core.Variable`): Width of sample in the dimension of the beam, in metres.
+            theta (:py:attr:`float`): Incident angle, in degrees.
         """
         for s in self.scans:
             s.footprint_correction(beam_width, sample_size)
 
     def transmission_normalisation(self):
         """
-        Perform the transmission correction (islatu.refl_data.Scan.transmission_normalisation) for each member of the `scans` list and fine attenutation correction (islatu.stitching.correction_attenutation). 
+        Perform the transmission correction (:func:`~islatu.refl_data.Scan.transmission_normalisation`) for each :py:class:`~Scan` in the list and fine attenutation correction (:func:`~islatu.stitching.correction_attenutation`). 
         """
         for s in self.scans:
             s.transmission_normalisation()
@@ -127,59 +125,72 @@ class Profile:
         pixel_size=172e-6,
     ): 
         """
-        Class method for ``islatu.refl_data.Scan.q_uncertainty_from_pixel`` for each member of the `scans` list.
+        Class method for :func:`~islatu.refl_data.Scan.q_uncertainty_from_pixel` for each :py:class:`~Scan` in the list.
 
-        Args:
-            number_of_pixels (float)
-            detector_distance (float): metres
-            energy (float): keV
-            pixel_size (float, optional): metres
-
-        Returns:
-            q_uncertainty: (float)
+       Args:
+            number_of_pixels (:py:attr:`float`): Number of pixels of q uncertainty.
+            detector_distance (:py:attr:`float`): Sample detector distance in metres
+            energy (:py:attr:`float`): X-ray energy in keV
+            pixel_size (:py:attr:`float`, optional): Pixel size in metres
         """
         for s in self.scans:
             s.q_uncertainty_from_pixel(number_of_pixels, detector_distance, energy, pixel_size)
     
     def qdcd_normalisation(self, itp):
         """
-        Class method for ``islatu.refl_data.Scan.qdcd_normalisation`` for each member of the `scans` list.
+        Class method for :func:`~islatu.refl_data.Scan.qdcd_normalisation` for each :py:class:`~Scan` in the list.
 
         Args:
-            normalisation_file (str): The ``.dat`` file that contains the
-                normalisation data.
+            normalisation_file (:py:attr:`str`): The ``.dat`` file that contains the normalisation data.
         """
         for s in self.scans:
             s.qdcd_normalisation(itp)
     
     def concatenate(self):
         """
-        Class method for ``islatu.stitching.concatenate``. 
+        Class method for :func:`~islatu.stitching.concatenate`. 
         """
         self.q_vectors, self.reflected_intensity = stitching.concatenate(self.scans)
 
     def normalise_ter(self, max_q=0.1):
         """
-        Class method for ``islatu.stitching.normalise_ter``.
+        Class method for :func:`~islatu.stitching.normalise_ter`.
 
         Args:
-            max_q (float): The maximum q to be included in finding the critical angle.
+            max_q (:py:attr:`float`): The maximum q to be included in finding the critical angle.
         """
         self.reflected_intensity = stitching.normalise_ter(self.q_vectors, self.reflected_intensity, max_q)
 
     def rebin(self, new_q=None, number_of_q_vectors=400):
         """
-        Class method for ``islatu.stitching.rebin``. 
+        Class method for :func:`islatu.stitching.rebin`. 
 
         Args:
-            new_q (np.ndarray): Array of potential q-values. Defaults to ``None``.
-            number_of_q_vectors (int, optional): The max number of
-                q-vectors to be using initially in the rebinning of the data. Defaults to ``400``.
+            new_q (:py:attr:`array_like`): Array of potential q-values. Defaults to :py:attr:`None`.
+            number_of_q_vectors (:py:attr:`int`, optional): The max number of q-vectors to be using initially in the rebinning of the data. Defaults to :py:attr:`400`.
         """
         self.q_vectors, self.reflected_intensity = stitching.rebin(self.q_vectors, self.reflected_intensity, new_q, number_of_q_vectors)
         
 
 class Scan:
+    """
+    This class stores scan specific information.
+
+    Attributes:
+        file_paths (:py:attr:`str`): File path for scan file.
+        metadata (:py:attr:`dict`): The metadata from the ``.dat`` file.
+        data (:py:class:`pandas.DataFrame`): The data from the ``.dat`` file.
+        q (:py:attr:`array_like`): The measured q-values in the scan.
+        theta (:py:attr:`array_like`): The measured theta values in the scan.
+        R (:py:attr:`array_like`): The reflected intensity values in the scan.
+        n_pixels (:py:attr:`array_like`): The width in pixels of the beam in each image.
+    
+    Args:
+        file_paths (:py:attr:`list`): List of files, one for each reflectometry scan.
+        parser (:py:attr:`callable`): Parser function for the reflectometry scan files.
+        q_axis_name (:py:attr:`str`, optional): Label for the q-axis in the scan. Defaults to :py:attr:`'q_axis_name'`. 
+        theta_axis_name (:py:attr:`str`, optional): Label for the theta axis in the scan. Defaults to :py:attr:`'dcdtheta'`.
+    """
     def __init__(
         self, file_path, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta", energy=None
     ):
@@ -211,19 +222,28 @@ class Scan:
 
     def __str__(self):
         """
-        Custom string output
+        Custom string output.
+
+        Returns:
+            :py:attr:`str`: Description of scan.
         """
         return 'The file: {} contains {} images from q = {:.4f} to q = {:.4f}.'.format(self.file_path, self.q.size, self.q[0].n, self.q[-1].n)
 
     def __repr__(self):
         """
-        Custom repr output
+        Custom repr output.
+
+        Returns:
+            :py:attr:`str`: Description of scan.
         """
         return self.__str__() 
 
     def _check_files_exist(self):
         """
-        Check that image files exist
+        Check that image files exist.
+
+        Returns: 
+            :py:class:`pandas.DataFrame`: Modified data with corrected file paths.
         """
         iterator = _get_iterator(unp.nominal_values(self.q), False)
         for i in iterator:
@@ -256,14 +276,14 @@ class Scan:
         progress=True,
     ):
         """
-        Class method for the ``islatu.refl_data.Scan.crop_and_bkg_sub`` method for each ``Scan`` in the list.
+        Preform cropping and background subtraction on each image in the Scan.
 
         Args:
-            crop_function (callable): Cropping function to be used.
-            bkg_sub_function (callable): Background subtraction function to be used. 
-            crop_kwargs (dict, optional): Keyword arguments for the cropping function. Defaults to ``None``.
-            bkg_sub_kwargs (dict, optional): Keyword arguments for the background subtraction function. Defaults to ``None``.
-            progress (bool, optional): Show a progress bar. Requires the ``tqdm`` package. Defaults to ``True``.
+            crop_function (:py:attr:`callable`): Cropping function to be used.
+            bkg_sub_function (:py:attr:`callable`): Background subtraction function to be used. 
+            crop_kwargs (:py:attr:`dict`, optional): Keyword arguments for the cropping function. Defaults to :py:attr:`None`.
+            bkg_sub_kwargs (:py:attr:`dict`, optional): Keyword arguments for the background subtraction function. Defaults to :py:attr:`None`.
+            progress (:py:attr:`bool`, optional): Show a progress bar. Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
         """
         iterator = _get_iterator(unp.nominal_values(self.q), progress)
         for i in iterator:
@@ -281,13 +301,12 @@ class Scan:
 
     def footprint_correction(self, beam_width, sample_size):
         """
-        Class method for ``islatu.corrections.footprint_correction``. 
+        Class method for :func:`islatu.corrections.footprint_correction`. 
 
         Args:
-            beam_width (float): Width of incident beam, in metres.
-            sample_size (uncertainties.core.Variable): Width of sample in the
-                dimension of the beam, in metres.
-            theta (float): Incident angle, in degrees.
+            beam_width (:py:attr:`float`): Width of incident beam, in metres.
+            sample_size (:py:class:`uncertainties.core.Variable`): Width of sample in the dimension of the beam, in metres.
+            theta (:py:attr:`float`): Incident angle, in degrees.
         """
         self.R /= corrections.footprint_correction(
             beam_width, sample_size, self.theta
@@ -310,13 +329,13 @@ class Scan:
         Calculate a q uncertainty from the area detector.
 
         Args:
-            number_of_pixels (float)
-            detector_distance (float): metres
-            energy (float): keV
-            pixel_size (float, optional): metres
+            number_of_pixels (:py:attr:`float`): Number of pixels of q uncertainty.
+            detector_distance (:py:attr:`float`): Sample detector distance in metres
+            energy (:py:attr:`float`): X-ray energy in keV
+            pixel_size (:py:attr:`float`, optional): Pixel size in metres
 
         Returns:
-            q_uncertainty: (float)
+            :py:attr:`float`: Resulting q-uncertainty.
         """
         if number_of_pixels is None:
             number_of_pixels = self.n_pixels
@@ -339,8 +358,7 @@ class Scan:
         Perform normalisation by DCD variance.
 
         Args:
-            normalisation_file (str): The ``.dat`` file that contains the
-                normalisation data.
+            itp (:py:attr:`tuple`): Containing interpolation knots (:py:attr:`array_like`), B-spline coefficients (:py:attr:`array_like`), and degree of spline (:py:attr:`int`).
         """
         self.R /= splev(unp.nominal_values(self.q), itp)
 
@@ -350,11 +368,11 @@ def _get_iterator(q, progress):
     Create a q-value iterator.
 
     Args:
-        q (np.ndarray): q-values.
-        progress (bool): Show progress bar.
+        q (:py:attr:`array_like`): q-values.
+        progress (:py:attr:`bool`): Show progress bar.
     
     Returns:
-        (range or tqdm.std.tqdm): Iterator object. 
+        :py:attr:`range` or :py:class:`tqdm.std.tqdm`: Iterator object. 
     """
     iterator = range(len(q))
     if progress:
