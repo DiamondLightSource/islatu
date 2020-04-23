@@ -73,18 +73,9 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
     if bounds is None:
         bounds = (
             0,
-            [
-                image.shape[0],
-                image.shape[1],
-                100,
-                100,
-                image.max(),
-                image.max() * 10,
-            ],
+            [image.shape[0], image.shape[1], 100, 100, image.max(), image.max() * 10,],
         )
-    abscissa = np.array(
-        np.mgrid[0 : image.shape[0] : 1, 0 : image.shape[1] : 1]
-    )
+    abscissa = np.array(np.mgrid[0 : image.shape[0] : 1, 0 : image.shape[1] : 1])
     # Perform the fitting
     popt, pcov = curve_fit(
         bivariate_normal,

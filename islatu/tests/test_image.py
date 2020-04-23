@@ -81,6 +81,7 @@ class TestImage(unittest.TestCase):
     """
     Unit tests for Image class
     """
+
     def test_init(self):
         """
         Test file reading
@@ -211,9 +212,7 @@ class TestImage(unittest.TestCase):
         expected_image_e = np.sqrt(load)
         expected_image_e[np.where(load == 0)] = 1
         assert_almost_equal(load, unp.nominal_values(test_image.__repr__()))
-        assert_almost_equal(
-            expected_image_e, unp.std_devs(test_image.__repr__())
-        )
+        assert_almost_equal(expected_image_e, unp.std_devs(test_image.__repr__()))
 
     def test_str(self):
         """
@@ -230,9 +229,7 @@ class TestImage(unittest.TestCase):
         expected_image_e = np.sqrt(load)
         expected_image_e[np.where(load == 0)] = 1
         assert_almost_equal(load, unp.nominal_values(test_image.__str__()))
-        assert_almost_equal(
-            expected_image_e, unp.std_devs(test_image.__str__())
-        )
+        assert_almost_equal(expected_image_e, unp.std_devs(test_image.__str__()))
 
     def test_crop(self):
         """

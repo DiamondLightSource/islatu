@@ -33,13 +33,14 @@ def footprint_correction(beam_width, sample_size, theta):
     upper = (unp.nominal_values(length) + unp.std_devs(length)) / 2.0 / beam_sd
     lower = (unp.nominal_values(length) - unp.std_devs(length)) / 2.0 / beam_sd
     probability = 2.0 * (
-        unp.uarray(norm.cdf(mid), (norm.cdf(upper) - norm.cdf(lower)) / 2)
-        - 0.5
+        unp.uarray(norm.cdf(mid), (norm.cdf(upper) - norm.cdf(lower)) / 2) - 0.5
     )
     return probability
 
 
-def get_interpolator(file_path, parser, q_axis_name='qdcd_', intensity_axis_name='adc2'):
+def get_interpolator(
+    file_path, parser, q_axis_name="qdcd_", intensity_axis_name="adc2"
+):
     """
     Get an interpolator object from scipy, this is useful for the DCD q-normalisation step.
 
@@ -56,4 +57,6 @@ def get_interpolator(file_path, parser, q_axis_name='qdcd_', intensity_axis_name
             - :py:attr:`int`: Degree of spline.
     """
     normalisation_data = parser(file_path)[1]
-    return splrep(normalisation_data[q_axis_name], normalisation_data[intensity_axis_name])
+    return splrep(
+        normalisation_data[q_axis_name], normalisation_data[intensity_axis_name]
+    )

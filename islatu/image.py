@@ -150,9 +150,7 @@ class Image:
         """
         self.array = unp.uarray(*crop_function(self.n, self.s, **kwargs))
 
-    def background_subtraction(
-        self, background_subtraction_function, **kwargs
-    ):
+    def background_subtraction(self, background_subtraction_function, **kwargs):
         """
         Perform a background subtraction based on some function.
 

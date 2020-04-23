@@ -6,13 +6,14 @@ The refl_data module includes two classes, :py:class:`~islatu.refl_data.Profile`
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey
 
-from os import path 
+from os import path
 import numpy as np
 from scipy.constants import physical_constants
 from scipy.interpolate import splev
 from uncertainties import ufloat
 from uncertainties import unumpy as unp
 from islatu import corrections, image, stitching
+
 
 class Profile:
     """
@@ -29,7 +30,10 @@ class Profile:
         q_axis_name (:py:attr:`str`, optional): Label for the q-axis in the scan. Defaults to :py:attr:`'q_axis_name'`. 
         theta_axis_name (:py:attr:`str`, optional): Label for the theta axis in the scan. Defaults to :py:attr:`'dcdtheta'`.
     """
-    def __init__(self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"):
+
+    def __init__(
+        self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"
+    ):
         self.scans = []
         for f in file_paths:
             self.scans.append(Scan(f, parser, q_axis_name, theta_axis_name))
@@ -75,7 +79,7 @@ class Profile:
             :py:attr:`array_like`: q-value uncertainties.
         """
         return unp.std_devs(self.q_vectors)
-        
+
     def crop_and_bkg_sub(
         self,
         crop_function,
@@ -95,8 +99,10 @@ class Profile:
             progress (:py:attr:`bool`, optional): Show a progress bar. Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
         """
         for s in self.scans:
-            s.crop_and_bkg_sub(crop_function, bkg_sub_function, crop_kwargs, bkg_sub_kwargs, progress)
-    
+            s.crop_and_bkg_sub(
+                crop_function, bkg_sub_function, crop_kwargs, bkg_sub_kwargs, progress
+            )
+
     def footprint_correction(self, beam_width, sample_size):
         """
         Class method for :func:`~islatu.refl_data.Scan.footprint_correction` for each :py:class:`~Scan` in the list.
@@ -123,7 +129,7 @@ class Profile:
         detector_distance=None,
         energy=None,
         pixel_size=172e-6,
-    ): 
+    ):
         """
         Class method for :func:`~islatu.refl_data.Scan.q_uncertainty_from_pixel` for each :py:class:`~Scan` in the list.
 
@@ -134,8 +140,10 @@ class Profile:
             pixel_size (:py:attr:`float`, optional): Pixel size in metres
         """
         for s in self.scans:
-            s.q_uncertainty_from_pixel(number_of_pixels, detector_distance, energy, pixel_size)
-    
+            s.q_uncertainty_from_pixel(
+                number_of_pixels, detector_distance, energy, pixel_size
+            )
+
     def qdcd_normalisation(self, itp):
         """
         Class method for :func:`~islatu.refl_data.Scan.qdcd_normalisation` for each :py:class:`~Scan` in the list.
@@ -145,7 +153,7 @@ class Profile:
         """
         for s in self.scans:
             s.qdcd_normalisation(itp)
-    
+
     def concatenate(self):
         """
         Class method for :func:`~islatu.stitching.concatenate`. 
@@ -159,7 +167,9 @@ class Profile:
         Args:
             max_q (:py:attr:`float`): The maximum q to be included in finding the critical angle.
         """
-        self.reflected_intensity = stitching.normalise_ter(self.q_vectors, self.reflected_intensity, max_q)
+        self.reflected_intensity = stitching.normalise_ter(
+            self.q_vectors, self.reflected_intensity, max_q
+        )
 
     def rebin(self, new_q=None, number_of_q_vectors=400):
         """
@@ -169,8 +179,10 @@ class Profile:
             new_q (:py:attr:`array_like`): Array of potential q-values. Defaults to :py:attr:`None`.
             number_of_q_vectors (:py:attr:`int`, optional): The max number of q-vectors to be using initially in the rebinning of the data. Defaults to :py:attr:`400`.
         """
-        self.q_vectors, self.reflected_intensity = stitching.rebin(self.q_vectors, self.reflected_intensity, new_q, number_of_q_vectors)
-        
+        self.q_vectors, self.reflected_intensity = stitching.rebin(
+            self.q_vectors, self.reflected_intensity, new_q, number_of_q_vectors
+        )
+
 
 class Scan:
     """
@@ -191,8 +203,14 @@ class Scan:
         q_axis_name (:py:attr:`str`, optional): Label for the q-axis in the scan. Defaults to :py:attr:`'q_axis_name'`. 
         theta_axis_name (:py:attr:`str`, optional): Label for the theta axis in the scan. Defaults to :py:attr:`'dcdtheta'`.
     """
+
     def __init__(
-        self, file_path, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta", energy=None
+        self,
+        file_path,
+        parser,
+        q_axis_name="qdcd",
+        theta_axis_name="dcdtheta",
+        energy=None,
     ):
         self.file_path = file_path
         self.metadata, self.data = parser(self.file_path)
@@ -200,24 +218,24 @@ class Scan:
             h = physical_constants["Planck constant in eV s"][0] * 1e-3
             c = physical_constants["speed of light in vacuum"][0] * 1e10
             if energy is None:
-                energy = self.metadata['dcm1energy'][0]
-            q = energy * 4 * np.pi * unp.sin(unp.radians(self.data[theta_axis_name])) / (h * c)
-            self.q = unp.uarray(
-                q, np.zeros(self.data[theta_axis_name].size)
+                energy = self.metadata["dcm1energy"][0]
+            q = (
+                energy
+                * 4
+                * np.pi
+                * unp.sin(unp.radians(self.data[theta_axis_name]))
+                / (h * c)
             )
+            self.q = unp.uarray(q, np.zeros(self.data[theta_axis_name].size))
         else:
             self.q = unp.uarray(
                 self.data[q_axis_name], np.zeros(self.data[q_axis_name].size)
             )
         self.data = self._check_files_exist()
         self.theta = unp.uarray(
-            self.data[theta_axis_name],
-            np.zeros(self.data[theta_axis_name].size),
+            self.data[theta_axis_name], np.zeros(self.data[theta_axis_name].size),
         )
-        self.R = unp.uarray(
-            np.zeros(self.q.size),
-            np.zeros(self.q.size),
-        )
+        self.R = unp.uarray(np.zeros(self.q.size), np.zeros(self.q.size),)
         self.n_pixels = np.zeros(self.q.size)
 
     def __str__(self):
@@ -227,7 +245,9 @@ class Scan:
         Returns:
             :py:attr:`str`: Description of scan.
         """
-        return 'The file: {} contains {} images from q = {:.4f} to q = {:.4f}.'.format(self.file_path, self.q.size, self.q[0].n, self.q[-1].n)
+        return "The file: {} contains {} images from q = {:.4f} to q = {:.4f}.".format(
+            self.file_path, self.q.size, self.q[0].n, self.q[-1].n
+        )
 
     def __repr__(self):
         """
@@ -236,7 +256,7 @@ class Scan:
         Returns:
             :py:attr:`str`: Description of scan.
         """
-        return self.__str__() 
+        return self.__str__()
 
     def _check_files_exist(self):
         """
@@ -261,10 +281,14 @@ class Scan:
                     im_file = self.data["file"][i].split(path.sep)[-1]
                     im_file = path.join(path.dirname(self.file_path), im_file)
                     if path.isfile(im_file):
-                        self.data.iloc[i, self.data.keys().get_loc("file")] = im_file                       
+                        self.data.iloc[i, self.data.keys().get_loc("file")] = im_file
                         continue
                     else:
-                        raise FileNotFoundError("The following image file could not be found: {}.".format(self.data["file"][i]))
+                        raise FileNotFoundError(
+                            "The following image file could not be found: {}.".format(
+                                self.data["file"][i]
+                            )
+                        )
         return self.data
 
     def crop_and_bkg_sub(
@@ -308,9 +332,7 @@ class Scan:
             sample_size (:py:class:`uncertainties.core.Variable`): Width of sample in the dimension of the beam, in metres.
             theta (:py:attr:`float`): Incident angle, in degrees.
         """
-        self.R /= corrections.footprint_correction(
-            beam_width, sample_size, self.theta
-        )
+        self.R /= corrections.footprint_correction(beam_width, sample_size, self.theta)
 
     def transmission_normalisation(self):
         """

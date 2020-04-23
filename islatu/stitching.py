@@ -97,9 +97,7 @@ def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400):
         new_q = new_q
     else:
         new_q = np.logspace(
-            np.log10(q_vectors[0].n),
-            np.log10(q_vectors[-1].n),
-            number_of_q_vectors,
+            np.log10(q_vectors[0].n), np.log10(q_vectors[-1].n), number_of_q_vectors,
         )
 
     binned_q = unp.uarray(np.zeros_like(new_q), np.zeros_like(new_q))
