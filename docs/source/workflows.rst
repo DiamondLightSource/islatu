@@ -1,7 +1,7 @@
 Reduction workflows
 ===================
 
-Some typical data reduction workflows, that ``islatu`` can handle are shown here: 
+Some typical data reduction workflows, that :py:mod:`islatu` can handle are shown here: 
 
 .. toctree::
    :maxdepth: 1

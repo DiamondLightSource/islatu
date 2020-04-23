@@ -1,7 +1,7 @@
 Installation
 ============
 
-``islatu`` can be installed from the PyPI package manager with ``pip``:
+:py:mod:`islatu` can be installed from the PyPI package manager with :py:mod:`pip`:
 
 .. code-block:: bash 
 
