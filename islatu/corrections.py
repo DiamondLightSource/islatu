@@ -29,13 +29,12 @@ def footprint_correction(beam_width, sample_size, theta):
     """
     beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
     length = sample_size * unp.sin(unp.radians(theta))
-    mid = unp.nominal_values(length)# / 2.0 / beam_sd
+    mid = unp.nominal_values(length) / 2.0 / beam_sd
     upper = (unp.nominal_values(length) + unp.std_devs(length)) / 2.0 / beam_sd
     lower = (unp.nominal_values(length) - unp.std_devs(length)) / 2.0 / beam_sd
-    probability = 2. * (norm.cdf(mid / 2. / beam_sd) - 0.5)
-    #probability = 2.0 * (
-    #    unp.uarray(norm.cdf(mid), (norm.cdf(upper) - norm.cdf(lower)) / 2) - 0.5
-    #)
+    probability = 2.0 * (
+        unp.uarray(norm.cdf(mid), (norm.cdf(upper) - norm.cdf(lower)) / 2) - 0.5
+    )
     return probability
 
 
