@@ -162,7 +162,10 @@ class Image:
             self.n, self.s, **kwargs
         )
         self.bkg = bkg_popt[bkg_idx]
-        self.n_pixel = bkg_popt[pixel_idx]
+        if pixel_idx is None:
+            self.n_pixel = None
+        else:
+            self.n_pixel = bkg_popt[pixel_idx]
         self.array -= self.bkg
 
     def sum(self, axis=None):

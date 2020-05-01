@@ -321,7 +321,10 @@ class Scan:
             else:
                 im.background_subtraction(bkg_sub_function, **bkg_sub_kwargs)
             self.R[i] = ufloat(im.sum().n, im.sum().s)
-            self.n_pixels[i] = im.n_pixel.n
+            if im.n_pixel is None:
+                self.n_pixels[i] = None
+            else:
+                self.n_pixels[i] = im.n_pixel.n
 
     def footprint_correction(self, beam_width, sample_size):
         """

@@ -10,7 +10,7 @@ Therefore, we crop the image down, these functions help with this.
 import numpy as np
 
 
-def crop_2d(array, x_start, x_end, y_start, y_end):
+def crop_2d(array, array_e=None, x_start=0, x_end=-1, y_start=0, y_end=-1):
     """
     Crop the data (:py:attr:`array`) with some given start and stop point.
 
@@ -24,7 +24,10 @@ def crop_2d(array, x_start, x_end, y_start, y_end):
     Returns:
         :py:attr:`array_like`: A cropped intensity map.
     """
-    cropped_array = array[x_start:x_end, y_start:y_end]
+    cropped_array = array[y_start:y_end, x_start:x_end]
+    if array_e is not None:
+        cropped_error = array_e[y_start:y_end, x_start:x_end]
+        return cropped_array, cropped_error
     return cropped_array
 
 
