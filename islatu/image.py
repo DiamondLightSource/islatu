@@ -32,6 +32,8 @@ class Image:
         metadata (:py:attr:`dict`, optional): Metadata regarding the measurement. Defaults to :py:attr:`None`.
         transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False`.
         hot_pixel_threshold (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`200000`.
+        pixel_maximum (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`500000`.
+        pixel_minimum (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`0`.
     """
 
     def __init__(
@@ -41,6 +43,8 @@ class Image:
         metadata=None,
         transpose=False,
         hot_pixel_threshold=200000,
+        pixel_maximum=500000,
+        pixel_minimum=0
     ):
         """
         Initialisation of the :py:class:`islatu.image.Image` class, includes running hot pixel check and assigning uncertainties.
@@ -53,10 +57,10 @@ class Image:
         img.close()
         if transpose:
             array = array.T
-        # Remove dead pixels
+        # Remove hot pixels
         array = _find_hot_pixels(array, threshold=hot_pixel_threshold)
-        array[np.where(array > 500000)] = 0
-        array[np.where(array < 0)] = 0
+        array[np.where(array > pixel_maximum)] = 0
+        array[np.where(array < pixel_minimum)] = 0
         array_error = np.sqrt(array)
         array_error[np.where(array == 0)] = 1
         self.array = unp.uarray(array, array_error)
