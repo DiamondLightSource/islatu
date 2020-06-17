@@ -31,7 +31,6 @@ class Image:
         data (:py:class:`pandas.DataFrame`, optional): Experimental data about the measurement. Defaults to :py:attr:`None`.
         metadata (:py:attr:`dict`, optional): Metadata regarding the measurement. Defaults to :py:attr:`None`.
         transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False`.
-        hot_pixel_threshold (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`200000`.
         pixel_maximum (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`500000`.
         pixel_minimum (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`0`.
     """
@@ -42,12 +41,10 @@ class Image:
         data=None,
         metadata=None,
         transpose=False,
-        hot_pixel_threshold=200000,
-        pixel_maximum=500000,
         pixel_minimum=0
     ):
         """
-        Initialisation of the :py:class:`islatu.image.Image` class, includes running hot pixel check and assigning uncertainties.
+        Initialisation of the :py:class:`islatu.image.Image` class, includes assigning uncertainties.
         """
         self.file_path = file_path
         self.data = data
@@ -58,8 +55,6 @@ class Image:
         if transpose:
             array = array.T
         # Remove hot pixels
-        array = _find_hot_pixels(array, threshold=hot_pixel_threshold)
-        array[np.where(array > pixel_maximum)] = 0
         array[np.where(array < pixel_minimum)] = 0
         array_error = np.sqrt(array)
         array_error[np.where(array == 0)] = 1
@@ -181,40 +176,3 @@ class Image:
         """
         return self.array.sum(axis)
 
-
-def _find_hot_pixels(array, threshold=200000):
-    """
-    Find some dead pixels and assign them with some local average value.
-
-    Args:
-        array (:py:attr:`array_like`): NumPy array describing the image.
-        threshold (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`200000`.
-
-    Returns:
-        :py:attr:`array_like`: NumPy array where hot pixels have been removed.
-    """
-    sorted_array = np.sort(array.flatten())[::-1]
-    for i in sorted_array:
-        if i >= threshold:
-            pos_a, pos_b = np.where(array == i)
-            lower_a = pos_a[0] - 1
-            upper_a = pos_a[0] + 2
-            lower_b = pos_b[0] - 1
-            upper_b = pos_b[0] + 2
-            if pos_a[0] == 0:
-                lower_a = 0
-            elif pos_a[0] == array.shape[0] - 1:
-                upper_a = array.shape[0]
-            if pos_b[0] == 0:
-                lower_b = 0
-            elif pos_b[0] == array.shape[1] - 1:
-                upper_b = array.shape[1]
-            local = np.copy(array[lower_a:upper_a, lower_b:upper_b])
-            local[np.where(local == i)] = 0
-            local_average = np.mean(local)
-            local_std = np.std(local)
-            if i > local_average + 2 * local_std:
-                array[pos_a[0], pos_b[0]] = local_average
-        else:
-            break
-    return array

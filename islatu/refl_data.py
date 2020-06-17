@@ -32,11 +32,15 @@ class Profile:
     """
 
     def __init__(
-        self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta"
+        self, file_paths, parser, q_axis_name="qdcd", theta_axis_name="dcdtheta", pixel_max=10000000, transpose=False
     ):
         self.scans = []
-        for f in file_paths:
-            self.scans.append(Scan(f, parser, q_axis_name, theta_axis_name))
+        try:
+            is_list = len(pixel_max)
+        except TypeError:
+            pixel_max = [pixel_max] * len(file_paths)
+        for i, f in enumerate(file_paths):
+            self.scans.append(Scan(f, parser, q_axis_name, theta_axis_name, pixel_max=pixel_max[i], transpose=transpose))
         self.q_vectors = None
         self.reflected_intensity = None
 
@@ -211,6 +215,8 @@ class Scan:
         q_axis_name="qdcd",
         theta_axis_name="dcdtheta",
         energy=None,
+        pixel_max=1000000,
+        transpose=False,
     ):
         self.file_path = file_path
         self.metadata, self.data = parser(self.file_path)
@@ -237,6 +243,8 @@ class Scan:
         )
         self.R = unp.uarray(np.zeros(self.q.size), np.zeros(self.q.size),)
         self.n_pixels = np.zeros(self.q.size)
+        self.pixel_max = pixel_max
+        self.transpose = transpose
 
     def __str__(self):
         """
@@ -310,21 +318,35 @@ class Scan:
             progress (:py:attr:`bool`, optional): Show a progress bar. Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
         """
         iterator = _get_iterator(unp.nominal_values(self.q), progress)
+        to_remove = []
         for i in iterator:
-            im = image.Image(self.data["file"][i], self.data, self.metadata)
-            if crop_kwargs is None:
-                im.crop(crop_function)
-            else:
-                im.crop(crop_function, **crop_kwargs)
-            if bkg_sub_kwargs is None:
-                im.background_subtraction(bkg_sub_function)
-            else:
-                im.background_subtraction(bkg_sub_function, **bkg_sub_kwargs)
-            self.R[i] = ufloat(im.sum().n, im.sum().s)
-            if im.n_pixel is None:
-                self.n_pixels[i] = None
-            else:
-                self.n_pixels[i] = im.n_pixel.n
+            try:
+                if self.data['roi1_maxval'][i] > self.pixel_max:
+                    to_remove.append(i)
+                    continue
+                im = image.Image(self.data["file"][i], self.data, self.metadata, transpose=self.transpose)
+                if crop_kwargs is None:
+                    im.crop(crop_function)
+                else:
+                    im.crop(crop_function, **crop_kwargs)
+                if bkg_sub_kwargs is None:
+                    im.background_subtraction(bkg_sub_function)
+                else:
+                    im.background_subtraction(bkg_sub_function, **bkg_sub_kwargs)
+                self.R[i] = ufloat(im.sum().n, im.sum().s)
+                if im.n_pixel is None:
+                    self.n_pixels[i] = None
+                else:
+                    self.n_pixels[i] = im.n_pixel.n
+            except (ValueError, RuntimeError) as e:
+                print(e)
+                print('Current file: ', self.data["file"][i])
+                to_remove.append(i)
+                continue
+        self.R = np.delete(self.R, to_remove)
+        self.theta = np.delete(self.theta, to_remove)
+        self.n_pixels = np.delete(self.n_pixels, to_remove)
+        self.q = np.delete(self.q, to_remove)
 
     def footprint_correction(self, beam_width, sample_size):
         """

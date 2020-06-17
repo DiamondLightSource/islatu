@@ -52,7 +52,7 @@ class TestStitcher(unittest.TestCase):
         exp_y1 = np.ones(10) * 10
         exp_dy1 = np.ones(10)
         exp_y2 = np.ones(10) * 10
-        exp_dy2 = np.append(np.ones(3), np.ones(7) * 1.2909944)
+        exp_dy2 = np.append(np.ones(3) * 0.8164966, np.ones(7) * 1.1547005)
 
         scan_list = stitching.correct_attentuation(scan_list)
 

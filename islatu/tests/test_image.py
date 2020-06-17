@@ -97,57 +97,6 @@ class TestImage(unittest.TestCase):
         assert_equal((10, 10), test_image.shape)
         assert_almost_equal(expected_image, test_image.n)
 
-    def test_hot_pixel(self):
-        """
-        Test hot pixel in image
-        """
-        b = io.StringIO(EXAMPLE_HOT_PIXEL)
-        buf = io.BytesIO()
-        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
-        im.save(buf, format="png")
-        buf.seek(0)
-        test_image = Image(buf)
-        test_image = image._find_hot_pixels(test_image.n, threshold=6e03)
-        data = io.StringIO(EXAMPLE_HOT_PIXEL)
-        expected_image = np.loadtxt(data)
-        expected_image[2, 2] = 2.333333333333
-        assert_equal((10, 10), test_image.shape)
-        assert_almost_equal(expected_image, test_image)
-
-    def test_hot_pixel_corner_a(self):
-        """
-        Test a hot pixel in the top left corner
-        """
-        b = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERA)
-        buf = io.BytesIO()
-        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
-        im.save(buf, format="png")
-        buf.seek(0)
-        test_image = Image(buf)
-        test_image = image._find_hot_pixels(test_image.n, threshold=6e03)
-        data = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERA)
-        expected_image = np.loadtxt(data)
-        expected_image[0, 0] = 0
-        assert_equal((10, 10), test_image.shape)
-        assert_almost_equal(expected_image, test_image)
-
-    def test_hot_pixel_corner_b(self):
-        """
-        Test a hot pixel in the bottom right corner
-        """
-        b = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERB)
-        buf = io.BytesIO()
-        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
-        im.save(buf, format="png")
-        buf.seek(0)
-        test_image = Image(buf)
-        test_image = image._find_hot_pixels(test_image.n, threshold=6e03)
-        data = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERB)
-        expected_image = np.loadtxt(data)
-        expected_image[9, 9] = 3.25
-        assert_equal((10, 10), test_image.shape)
-        assert_almost_equal(expected_image, test_image)
-
     def test_init_with_transpose(self):
         """
         Test for transposing with reading

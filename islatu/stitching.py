@@ -5,9 +5,10 @@ As reflectometry measurements typicall consist of multiple scans at different at
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey
+import warnings
 import numpy as np
 from uncertainties import unumpy as unp
-
+from scipy.stats import linregress
 
 def correct_attentuation(scan_list):
     """
@@ -22,15 +23,22 @@ def correct_attentuation(scan_list):
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n
         overlap_end = scan_list[i].q[-1].n
+        
+        if overlap_start > overlap_end:
+            warnings.warn('Using extrapolation to correct attenuation between scans {} and {}. Please double check these results.'.format(
+                scan_list[i].file_path, scan_list[i+1].file_path))
+            overlap_start_index = -2
+            overlap_end_index = 1
+        else:
+            overlap_start_index = np.argmin(np.abs(scan_list[i].q - overlap_start))
+            overlap_end_index = np.argmin(np.abs(scan_list[i + 1].q - overlap_end))
 
-        overlap_start_index = np.argmin(np.abs(scan_list[i].q - overlap_start))
-        overlap_end_index = np.argmin(np.abs(scan_list[i + 1].q - overlap_end))
-
-        target_r = scan_list[i].R[overlap_start_index:]
-        vary_r = scan_list[i + 1].R[: overlap_end_index + 1]
+        res = linregress(unp.nominal_values(scan_list[i].q[overlap_start_index:]), np.log(unp.nominal_values(scan_list[i].R[overlap_start_index:])))
+        target_r = unp.exp(scan_list[i+1].q[: overlap_end_index + 1] * res.slope + res.intercept)
+        vary_r = scan_list[i+1].R[: overlap_end_index + 1]
 
         ratio = target_r.mean() / vary_r.mean()
-
+        
         scan_list[i + 1].R *= ratio
     return scan_list
 
