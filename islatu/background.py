@@ -35,8 +35,7 @@ def bivariate_normal(data, mu_1, mu_2, sigma_1, sigma_2, offset, factor):
             distribution.
 
     Returns:
-        :py:attr:`array_like`: Flattened ordinate data for bivariate normal
-            distribution.
+        :py:attr:`array_like`: Flattened ordinate data for bivariate normal distribution.
     """
     # Setting the data up in the correct format
     pos = np.empty(data[0].shape + (2,))
@@ -63,8 +62,7 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
 
     Returns:
         :py:attr:`tuple`: Containing:
-            - :py:attr:`array_like`: The results (with uncertainties) for each
-                of the 6 parameters fit.
+            - :py:attr:`array_like`: The results (with uncertainties) for each of the 6 parameters fit.
             - :py:attr:`int`: The index of the offset.
             - :py:attr:`int`: The index of the vertical distribution width.
     """
@@ -101,8 +99,7 @@ def univariate_normal(data, mu, sigma, offset, factor):
             distribution.
 
     Returns:
-        :py:attr:`array_like`: Ordinate data for univariate normal
-            distribution.
+        :py:attr:`array_like`: Ordinate data for univariate normal distribution.
     """
     # Creation of the bivariate normal distribution
     normal = norm(loc=mu, scale=sigma)
@@ -126,11 +123,9 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
 
     Returns:
         :py:attr:`tuple`: Containing:
-            - :py:attr:`array_like`: The results (with uncertainties) for each
-                of the 6 parameters fit.
+            - :py:attr:`array_like`: The results (with uncertainties) for each of the 6 parameters fit.
             - :py:attr:`int`: The index of the offset.
-            - :py:attr:`None`: As it is not possible to describe the reflected
-                peak width.
+            - :py:attr:`None`: As it is not possible to describe the reflected peak width.
     """
     ordinate = image.mean(axis=axis)
     ordinate_e = image_e.mean(axis=axis)

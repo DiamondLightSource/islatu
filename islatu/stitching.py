@@ -21,8 +21,7 @@ def correct_attentuation(scan_list):
             Reflectometry scans.
 
     Returns:
-        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: Reflectometry
-            scans with attenuation corrected.
+        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: Reflectometry scans with attenuation corrected.
     """
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n

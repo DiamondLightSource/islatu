@@ -293,8 +293,7 @@ class Scan:
         Check that image files exist.
 
         Returns:
-            :py:class:`pandas.DataFrame`: Modified data with corrected file
-                paths.
+            :py:class:`pandas.DataFrame`: Modified data with corrected file paths.
         """
         iterator = _get_iterator(unp.nominal_values(self.q), False)
         for i in iterator:
