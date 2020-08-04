@@ -1,15 +1,14 @@
 """
-The two-dimension detector generates images of the reflected intensity. 
-The purpose of this class is the investigation and manipulation of these images.
+The two-dimension detector generates images of the reflected intensity.
+The purpose of this class is the investigation and manipulation of these
+images.
 """
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
 # author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
-import os
 import numpy as np
-from matplotlib.pyplot import imshow
 from PIL import Image as PILIm
 from uncertainties import unumpy as unp
 
@@ -20,31 +19,35 @@ class Image:
 
     Attributes:
         file_path (:py:attr:`str`): File path for the image.
-        data (:py:class:`pandas.DataFrame`): Experimental data about the measurement.
+        data (:py:class:`pandas.DataFrame`): Experimental data about the
+            measurement.
         metadata (:py:attr:`dict`): Metadata regarding the measurement.
         array (:py:attr:`array_like`): The image described as an array.
-        bkg (:py:class:`uncertainties.cores.Variable`): The background that was subtracted from the image.
-        n_pixels (:py:attr:`float`): The width of the peak in number of pixels, used to calculate an uncertainty in q on the detector.
+        bkg (:py:class:`uncertainties.cores.Variable`): The background that
+            was subtracted from the image.
+        n_pixels (:py:attr:`float`): The width of the peak in number of
+            pixels, used to calculate an uncertainty in q on the detector.
 
     Args:
         file_path (:py:attr:`str`): The file path for the image.
-        data (:py:class:`pandas.DataFrame`, optional): Experimental data about the measurement. Defaults to :py:attr:`None`.
-        metadata (:py:attr:`dict`, optional): Metadata regarding the measurement. Defaults to :py:attr:`None`.
-        transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False`.
-        pixel_maximum (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`500000`.
-        pixel_minimum (:py:attr:`int`, optional): The number of counts above which a pixel should be assessed to determine if it is hot. Defaults to :py:attr:`0`.
+        data (:py:class:`pandas.DataFrame`, optional): Experimental data about
+            the measurement. Defaults to :py:attr:`None`.
+        metadata (:py:attr:`dict`, optional): Metadata regarding the
+            measurement. Defaults to :py:attr:`None`.
+        transpose (:py:attr:`bool`, optional): Should the data be rotated by
+            90 degrees? Defaults to :py:attr:`False`.
+        pixel_maximum (:py:attr:`int`, optional): The number of counts above
+            which a pixel should be assessed to determine if it is hot.
+            Defaults to :py:attr:`500000`.
+        pixel_minimum (:py:attr:`int`, optional): The number of counts above
+            which a pixel should be assessed to determine if it is hot.
+            Defaults to :py:attr:`0`.
     """
-
-    def __init__(
-        self,
-        file_path,
-        data=None,
-        metadata=None,
-        transpose=False,
-        pixel_minimum=0
-    ):
+    def __init__(self, file_path, data=None, metadata=None, transpose=False,
+                 pixel_minimum=0):
         """
-        Initialisation of the :py:class:`islatu.image.Image` class, includes assigning uncertainties.
+        Initialisation of the :py:class:`islatu.image.Image` class, includes
+        assigning uncertainties.
         """
         self.file_path = file_path
         self.data = data
@@ -54,7 +57,6 @@ class Image:
         img.close()
         if transpose:
             array = array.T
-        # Remove hot pixels
         array[np.where(array < pixel_minimum)] = 0
         array_error = np.sqrt(array)
         array_error[np.where(array == 0)] = 1
@@ -112,15 +114,6 @@ class Image:
         """
         return unp.nominal_values(self.array).shape
 
-    def show(self):
-        """
-        Show the image.
-
-        Return:
-            :py:class:`matplotlib.figure.Figure`: Matplotlib imshow of array.
-        """
-        return im.show(self.n)
-
     def __repr__(self):
         """
         Custom representation.
@@ -149,13 +142,16 @@ class Image:
         """
         self.array = unp.uarray(*crop_function(self.n, self.s, **kwargs))
 
-    def background_subtraction(self, background_subtraction_function, **kwargs):
+    def background_subtraction(self, background_subtraction_function,
+                               **kwargs):
         """
         Perform a background subtraction based on some function.
 
         Args:
-            background_subtraction_function (:py:attr:`callable`): The function to model the data and therefore remove the background.
-            **kwargs (:py:attr:`dict`): The background substraction function keyword arguments.
+            background_subtraction_function (:py:attr:`callable`): The
+                function to model the data and therefore remove the background.
+            **kwargs (:py:attr:`dict`): The background substraction function
+                keyword arguments.
         """
         bkg_popt, bkg_idx, pixel_idx = background_subtraction_function(
             self.n, self.s, **kwargs
@@ -172,7 +168,7 @@ class Image:
         Perform a summation on the image
 
         Args:
-            axis (:py:attr:`int`, optional): The axis of the array to perform the summation over. Defaults to :py:attr:`None`.
+            axis (:py:attr:`int`, optional): The axis of the array to perform
+                the summation over. Defaults to :py:attr:`None`.
         """
         return self.array.sum(axis)
-

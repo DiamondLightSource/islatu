@@ -1,5 +1,6 @@
 """
-As reflectometry measurements typicall consist of multiple scans at different attenutation, we must stitch these together.
+As reflectometry measurements typically consist of multiple scans at different
+attenutation, we must stitch these together.
 """
 
 # Copyright (c) Andrew R. McCluskey
@@ -7,38 +8,45 @@ As reflectometry measurements typicall consist of multiple scans at different at
 # author: Andrew R. McCluskey
 import warnings
 import numpy as np
-from uncertainties import unumpy as unp
 from scipy.stats import linregress
+from uncertainties import unumpy as unp
+
 
 def correct_attentuation(scan_list):
     """
     Correct the attentuation level between a a series of elements in lists.
 
     Args:
-        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`): Reflectometry scans.
+        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`):
+            Reflectometry scans.
 
     Returns:
-        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: Reflectometry scans with attenuation corrected.
+        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: Reflectometry
+            scans with attenuation corrected.
     """
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n
         overlap_end = scan_list[i].q[-1].n
-        
         if overlap_start > overlap_end:
-            warnings.warn('Using extrapolation to correct attenuation between scans {} and {}. Please double check these results.'.format(
-                scan_list[i].file_path, scan_list[i+1].file_path))
+            warnings.warn('Using extrapolation to correct attenuation between '
+                          'scans {} and {}. Please double check these '
+                          'results.'.format(scan_list[i].file_path,
+                                            scan_list[i+1].file_path))
             overlap_start_index = -2
             overlap_end_index = 1
         else:
-            overlap_start_index = np.argmin(np.abs(scan_list[i].q - overlap_start))
-            overlap_end_index = np.argmin(np.abs(scan_list[i + 1].q - overlap_end))
-
-        res = linregress(unp.nominal_values(scan_list[i].q[overlap_start_index:]), np.log(unp.nominal_values(scan_list[i].R[overlap_start_index:])))
-        target_r = unp.exp(scan_list[i+1].q[: overlap_end_index + 1] * res.slope + res.intercept)
+            overlap_start_index = np.argmin(
+                np.abs(scan_list[i].q - overlap_start))
+            overlap_end_index = np.argmin(
+                np.abs(scan_list[i + 1].q - overlap_end))
+        res = linregress(
+            unp.nominal_values(scan_list[i].q[overlap_start_index:]),
+            np.log(unp.nominal_values(scan_list[i].R[overlap_start_index:])))
+        target_r = unp.exp(
+            scan_list[
+                i+1].q[: overlap_end_index + 1] * res.slope + res.intercept)
         vary_r = scan_list[i+1].R[: overlap_end_index + 1]
-
         ratio = target_r.mean() / vary_r.mean()
-        
         scan_list[i + 1].R *= ratio
     return scan_list
 
@@ -48,7 +56,8 @@ def concatenate(scan_list):
     Concatenate each of the datasets together.
 
     Args:
-        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`): Reflectometry scans.
+        scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`):
+            Reflectometry scans.
 
     Returns:
         :py:attr:`tuple`: Containing:
@@ -57,9 +66,9 @@ def concatenate(scan_list):
     """
     reflected_intensity = np.array([])
     q_vectors = np.array([])
-    for i in range(len(scan_list)):
-        reflected_intensity = np.append(reflected_intensity, scan_list[i].R)
-        q_vectors = np.append(q_vectors, scan_list[i].q)
+    for scan in scan_list:
+        reflected_intensity = np.append(reflected_intensity, scan.R)
+        q_vectors = np.append(q_vectors, scan.q)
     return q_vectors, reflected_intensity
 
 
@@ -68,7 +77,8 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     Find the total external reflection region and normalise this to 1.
 
     Args:
-        max_q (:py:attr:`float`): The maximum q to be included in finding the critical angle.
+        max_q (:py:attr:`float`): The maximum q to be included in finding the
+            critical angle.
 
     Returns:
         :py:attr:`array_like`: Reflected intensities.
@@ -79,7 +89,9 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
         end_of_ter_index = 1
     else:
         end_of_ter_index = np.argmax(
-            np.abs(np.gradient(unp.nominal_values(reflected_intensity)[:max_q_idx]))
+            np.abs(
+                np.gradient(
+                    unp.nominal_values(reflected_intensity)[:max_q_idx]))
         )
     if end_of_ter_index == 0:
         end_of_ter_index = 1
@@ -93,20 +105,21 @@ def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400):
     Rebin the data on a logarithmic q-scale.
 
     Args:
-        new_q (:py:attr:`array_like`): Array of potential q-values. Defaults to :py:attr:`None`.
-        number_of_q_vectors (:py:attr:`int`, optional): The max number of q-vectors to be using initially in the rebinning of the data. Defaults to :py:attr:`400`.
+        new_q (:py:attr:`array_like`): Array of potential q-values. Defaults
+            to :py:attr:`None`.
+        number_of_q_vectors (:py:attr:`int`, optional): The max number of
+            q-vectors to be using initially in the rebinning of the data.
+            Defaults to :py:attr:`400`.
 
     Returns:
         :py:attr:`tuple`: Containing:
             - :py:attr:`array_like`: q-values.
             - :py:attr:`array_like`: Reflected intensities.
     """
-    if new_q is not None:
-        new_q = new_q
-    else:
+    if new_q is None:
         new_q = np.logspace(
-            np.log10(q_vectors[0].n), np.log10(q_vectors[-1].n), number_of_q_vectors,
-        )
+            np.log10(q_vectors[0].n),
+            np.log10(q_vectors[-1].n), number_of_q_vectors)
 
     binned_q = unp.uarray(np.zeros_like(new_q), np.zeros_like(new_q))
     binned_r = unp.uarray(np.zeros_like(new_q), np.zeros_like(new_q))

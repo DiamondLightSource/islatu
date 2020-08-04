@@ -23,10 +23,9 @@ project = 'islatu'
 copyright = '2020, Andrew R. McCluskey'
 author = 'Andrew R. McCluskey'
 
-# The short X.Y version
-version = '0.1'
+version = '0.0.26'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.0.26'
 
 
 # -- General configuration ---------------------------------------------------
