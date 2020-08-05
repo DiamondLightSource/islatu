@@ -300,14 +300,14 @@ class Scan:
             im_file = self.data["file"][i]
             if path.isfile(im_file):
                 continue
-            im_file = self.data["file"][i].split(path.sep)[-2:]
+            im_file = self.data["file"][i].split('/')[-2:]
             im_file = path.join(im_file[0], im_file[1])
             im_file = path.join(path.dirname(self.file_path), im_file)
             if path.isfile(im_file):
                 self.data.iloc[
                     i, self.data.keys().get_loc("file")] = im_file
                 continue
-            im_file = self.data["file"][i].split(path.sep)[-1]
+            im_file = self.data["file"][i].split('/')[-1]
             im_file = path.join(path.dirname(self.file_path), im_file)
             if path.isfile(im_file):
                 self.data.iloc[
