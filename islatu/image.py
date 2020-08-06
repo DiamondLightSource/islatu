@@ -44,7 +44,7 @@ class Image:
             Defaults to :py:attr:`0`.
     """
     def __init__(self, file_path, data=None, metadata=None, transpose=False,
-                 pixel_minimum=0):
+                 pixel_minimum=0, pixel_maximum=1e6):
         """
         Initialisation of the :py:class:`islatu.image.Image` class, includes
         assigning uncertainties.
@@ -57,6 +57,7 @@ class Image:
         img.close()
         if transpose:
             array = array.T
+        array = _average_out_hot(array, pixel_maximum)
         array[np.where(array < pixel_minimum)] = 0
         array_error = np.sqrt(array)
         array_error[np.where(array == 0)] = 1
@@ -172,3 +173,22 @@ class Image:
                 the summation over. Defaults to :py:attr:`None`.
         """
         return self.array.sum(axis)
+
+
+def _average_out_hot(array, pixel_maximum=1e6):
+    """
+    Make hot pixels equal to the local average.
+
+    Args:
+        array (:py:attr:`array_like`): The array to have hot pixels removed.
+        pixel_maximum (:py:attr:`float`, optional): The definition of a hot pixel. 
+
+    Returns:
+       :py:attr:`array_like`: Image array with hot pixels removed. 
+    """
+    x, y = np.where(array > pixel_maximum)
+    for i in range(x.size):
+        local = array[x[i]-1:x[i]+2, y[i]-1:y[i]+2]
+        local[1, 1] = 0
+        array[x[i], y[i]] = local.sum() / 8
+    return array

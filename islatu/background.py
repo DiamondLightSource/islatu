@@ -90,7 +90,7 @@ def univariate_normal(data, mu, sigma, offset, factor):
     Produce a univariate normal distribution.
 
     Args:
-        data (:pyttr:`array_like`): Abscissa data.
+        data (:py:attr:`array_like`): Abscissa data.
         mu (:py:attr:`float`): Mean (horizontal).
         sigma (:py:attr:`float`): Variance (horizontal).
         offset (:py:attr:`float`): Offset from the 0 for the ordinate, this is
