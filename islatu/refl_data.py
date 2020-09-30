@@ -39,20 +39,42 @@ class Profile:
             scan. Defaults to :py:attr:`'q_axis_name'`.
         theta_axis_name (:py:attr:`str`, optional): Label for the theta axis
             in the scan. Defaults to :py:attr:`'dcdtheta'`.
+        energy (:py:attr:`float`): The energy of the probing X-ray, in keV.
+            Defaults to finding from metadata if no value given.
+        pixel_min (:py:attr:`int`): The minimum pixel value possible, all
+            pixels found with less than this value will have this value
+            assigned. Defaults to :py:attr:`0`.
+        pixel_max (:py:attr:`int`): The maximum pixel value allowed, if any
+            detector image has a pixel over this value, the whole image is
+            removed from the dataset. This is due to the risk of non-linear
+            counting at very high counts. Defaults to :py:attr:`1e6`.
+        hot_pixel_max (:py:attr:`int`): The value of a hot pixel that will be
+            set to the average of the surrounding pixels. Logically, this
+            should be less than the :py:attr:`pixel_max` value. Defaults to
+            :py:attr:`2e5`.
+        progress (:py:attr:`bool`, optional): Show a progress bar.
+            Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
     """
     def __init__(self, file_paths, parser, q_axis_name="qdcd",
-                 theta_axis_name="dcdtheta", pixel_max=10000000,
-                 transpose=False):
+                 theta_axis_name="dcdtheta", energy=None, pixel_min=0,
+                 pixel_max=1000000, hot_pixel_max=1e5, transpose=False):
         self.scans = []
+        try:
+            _ = len(pixel_min)
+        except TypeError:
+            pixel_min = [pixel_min] * len(file_paths)
         try:
             _ = len(pixel_max)
         except TypeError:
             pixel_max = [pixel_max] * len(file_paths)
+        try:
+            _ = len(hot_pixel_max)
+        except TypeError:
+            hot_pixel_max = [hot_pixel_max] * len(file_paths)
         for i, fyle in enumerate(file_paths):
             self.scans.append(
-                Scan(
-                    fyle, parser, q_axis_name, theta_axis_name,
-                    pixel_max=pixel_max[i], transpose=transpose))
+                Scan(fyle, parser, q_axis_name, theta_axis_name,
+                     pixel_min=pixel_min[i], pixel_max=pixel_max[i], hot_pixel_max=hot_pixel_max[i], transpose=transpose))
         self.q_vectors = None
         self.reflected_intensity = None
 
@@ -96,20 +118,31 @@ class Profile:
         """
         return unp.std_devs(self.q_vectors)
 
-    def crop_and_bkg_sub(self, crop_function, bkg_sub_function,
-                         crop_kwargs=None, bkg_sub_kwargs=None,
-                         progress=True):
+    def crop(self, crop_function, kwargs=None, progress=True):
         """
-        Class method for the :func:`~islatu.refl_data.Scan.crop_and_bkg_sub`
-        method for each :py:class:`~Scan` in the list.
+        Class method for the :func:`~islatu.refl_data.Scan.crop` method for
+        each :py:class:`~Scan` in the list.
 
         Args:
             crop_function (:py:attr:`callable`): Cropping function to be used.
+            kwargs (:py:attr:`dict`, optional): Keyword arguments for the
+                cropping function. Defaults to :py:attr:`None`.
+            progress (:py:attr:`bool`, optional): Show a progress bar.
+                Requires the :py:mod:`tqdm` package. Defaults to
+                :py:attr:`True`.
+        """
+        for scan in self.scans:
+            scan.crop(crop_function, kwargs, progress)
+
+    def bkg_sub(self, bkg_sub_function, kwargs=None, progress=True):
+        """
+        Class method for the :func:`~islatu.refl_data.Scan.bkg_sub` method for
+        each :py:class:`~Scan` in the list.
+
+        Args:
             bkg_sub_function (:py:attr:`callable`): Background subtraction
                 function to be used.
-            crop_kwargs (:py:attr:`dict`, optional): Keyword arguments for the
-                cropping function. Defaults to :py:attr:`None`.
-            bkg_sub_kwargs (:py:attr:`dict`, optional): Keyword arguments for
+            kwargs (:py:attr:`dict`, optional): Keyword arguments for
                 the background subtraction function. Defaults to
                 :py:attr:`None`.
             progress (:py:attr:`bool`, optional): Show a progress bar.
@@ -117,9 +150,7 @@ class Profile:
                 :py:attr:`True`.
         """
         for scan in self.scans:
-            scan.crop_and_bkg_sub(
-                crop_function, bkg_sub_function, crop_kwargs,
-                bkg_sub_kwargs, progress)
+            scan.bkg_sub(bkg_sub_function, kwargs, progress)
 
     def footprint_correction(self, beam_width, sample_size):
         """
@@ -146,7 +177,7 @@ class Profile:
             scan.transmission_normalisation()
         self.scans = stitching.correct_attentuation(self.scans)
 
-    def q_uncertainty_from_pixel(self, number_of_pixels=None,
+    def resolution_function(self, qz_dimension=1, progress=True,
                                  detector_distance=None, energy=None,
                                  pixel_size=172e-6):
         """
@@ -155,6 +186,11 @@ class Profile:
         :py:class:`~Scan` in the list.
 
        Args:
+           qz_dimension (:py:attr:`int`, optional): The dimension of q_z in
+               the detector image (this should be the opposite index to that
+               the summation is performed if the
+               :py:func:`islatu.background.fit_gaussian_1d` background
+               subtraction has been performed). Defaults to :py:attr:`1`.
             number_of_pixels (:py:attr:`float`): Number of pixels of q
                 uncertainty.
             detector_distance (:py:attr:`float`): Sample detector distance in
@@ -163,8 +199,9 @@ class Profile:
             pixel_size (:py:attr:`float`, optional): Pixel size in metres
         """
         for scan in self.scans:
-            scan.q_uncertainty_from_pixel(
-                number_of_pixels, detector_distance, energy, pixel_size
+            scan.resolution_function(
+                qz_dimension, progress, detector_distance,
+                energy, pixel_size
             )
 
     def qdcd_normalisation(self, itp):
@@ -198,7 +235,7 @@ class Profile:
             self.q_vectors, self.reflected_intensity, max_q
         )
 
-    def rebin(self, new_q=None, number_of_q_vectors=400):
+    def rebin(self, new_q=None, number_of_q_vectors=400, interpolate=False):
         """
         Class method for :func:`islatu.stitching.rebin`.
 
@@ -211,7 +248,7 @@ class Profile:
         """
         self.q_vectors, self.reflected_intensity = stitching.rebin(
             self.q_vectors, self.reflected_intensity,
-            new_q, number_of_q_vectors)
+            new_q, number_of_q_vectors, interpolate)
 
 
 class Scan:
@@ -222,6 +259,8 @@ class Scan:
         file_paths (:py:attr:`str`): File path for scan file.
         metadata (:py:attr:`dict`): The metadata from the ``.dat`` file.
         data (:py:class:`pandas.DataFrame`): The data from the ``.dat`` file.
+        images (:py:attr:`list` of :py:class:`islatu.image.Image`): The
+            detector images in the given scan.
         q (:py:attr:`array_like`): The measured q-values in the scan.
         theta (:py:attr:`array_like`): The measured theta values in the scan.
         R (:py:attr:`array_like`): The reflected intensity values in the scan.
@@ -237,11 +276,27 @@ class Scan:
             scan. Defaults to :py:attr:`'q_axis_name'`.
         theta_axis_name (:py:attr:`str`, optional): Label for the theta axis
             in the scan. Defaults to :py:attr:`'dcdtheta'`.
+        energy (:py:attr:`float`): The energy of the probing X-ray, in keV.
+            Defaults to finding from metadata if no value given.
+        pixel_min (:py:attr:`int`): The minimum pixel value possible, all
+            pixels found with less than this value will have this value
+            assigned. Defaults to :py:attr:`0`.
+        pixel_max (:py:attr:`int`): The maximum pixel value allowed, if any
+            detector image has a pixel over this value, the whole image is
+            removed from the dataset. This is due to the risk of non-linear
+            counting at very high counts. Defaults to :py:attr:`1e6`.
+        hot_pixel_max (:py:attr:`int`): The value of a hot pixel that will be
+            set to the average of the surrounding pixels. Logically, this
+            should be less than the :py:attr:`pixel_max` value. Defaults to
+            :py:attr:`2e5`.
+        progress (:py:attr:`bool`, optional): Show a progress bar.
+            Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
     """
 
     def __init__(self, file_path, parser, q_axis_name="qdcd",
-                 theta_axis_name="dcdtheta", energy=None, pixel_max=1000000,
-                 transpose=False):
+                 theta_axis_name="dcdtheta", energy=None, pixel_min=0,
+                 pixel_max=1000000, hot_pixel_max=2e5,
+                 transpose=False, progress=True):
         self.file_path = file_path
         self.metadata, self.data = parser(self.file_path)
         if q_axis_name is None:
@@ -265,8 +320,24 @@ class Scan:
             np.zeros(self.data[theta_axis_name].size))
         self.R = unp.uarray(np.zeros(self.q.size), np.zeros(self.q.size),)
         self.n_pixels = np.zeros(self.q.size)
-        self.pixel_max = pixel_max
         self.transpose = transpose
+        self.images = []
+        iterator = _get_iterator(unp.nominal_values(self.q), progress)
+        to_remove = []
+        for i in iterator:
+            if self.data['roi1_maxval'][i] <= pixel_max:
+                img = image.Image(self.data["file"][i], self.data,
+                                  self.metadata, pixel_min=pixel_min,
+                                  hot_pixel_max=hot_pixel_max,
+                                  transpose=self.transpose)
+                self.images.append(img)
+            else:
+                to_remove.append(i)
+        self.R = np.delete(self.R, to_remove)
+        self.theta = np.delete(self.theta, to_remove)
+        self.n_pixels = np.delete(self.n_pixels, to_remove)
+        self.q = np.delete(self.q, to_remove)
+
 
     def __str__(self):
         """
@@ -318,57 +389,87 @@ class Scan:
                 "found: {}.".format(self.data["file"][i]))
         return self.data
 
-    def crop_and_bkg_sub(self, crop_function, bkg_sub_function,
-                         crop_kwargs=None, bkg_sub_kwargs=None,
-                         progress=True):
+    def crop(self, crop_function, kwargs=None, progress=True):
         """
-        Preform cropping and background subtraction on each image in the Scan.
+        Perform detector image cropping.
+
+        args:
+            crop_function (:py:attr:`callable`): Cropping function to be used.
+            kwargs (:py:attr:`dict`, optional): Keyword arguments for the
+                cropping function. Defaults to :py:attr:`None`.
+            progress (:py:attr:`bool`, optional): Show a progress bar.
+                Requires the :py:mod:`tqdm` package. Defaults
+                to :py:attr:`True`.
+        """
+        iterator = _get_iterator(self.images, progress)
+        for i in iterator:
+            if kwargs is None:
+                self.images[i].crop(crop_function)
+            else:
+                self.images[i].crop(crop_function, **kwargs)
+            self.R[i] = ufloat(self.images[i].sum().n, self.images[i].sum().s)
+
+    def bkg_sub(self, bkg_sub_function, kwargs=None, progress=True):
+        """
+        Perform background substraction for each image in a Scan.
 
         Args:
-            crop_function (:py:attr:`callable`): Cropping function to be used.
             bkg_sub_function (:py:attr:`callable`): Background subtraction
                 function to be used.
-            crop_kwargs (:py:attr:`dict`, optional): Keyword arguments for the
-                cropping function. Defaults to :py:attr:`None`.
-            bkg_sub_kwargs (:py:attr:`dict`, optional): Keyword arguments for
+            kwargs (:py:attr:`dict`, optional): Keyword arguments for
                 the background subtraction function. Defaults
                 to :py:attr:`None`.
             progress (:py:attr:`bool`, optional): Show a progress bar.
                 Requires the :py:mod:`tqdm` package. Defaults
                 to :py:attr:`True`.
         """
-        iterator = _get_iterator(unp.nominal_values(self.q), progress)
-        to_remove = []
+        iterator = _get_iterator(self.images, progress)
         for i in iterator:
-            try:
-                if self.data['roi1_maxval'][i] > self.pixel_max:
-                    to_remove.append(i)
-                    continue
-                img = image.Image(self.data["file"][i], self.data,
-                                  self.metadata, transpose=self.transpose)
-                if crop_kwargs is None:
-                    img.crop(crop_function)
-                else:
-                    img.crop(crop_function, **crop_kwargs)
-                if bkg_sub_kwargs is None:
-                    img.background_subtraction(bkg_sub_function)
-                else:
-                    img.background_subtraction(
-                        bkg_sub_function, **bkg_sub_kwargs)
-                self.R[i] = ufloat(img.sum().n, img.sum().s)
-                if img.n_pixel is None:
-                    self.n_pixels[i] = None
-                else:
-                    self.n_pixels[i] = img.n_pixel.n
-            except (ValueError, RuntimeError) as error:
-                print(error)
-                print('Current file: ', self.data["file"][i])
-                to_remove.append(i)
-                continue
-        self.R = np.delete(self.R, to_remove)
-        self.theta = np.delete(self.theta, to_remove)
-        self.n_pixels = np.delete(self.n_pixels, to_remove)
-        self.q = np.delete(self.q, to_remove)
+            if kwargs is None:
+                self.images[i].background_subtraction(bkg_sub_function)
+            else:
+                self.images[i].background_subtraction(
+                    bkg_sub_function, **kwargs)
+            self.R[i] = ufloat(self.images[i].sum().n, self.images[i].sum().s)
+
+    def resolution_function(self, qz_dimension=1, progress=True,
+                            detector_distance=None, energy=None,
+                            pixel_size=172e-6):
+        """
+        Estimate the q-resolution function based on the reflected intensity
+        on the detector and add this to the q uncertainty.
+
+        Args:
+            qz_dimension (:py:attr:`int`, optional): The dimension of q_z in
+                the detector image (this should be the opposite index to that
+                the summation is performed if the
+                :py:func:`islatu.background.fit_gaussian_1d` background
+                subtraction has been performed). Defaults to :py:attr:`1`.
+            progress (:py:attr:`bool`, optional): Show a progress bar.
+                Requires the :py:mod:`tqdm` package. Defaults
+                to :py:attr:`True`.
+            detector_distance (:py:attr:`float`): Sample detector distance in
+                metres
+            energy (:py:attr:`float`): X-ray energy in keV
+            pixel_size (:py:attr:`float`, optional): Pixel size in metres
+        """
+        iterator = _get_iterator(self.images, progress)
+        for i in iterator:
+            self.images[i].q_resolution(qz_dimension)
+        if detector_distance is None:
+            detector_distance = self.metadata["diff1detdist"][0] * 1e-3
+        if energy is None:
+            energy = self.metadata["dcm1energy"][0]
+        offset = np.arctan(
+            pixel_size * 1.96 * self.n_pixels * 0.5 / (detector_distance)
+        )
+        planck = physical_constants["Planck constant in eV s"][0] * 1e-3
+        speed_of_light = physical_constants[
+            "speed of light in vacuum"][0] * 1e10
+        q_uncertainty = energy * 4 * np.pi * unp.sin(
+            offset) / (planck * speed_of_light)
+        self.q = unp.uarray(
+            unp.nominal_values(self.q), unp.std_devs(self.q) + q_uncertainty)
 
     def footprint_correction(self, beam_width, sample_size):
         """
@@ -389,40 +490,6 @@ class Scan:
         """
         self.R /= float(self.metadata["transmission"][0])
 
-    def q_uncertainty_from_pixel(self, number_of_pixels=None,
-                                 detector_distance=None, energy=None,
-                                 pixel_size=172e-6):
-        """
-        Calculate a q uncertainty from the area detector.
-
-        Args:
-            number_of_pixels (:py:attr:`float`): Number of pixels of q
-                uncertainty.
-            detector_distance (:py:attr:`float`): Sample detector distance in
-                metres
-            energy (:py:attr:`float`): X-ray energy in keV
-            pixel_size (:py:attr:`float`, optional): Pixel size in metres
-
-        Returns:
-            :py:attr:`float`: Resulting q-uncertainty.
-        """
-        if number_of_pixels is None:
-            number_of_pixels = self.n_pixels
-        if detector_distance is None:
-            detector_distance = self.metadata["diff1detdist"][0] * 1e-3
-        if energy is None:
-            energy = self.metadata["dcm1energy"][0]
-        offset = np.arctan(
-            pixel_size * 1.96 * number_of_pixels * 0.5 / (detector_distance)
-        )
-        planck = physical_constants["Planck constant in eV s"][0] * 1e-3
-        speed_of_light = physical_constants[
-            "speed of light in vacuum"][0] * 1e10
-        q_uncertainty = energy * 4 * np.pi * unp.sin(
-            offset) / (planck * speed_of_light)
-        self.q = unp.uarray(
-            unp.nominal_values(self.q), unp.std_devs(self.q) + q_uncertainty)
-
     def qdcd_normalisation(self, itp):
         """
         Perform normalisation by DCD variance.
@@ -435,22 +502,22 @@ class Scan:
         self.R /= splev(unp.nominal_values(self.q), itp)
 
 
-def _get_iterator(q_values, progress):
+def _get_iterator(to_iter, progress):
     """
-    Create a q-value iterator.
+    Create an iterator.
 
     Args:
-        q_values (:py:attr:`array_like`): q-values.
+        to_iter (:py:attr:`array_like`): The list or array to iterate.
         progress (:py:attr:`bool`): Show progress bar.
 
     Returns:
         :py:attr:`range` or :py:class:`tqdm.std.tqdm`: Iterator object.
     """
-    iterator = range(len(q_values))
+    iterator = range(len(to_iter))
     if progress:
         try:
             from tqdm import tqdm
-            iterator = tqdm(range(len(q_values)))
+            iterator = tqdm(range(len(to_iter)))
         except ModuleNotFoundError:
             print(
                 "For the progress bar, you need to have the tqdm package "

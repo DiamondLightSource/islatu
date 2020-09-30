@@ -48,4 +48,3 @@ class TestBackground(TestCase):
         result = background.fit_gaussian_2d(to_fit, to_fit_e)
         assert_almost_equal(unp.nominal_values(result[0]), [0, 0, 1, 1, 15, 10])
         assert_equal(4, result[1])
-        assert_equal(2, result[2])

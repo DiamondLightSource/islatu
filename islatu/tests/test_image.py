@@ -51,8 +51,8 @@ EXAMPLE_HOT_PIXEL = (
 )
 
 EXAMPLES_HOT_PIXEL_CORNERA = (
-    "5.000e+04   0.   1.   1.   4. 113. 117.   7.   1.   0. \n"
-    "0.   0.   0.   3.   4. 127. 144.   9.   2.   0. \n"
+    "5.000e+04   2.   1.   1.   4. 113. 117.   7.   1.   0. \n"
+    "5.   3.   0.   3.   4. 127. 144.   9.   2.   0. \n"
     "2.   0.   5.   7.   7. 232. 271.  13.   5.   2. \n"
     "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
     "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
@@ -73,7 +73,7 @@ EXAMPLES_HOT_PIXEL_CORNERB = (
     "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
     "1.   0.   5.   6.  31. 672. 703.  55.  10.   3. \n"
     "1.   0.   5.   6.  31. 672. 703.  55.  9.   3. \n"
-    "0.   0.   0.   1.   4. 355. 167.   4.   1.   5.0000e+04"
+    "0.   0.   0.   1.   4. 355. 167.   4.   0.   5.0000e+04"
 )
 
 
@@ -96,6 +96,45 @@ class TestImage(unittest.TestCase):
         expected_image = np.loadtxt(data)
         assert_equal((10, 10), test_image.shape)
         assert_almost_equal(expected_image, test_image.n)
+
+    def test_hot_pixel(self):
+        """
+        Test file reading
+        """
+        b = io.StringIO(EXAMPLE_HOT_PIXEL)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf, hot_pixel_max=4e4)
+        assert_equal((10, 10), test_image.shape)
+        assert_almost_equal(2, test_image.n[2, 2])
+
+    def test_hot_pixel_cornera(self):
+        """
+        Test file reading
+        """
+        b = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERA)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf, hot_pixel_max=4e4)
+        assert_equal((10, 10), test_image.shape)
+        assert_almost_equal(2, test_image.n[0, 0])
+
+    def test_hot_pixel_cornerb(self):
+        """
+        Test file reading
+        """
+        b = io.StringIO(EXAMPLES_HOT_PIXEL_CORNERB)
+        buf = io.BytesIO()
+        im = PILIm.fromarray(np.loadtxt(b).astype(np.uint32))
+        im.save(buf, format="png")
+        buf.seek(0)
+        test_image = Image(buf, hot_pixel_max=4e4)
+        assert_equal((10, 10), test_image.shape)
+        assert_almost_equal(4, test_image.n[-1, -1])
 
     def test_init_with_transpose(self):
         """

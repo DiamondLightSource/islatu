@@ -9,6 +9,7 @@ attenutation, we must stitch these together.
 import warnings
 import numpy as np
 from scipy.stats import linregress
+from scipy.interpolate import splrep, splev
 from uncertainties import unumpy as unp
 
 
@@ -99,16 +100,22 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     return reflected_intensity
 
 
-def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400):
+def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400,
+          interpolate=False):
     """
     Rebin the data on a logarithmic q-scale.
 
     Args:
+        q_vectors (:py:attr:`array_like`): The current q-values.
+        reflected_intensity (:py:attr:`array_like`): The current reflected
+            intensity.
         new_q (:py:attr:`array_like`): Array of potential q-values. Defaults
             to :py:attr:`None`.
         number_of_q_vectors (:py:attr:`int`, optional): The max number of
             q-vectors to be using initially in the rebinning of the data.
             Defaults to :py:attr:`400`.
+        interpolate (:py:attr:`bool`, optional): Should values be interpolated
+            if no measured values are present for the given q-value.
 
     Returns:
         :py:attr:`tuple`: Containing:
@@ -134,5 +141,14 @@ def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400):
             binned_r[i] /= count
     cleaned_q = np.delete(binned_q, np.argwhere(binned_r == 0))
     cleaned_r = np.delete(binned_r, np.argwhere(binned_r == 0))
+    if interpolate:
+        r = unp.nominal_values(cleaned_r)
+        dr = unp.std_devs(cleaned_r)
+        itp1 = splrep(unp.nominal_values(cleaned_q), r + dr)
+        itp2 = splrep(unp.nominal_values(cleaned_q), r)
+        r_max = splev(new_q, itp1)
+        r_new = splev(new_q, itp2)
+        cleaned_q = new_q
+        cleaned_r = unp.uarray(r_new, r_max-r_new)
 
     return cleaned_q, cleaned_r

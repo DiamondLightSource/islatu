@@ -47,7 +47,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         a2 = np.zeros((3))
         np.any(np.not_equal(unp.nominal_values(r.scans[0].R), a2))
         np.any(np.not_equal(unp.nominal_values(r.scans[1].R), a2))
@@ -68,7 +69,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r_store0 = r.scans[0].R
         r_store1 = r.scans[1].R
         r.footprint_correction(100e-6, 100e-3)
@@ -91,7 +93,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r_store0 = r.scans[0].R
         r_store1 = r.scans[1].R
         r.transmission_normalisation()
@@ -119,7 +122,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r_store0 = r.scans[0].R
         r_store1 = r.scans[1].R
         r.qdcd_normalisation(itp)
@@ -130,9 +134,9 @@ class TestReflData(TestCase):
             np.not_equal(unp.nominal_values(r.scans[1].R), unp.nominal_values(r_store1))
         )
 
-    def test_q_uncertainty_profile(self):
+    def test_resolution_function_profile(self):
         """
-        Test q_uncertainty from pixel profile
+        Test resolution_function from pixel profile
         """
         file_name1 = path.join(
             path.dirname(islatu.__file__), "tests/test_files/test_a.dat"
@@ -142,10 +146,11 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         q_store0 = unp.nominal_values(r.scans[0].q)
         q_store1 = unp.nominal_values(r.scans[1].q)
-        r.q_uncertainty_from_pixel()
+        r.resolution_function(1)
         assert_equal(unp.nominal_values(r.scans[0].q), q_store0)
         np.any(np.not_equal(unp.std_devs(r.scans[0].q), np.zeros((3))))
         assert_equal(unp.nominal_values(r.scans[1].q), q_store1)
@@ -163,7 +168,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r.concatenate()
         assert_equal(r.q.size, 6)
         assert_equal(r.R.size, 6)
@@ -182,7 +188,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r.concatenate()
         store = r.R
         dstore = r.dR
@@ -204,7 +211,8 @@ class TestReflData(TestCase):
         )
         files = [file_name1, file_name2]
         r = refl_data.Profile(files, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r.concatenate()
         r.rebin(number_of_q_vectors=3)
         assert_equal(r.q.size, 2)
@@ -338,7 +346,8 @@ class TestReflData(TestCase):
             path.dirname(islatu.__file__), "tests/test_files/test_a.dat"
         )
         r = refl_data.Scan(file_name, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         a2 = np.zeros((3))
         np.any(np.not_equal(unp.nominal_values(r.R), a2))
         np.any(np.not_equal(unp.std_devs(r.R), a2))
@@ -360,11 +369,13 @@ class TestReflData(TestCase):
             1,
             1000,
         ]
-        r.crop_and_bkg_sub(
+        r.crop(
             cropping.crop_around_peak_2d,
+            kwargs={"x_size": 20},
+        )
+        r.bkg_sub(
             background.fit_gaussian_2d,
-            crop_kwargs={"x_size": 20},
-            bkg_sub_kwargs={"p0": p0},
+            kwargs={"p0": p0},
         )
         a2 = np.zeros((3))
         np.any(np.not_equal(unp.nominal_values(r.R), a2))
@@ -379,7 +390,8 @@ class TestReflData(TestCase):
             path.dirname(islatu.__file__), "tests/test_files/test_a.dat"
         )
         r = refl_data.Scan(file_name, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r_store = r.R
         r.footprint_correction(100e-6, 100e-3)
         np.any(np.not_equal(unp.nominal_values(r.R), unp.nominal_values(r_store)))
@@ -392,7 +404,8 @@ class TestReflData(TestCase):
             path.dirname(islatu.__file__), "tests/test_files/test_a.dat"
         )
         r = refl_data.Scan(file_name, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r_store = r.R
         r.transmission_normalisation()
         np.any(np.not_equal(unp.nominal_values(r.R), unp.nominal_values(r_store)))
@@ -410,21 +423,23 @@ class TestReflData(TestCase):
             path.dirname(islatu.__file__), "tests/test_files/test_a.dat"
         )
         r = refl_data.Scan(file_name, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         r_store = r.R
         r.qdcd_normalisation(itp)
         np.any(np.not_equal(unp.nominal_values(r.R), unp.nominal_values(r_store)))
 
-    def test_q_uncertainty(self):
+    def test_resolution_function(self):
         """
-        Test q_uncertainty from pixel
+        Test resolution_function from pixel
         """
         file_name = path.join(
             path.dirname(islatu.__file__), "tests/test_files/test_a.dat"
         )
         r = refl_data.Scan(file_name, io.i07_dat_parser)
-        r.crop_and_bkg_sub(cropping.crop_around_peak_2d, background.fit_gaussian_2d)
+        r.crop(cropping.crop_around_peak_2d)
+        r.bkg_sub(background.fit_gaussian_2d)
         q_store = unp.nominal_values(r.q)
-        r.q_uncertainty_from_pixel()
+        r.resolution_function(1)
         assert_equal(unp.nominal_values(r.q), q_store)
         np.any(np.not_equal(unp.std_devs(r.q), np.zeros((3))))

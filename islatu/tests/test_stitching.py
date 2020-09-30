@@ -205,6 +205,23 @@ class TestStitcher(unittest.TestCase):
         assert_almost_equal(unumpy.nominal_values(r), exp_y)
         assert_almost_equal(unumpy.nominal_values(q), exp_x)
 
+    def test_rebin_interpolate(self):
+        """
+        Test rebin with specific q with interpolate
+        """
+        reflected_intensity = unumpy.uarray(
+            np.linspace(1, 9, 5), np.linspace(1, 9, 5) * 0.01
+        )
+        q_vectors = unumpy.uarray([1, 3, 5, 7, 9], np.zeros(5))
+
+        exp_y = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        new_x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        q, r = stitching.rebin(q_vectors, reflected_intensity, new_q=new_x,
+                               interpolate=True)
+
+        assert_almost_equal(unumpy.nominal_values(r), exp_y)
+
     def test_rebin_a(self):
         """
         Test rebin with default

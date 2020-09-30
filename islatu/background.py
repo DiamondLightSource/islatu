@@ -82,7 +82,7 @@ def fit_gaussian_2d(image, image_e, p0=None, bounds=None):
         maxfev=2000 * (len(p0) + 1))
     # Determine uncertainty from covariance matrix
     p_sigma = np.sqrt(np.diag(pcov))
-    return unp.uarray(popt, p_sigma), 4, 2
+    return unp.uarray(popt, p_sigma), 4
 
 
 def univariate_normal(data, mu, sigma, offset, factor):
@@ -131,7 +131,7 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
     ordinate_e = image_e.mean(axis=axis)
     # Setting default values
     if p0 is None:
-        p0 = [ordinate.shape[0] / 2, 1, image.min(), image.max()]
+        p0 = [ordinate.shape[0] / 2, 1, 0, image.max()]
     if bounds is None:
         bounds = (0, [ordinate.shape[0], 100, image.max(), image.max() * 10])
     # Perform the fitting
@@ -141,4 +141,4 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
         sigma=ordinate_e.flatten(), p0=p0, maxfev=2000 * (len(p0) + 1))
     # Determine uncertainty from covarience matrix
     p_sigma = np.sqrt(np.diag(pcov))
-    return unp.uarray(popt, p_sigma), 2, None
+    return unp.uarray(popt, p_sigma), 2

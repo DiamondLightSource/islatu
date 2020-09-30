@@ -12,6 +12,8 @@ import numpy as np
 from PIL import Image as PILIm
 from uncertainties import unumpy as unp
 
+from islatu.background import fit_gaussian_1d
+
 
 class Image:
     """
@@ -36,15 +38,16 @@ class Image:
             measurement. Defaults to :py:attr:`None`.
         transpose (:py:attr:`bool`, optional): Should the data be rotated by
             90 degrees? Defaults to :py:attr:`False`.
-        pixel_maximum (:py:attr:`int`, optional): The number of counts above
-            which a pixel should be assessed to determine if it is hot.
-            Defaults to :py:attr:`500000`.
-        pixel_minimum (:py:attr:`int`, optional): The number of counts above
-            which a pixel should be assessed to determine if it is hot.
-            Defaults to :py:attr:`0`.
+        pixel_min (:py:attr:`int`): The minimum pixel value possible, all
+            pixels found with less than this value will have this value
+            assigned. Defaults to :py:attr:`0`.
+        hot_pixel_max (:py:attr:`int`): The value of a hot pixel that will be
+            set to the average of the surrounding pixels. Logically, this
+            should be less than the :py:attr:`pixel_max` value. Defaults to
+            :py:attr:`2e5`.
     """
     def __init__(self, file_path, data=None, metadata=None, transpose=False,
-                 pixel_minimum=0, pixel_maximum=1e6):
+                 pixel_min=0, hot_pixel_max=2e5):
         """
         Initialisation of the :py:class:`islatu.image.Image` class, includes
         assigning uncertainties.
@@ -57,8 +60,8 @@ class Image:
         img.close()
         if transpose:
             array = array.T
-        array = _average_out_hot(array, pixel_maximum)
-        array[np.where(array < pixel_minimum)] = 0
+        array = _average_out_hot(array, hot_pixel_max)
+        array[np.where(array < pixel_min)] = 0
         array_error = np.sqrt(array)
         array_error[np.where(array == 0)] = 1
         self.array = unp.uarray(array, array_error)
@@ -154,14 +157,10 @@ class Image:
             **kwargs (:py:attr:`dict`): The background substraction function
                 keyword arguments.
         """
-        bkg_popt, bkg_idx, pixel_idx = background_subtraction_function(
+        bkg_popt, bkg_idx = background_subtraction_function(
             self.n, self.s, **kwargs
         )
         self.bkg = bkg_popt[bkg_idx]
-        if pixel_idx is None:
-            self.n_pixel = None
-        else:
-            self.n_pixel = bkg_popt[pixel_idx]
         self.array -= self.bkg
 
     def sum(self, axis=None):
@@ -174,21 +173,56 @@ class Image:
         """
         return self.array.sum(axis)
 
+    def q_resolution(self, qz_dimension=1):
+        """
+        Estimate the q-resolution function based on the reflected intensity
+        on the detector.
 
-def _average_out_hot(array, pixel_maximum=1e6):
+        Args:
+            qz_dimension (:py:attr:`int`, optional): The dimension of q_z in
+                the detector image (this should be the opposite index to that
+                the summation is performed if the
+                :py:func:`islatu.background.fit_gaussian_1d` background
+                subtraction has been performed). Defaults to :py:attr:`1`.
+        """
+        bkg_popt, bkg_idx = fit_gaussian_1d(
+            self.n, self.s, axis=qz_dimension
+        )
+        self.n_pixel = bkg_popt[1]
+
+
+def _average_out_hot(array, hot_pixel_max=2e5):
     """
     Make hot pixels equal to the local average.
 
     Args:
         array (:py:attr:`array_like`): The array to have hot pixels removed.
-        pixel_maximum (:py:attr:`float`, optional): The definition of a hot pixel. 
+        hot_pixel_max (:py:attr:`float`, optional): The definition of a hot
+            pixel.
 
     Returns:
-       :py:attr:`array_like`: Image array with hot pixels removed. 
+       :py:attr:`array_like`: Image array with hot pixels removed.
     """
-    x, y = np.where(array > pixel_maximum)
+    x, y = np.where(array > hot_pixel_max)
     for i in range(x.size):
-        local = array[x[i]-1:x[i]+2, y[i]-1:y[i]+2]
-        local[1, 1] = 0
-        array[x[i], y[i]] = local.sum() / 8
+        a = x[i]
+        b = y[i]
+        j = 1
+        k = 1
+        if a == 0:
+            a = 1
+            j = 0
+        elif a == array.shape[0] - 1:
+            a = array.shape[0] - 1
+            j = 1
+        if b == 0:
+            b = 1
+            k = 0
+        elif b == array.shape[1] - 1:
+            b = array.shape[1] - 1
+            k = 1
+        local = np.copy(array[a-1:a+2, b-1:b+2])
+        local[j, k] = 0
+        if local.mean() < (array[x[i], y[i]]) / 100:
+            array[x[i], y[i]] = local.sum() / (local.size - 1)
     return array
