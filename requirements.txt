@@ -1,5 +1,5 @@
 cython
-numpy 
+numpy
 matplotlib
 scipy
 tqdm
@@ -11,3 +11,4 @@ coverage
 coveralls
 pillow
 pandas
+pyyaml
