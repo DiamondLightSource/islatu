@@ -20,8 +20,7 @@ function_map = {'gaussian_1d': background.fit_gaussian_1d,
                 }
 
 class Foreperson:
-    def __init__(self):
-        self.instrument = None
+    def __init__(self, metadata):
         self.parser = None
         self.visit_id = None
         self.year = datetime.datetime.now().year
@@ -46,29 +45,65 @@ class Foreperson:
         self.qxy_dimension = 0
         self.pixel_max = 1e6
         self.hot_pixel_max = 1e5
+        self.metadata = metadata
+        self.creator = {'name': 'Unknown',
+                        'affiliation': 'Unknown',
+                        'time': datetime.datetime.now().isoformat()}
+        self.data_source = {'experiment': {'probe': 'X-rays',
+                                           'instrument': 'i07',
+                                           'sample': None}}
+        self.reduction = {'software': 'islatu', 'yaml': None}
+        if self.n_columns == 3
+            self.data = {'column 1': 'Qz / Aa^-1', 'column 2': 'RQz', 'column 3': 'sigma RQz , standard deviation'}
+        elif self.n_columns == 4:
+            self.data = {'column 1': 'Qz / Aa^-1', 'column 2': 'RQz', 'column 3': 'sigma RQz , standard deviation', 'column 4': 'dQz-by-Qz , resolution'}
+        if 'creator' in metadata.keys():
+            self.creator = metadata['creator']
+        if 'data source' in metadata.keys():
+            self.data_source = metadata['data source']
+        self.header = None
+
 
     def ready(self, directory):
-        directory_path = directory.format(self.instrument, self.year, self.visit_id)
+        directory_path = directory.format(self.data_source['experiment']['instrument'], self.year, self.visit_id)
         if path.isdir(directory_path):
             self.directory_path = directory_path
         else:
             raise FileNotFoundError("The experiment directory cannot be found.")
+        self.header = f' creator:\n   name:{
+            self.creator['name']}\n   affiliation:{
+            self.creator['affiliation']}\n   time:{
+            self.creator['time']}\n data source:\n   experiment:\n     probe:{
+            self.data_source['experiment']['probe']}\n     instrument:{
+            self.data_source['experiment']['instrument']}\n     sample:{
+            self.data_source['experiment']['sample']}\n reduction:\n   software:{
+            self.reduction['software']}\n   yaml:{
+            self.reduction['yaml']}\n data:\n   column 1:{
+            self.data['column 1']}\n   column 2:{
+            self.data['column 2']}\n   column 3:{
+            self.data['column 3']}'
+        if self.n_columns == 4:
+            self.header += '\n   column 4:{
+            self.data['column 4']}'
 
-def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/'):
+def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=None):
     """
     The runner that parses the yaml file and performs the data reduction.
 
     run_numbers (:py:attr:`list` of :py:attr:`int`): Reflectometry scans that
         make up the profile.
     yaml_file (:py:attr:`str`): File path to instruction set.
-    """
-    the_boss = Foreperson()
+    metadata (:py:attr:`dict`): If metadata should be included in the outpuit
+        file, pass this as a :py:attr:`dict`.
+    """1
+    the_boss = Foreperson(metadata)
     y_file = open(yaml_file, 'r')
     recipe = load(y_file, Loader=CLoader)
     y_file.close()
+    the_boss.reduction['yaml'] = yaml_file
     keys = recipe.keys()
     if 'instrument' in keys:
-        the_boss.instrument = recipe['instrument']
+        the_boss.self.data_source['experiment']['instrument'] = recipe['instrument']
         the_boss.parser = function_map[recipe['instrument']]
     else:
         raise ValueError("No instrument given in {}.".format(yaml_file))
@@ -189,10 +224,10 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/'):
 
     if the_boss.output_columns == 3:
         data = np.array([refl.q, refl.R, refl.dR]).T
-        np.savetxt(the_boss.directory_path + '/processing/' + run_numbers[0] + '.dat', data, header='q R dR \n{}'.format(recipe))
+        np.savetxt(the_boss.directory_path + '/processing/' + run_numbers[0] + '.dat', data, header='{}'.format(the_boss.header))
     elif the_boss.output_columns == 4:
         data = np.array([refl.q, refl.R, refl.dR, refl.dq]).T
-        np.savetxt(the_boss.directory_path + '/processing/' + run_numbers[0] + '.dat', data, header='q R dR dq \n{}'.format(recipe))
+        np.savetxt(the_boss.directory_path + '/processing/' + run_numbers[0] + '.dat', data, header='{}'.format(the_boss.header))
     print("-" * 10)
     print('Reduced Data Stored in Processing Directory')
     print("-" * 10)
