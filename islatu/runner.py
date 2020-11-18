@@ -32,12 +32,12 @@ class Creator:
 
 
 class Origin:
-    def __init__(self, contact=None, facility='Diamond Light Source', id=None,
+    def __init__(self, contact='My Local Contact', facility='Diamond Light Source', id=None,
                  title=None, directory_path=None):
         self.contact = contact
         self.facility = facility
         self.id = id
-        self.time = None
+        self.date = str(datetime.datetime.now())
         self.year = None
         self.title = title
         self.directory_path = directory_path
@@ -121,7 +121,7 @@ class Data:
                  columns=['Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation',
                           'sigma Qz / Aa^-1, standard deviation'],
                  n_qvectors=50, q_min=None, q_max=None, q_step=None,
-                 q_shape='linear'):
+                 q_shape='log'):
         self.column_1 = columns[0]
         self.column_2 = columns[1]
         self.column_3 = columns[2]
@@ -129,8 +129,6 @@ class Data:
             self.column_4 = columns[3]
         self.rebin = True
         self.n_qvectors = n_qvectors
-        self.q_min = q_min
-        self.q_max = q_max
         self.q_step = q_step
         self.q_shape = 'linear'
 
@@ -230,9 +228,9 @@ class Foreperson:
             else:
                 raise ValueError("No beam width given in setup of {}.".format(
                     yaml_file))
-            if 'theta_axis' in recipe['setup'].keys():
+            if 'theta axis' in recipe['setup'].keys():
                 self.data_source.experiment.measurement.theta_axis_name = (
-                    recipe['setup']['theta_axis'])
+                    recipe['setup']['theta axis'])
             if 'q axis' in recipe['setup'].keys():
                 self.data_source.experiment.measurement.q_axis_name = (
                     recipe['setup']['q axis'])
@@ -242,12 +240,12 @@ class Foreperson:
                 if self.data_source.experiment.measurement.transpose:
                     self.data_source.experiment.measurement.qz_dimension = 0
                     self.data_source.experiment.measurement.qxy_dimension = 1
-            if 'pixel_max' in recipe['setup'].keys():
+            if 'pixel max' in recipe['setup'].keys():
                 self.data_source.experiment.measurement.pixel_max = recipe[
-                    'setup']['pixel_max']
-            if 'hot_pixel_max' in recipe['setup'].keys():
+                    'setup']['pixel max']
+            if 'hot pixel max' in recipe['setup'].keys():
                 self.data_source.experiment.measurement.hot_pixel_max = recipe[
-                    'setup']['hot_pixel_max']
+                    'setup']['hot pixel max']
         else:
             raise ValueError("No setup given in {}.".format(yaml_file))
         if 'output_columns' in keys:
@@ -260,8 +258,6 @@ class Foreperson:
                 self.data.n_qvectors = recipe['rebin']['n qvectors']
             elif 'min' in recipe['rebin'].keys() and 'max' in recipe[
                 'rebin'].keys() and 'step' in recipe['rebin'].keys():
-                self.data.q_min = recipe['rebin']['min']
-                self.data.q_max = recipe['rebin']['max']
                 self.data.q_step = recipe['rebin']['step']
                 if 'shape' in recipe['rebin'].keys():
                     self.data.q_shape = recipe['rebin']['shape']
@@ -272,7 +268,7 @@ class Foreperson:
             self.data.rebin=False
 
 
-def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
+def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
            title='Unknown'):
     """
     The runner that parses the yaml file and performs the data reduction.
@@ -344,24 +340,25 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                 spacing = np.linspace
             elif the_boss.data.q_space == 'log':
                 spacing = np.logspace
-            refl.rebin(new_q=spacing(the_boss.data.q_min, the_boss.data.q_max,
+            refl.rebin(new_q=spacing(refl.q.min(), refl.q.max(),
                                      the_boss.data.q_step))
         the_boss.reduction.data_state.rebinned = the_boss.data.q_shape
 
     the_boss.data_source.experiment.measurement.q_range = [
         str(refl.q.min()), str(refl.q.max())]
+    the_boss.data.n_qvectors = str(len(refl.R))
     try:
         _ = the_boss.data.column_4
         data = np.array([refl.q, refl.R, refl.dR, refl.dq]).T
         np.savetxt(
-            (the_boss.directory_path + '/processing/XRR_' +
-             run_numbers[0] + '.dat'), data,
+            (the_boss.directory_path + '/processing/XRR_{}.dat'.format(
+                run_numbers[0])), data,
              header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
     except:
         data = np.array([refl.q, refl.R, refl.dR]).T
         np.savetxt(
-            (the_boss.directory_path + '/processing/XRR_' +
-             run_numbers[0] + '.dat'), data,
+            (the_boss.directory_path + '/processing/XRR_{}.dat'.format(
+                run_numbers[0])), data,
              header='{}\n 1 2 3'.format(dump(vars(the_boss))))
 
     print("-" * 10)
