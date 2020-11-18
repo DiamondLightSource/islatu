@@ -9,15 +9,12 @@ setup.py for islatu
 import io
 from os import path
 from setuptools import setup, find_packages
+import islatu
 
 PACKAGES = find_packages()
 
 # versioning
-MAJOR = 0
-MINOR = 0
-MICRO = 27 
-ISRELEASED = False
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+VERSION = islatu.__version__
 
 
 THIS_DIRECTORY = path.abspath(path.dirname(__file__))

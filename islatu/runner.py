@@ -5,7 +5,12 @@ from islatu import image
 from islatu import io
 from islatu import refl_data
 from islatu import stitching
-from yaml import load, CLoader
+from islatu import __version__
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 import datetime
 from os import path
 from ast import literal_eval as make_tuple
@@ -19,10 +24,33 @@ function_map = {'gaussian_1d': background.fit_gaussian_1d,
                 'crop_peak': cropping.crop_around_peak_2d,
                 }
 
+metadata = {'creator': {'name': 'Unknown',
+                        'affiliation': 'Unknown',
+                        'time': 000000},
+            'data source': {'origin': {'local contact': 'Unknown',
+                                       'facility': 'Diamond Light Source',
+                                       'experiment ID': 000000,
+                                       'experiment date': 000000,
+                                       'title': 'Unknown'},
+                            'experiment': {'instrument': 'i07',
+                                           'probe': 'xray',
+                                           'energy': 12.5,
+                                           'measurement': {'scheme': 'q-dispersive',
+                                                           'q range': 'Unknown'},
+                                           'sample': 'Unknown'}
+                            },
+            'reduction': {'software': {'name': 'islatu',
+                                       'link': 'https://islatu.readthedocs.io',
+                                       'version': __version__},
+                          'yaml': 'Unknown',
+                          'input files': {'datafiles': []},
+                          'data state': {}},
+            'data': {}
+            }
+
 class Foreperson:
     def __init__(self, metadata):
         self.parser = None
-        self.visit_id = None
         self.year = datetime.datetime.now().year
         self.directory_path = None
         self.crop_function = function_map['crop_peak']
@@ -38,7 +66,7 @@ class Foreperson:
         self.q_step = None
         self.q_shape = 'linear'
         self.n_columns = 3
-        self.theta_axis_name = None
+        self.theta_axis_name = "dcdtheta"
         self.q_axis_name = "qdcd"
         self.transpose = False
         self.qz_dimension = 1
@@ -46,47 +74,15 @@ class Foreperson:
         self.pixel_max = 1e6
         self.hot_pixel_max = 1e5
         self.metadata = metadata
-        self.creator = {'name': 'Unknown',
-                        'affiliation': 'Unknown',
-                        'time': datetime.datetime.now().isoformat()}
-        self.data_source = {'experiment': {'probe': 'X-rays',
-                                           'instrument': 'i07',
-                                           'sample': None}}
-        self.reduction = {'software': 'islatu', 'yaml': None}
-        if self.n_columns == 3
-            self.data = {'column 1': 'Qz / Aa^-1', 'column 2': 'RQz', 'column 3': 'sigma RQz , standard deviation'}
-        elif self.n_columns == 4:
-            self.data = {'column 1': 'Qz / Aa^-1', 'column 2': 'RQz', 'column 3': 'sigma RQz , standard deviation', 'column 4': 'dQz-by-Qz , resolution'}
-        if 'creator' in metadata.keys():
-            self.creator = metadata['creator']
-        if 'data source' in metadata.keys():
-            self.data_source = metadata['data source']
-        self.header = None
-
 
     def ready(self, directory):
-        directory_path = directory.format(self.data_source['experiment']['instrument'], self.year, self.visit_id)
+        directory_path = directory.format(self.metadata['data source']['experiment']['instrument'], self.year, self.metadata['data source']['origin']['experiment ID'])
         if path.isdir(directory_path):
             self.directory_path = directory_path
         else:
             raise FileNotFoundError("The experiment directory cannot be found.")
-        self.header = f' creator:\n   name:{
-            self.creator['name']}\n   affiliation:{
-            self.creator['affiliation']}\n   time:{
-            self.creator['time']}\n data source:\n   experiment:\n     probe:{
-            self.data_source['experiment']['probe']}\n     instrument:{
-            self.data_source['experiment']['instrument']}\n     sample:{
-            self.data_source['experiment']['sample']}\n reduction:\n   software:{
-            self.reduction['software']}\n   yaml:{
-            self.reduction['yaml']}\n data:\n   column 1:{
-            self.data['column 1']}\n   column 2:{
-            self.data['column 2']}\n   column 3:{
-            self.data['column 3']}'
-        if self.n_columns == 4:
-            self.header += '\n   column 4:{
-            self.data['column 4']}'
 
-def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=None):
+def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=metadata, title='Unknown'):
     """
     The runner that parses the yaml file and performs the data reduction.
 
@@ -95,20 +91,27 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=Non
     yaml_file (:py:attr:`str`): File path to instruction set.
     metadata (:py:attr:`dict`): If metadata should be included in the outpuit
         file, pass this as a :py:attr:`dict`.
-    """1
+    title (:py:attr:`str`): A title for the experiment.
+    """
     the_boss = Foreperson(metadata)
     y_file = open(yaml_file, 'r')
-    recipe = load(y_file, Loader=CLoader)
+    recipe = load(y_file, Loader=Loader)
     y_file.close()
-    the_boss.reduction['yaml'] = yaml_file
+    the_boss.metadata['data source']['origin']['local contact'] = recipe['visit']['local contact']
+    the_boss.metadata['data source']['origin']['experiment date'] = str(datetime.datetime.now().date())
+    the_boss.metadata['data source']['origin']['title'] = title
+    the_boss.metadata['creator']['name'] = recipe['visit']['user']
+    the_boss.metadata['creator']['affiliation'] = recipe['visit']['user affiliation']
+    the_boss.metadata['reduction']['yaml'] = yaml_file
+    the_boss.metadata['reduction']['input files']['datafile'] = [self.directory_path + str(r) for r in run_numbers]
     keys = recipe.keys()
     if 'instrument' in keys:
-        the_boss.self.data_source['experiment']['instrument'] = recipe['instrument']
+        the_boss.metadata['data source']['experiment']['instrument'] = recipe['instrument']
         the_boss.parser = function_map[recipe['instrument']]
     else:
         raise ValueError("No instrument given in {}.".format(yaml_file))
     if 'visit' in keys:
-        the_boss.visit_id = recipe['visit']['visit_id']
+        the_boss.metadata['data source']['origin']['experiment ID'] = recipe['visit']['visit id']
         if 'year' in recipe['visit'].keys():
             the_boss.year = recipe['visit']['year']
     else:
@@ -122,30 +125,31 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=Non
         if 'kwargs' in recipe['background']:
             the_boss.bkg_kwargs = recipe['background']['kwargs']
     if 'setup' in keys:
-        if 'dcd_normalisation' in recipe['setup'].keys():
-            the_boss.dcd_normalisation = recipe['setup']['dcd_normalisation']
-        if 'sample_size' in recipe['setup'].keys():
-            the_boss.sample_size = make_tuple(recipe['setup']['sample_size'])
+        if 'dcd normalisation' in recipe['setup'].keys():
+            the_boss.dcd_normalisation = recipe['setup']['dcd normalisation']
+            the_boss.metadata['data source']['links'] = {'instrument reference': 'doi:10.1107/S0909049512009272'}
+        if 'sample size' in recipe['setup'].keys():
+            the_boss.sample_size = make_tuple(recipe['setup']['sample size'])
             try:
                 _ = len(the_boss.sample_size)
                 the_boss.sample_size = ufloat(the_boss.sample_size[0], the_boss.sample_size[1])
             except TypeError:
                 pass
         else:
-            raise ValueError("No sample_size given in setup of {}.".format(yaml_file))
-        if 'beam_width' in recipe['setup'].keys():
-            the_boss.beam_width = make_tuple(recipe['setup']['beam_width'])
+            raise ValueError("No sample size given in setup of {}.".format(yaml_file))
+        if 'beam width' in recipe['setup'].keys():
+            the_boss.beam_width = make_tuple(recipe['setup']['beam width'])
             try:
                 _ = len(the_boss.beam_width)
                 the_boss.beam_width = ufloat(the_boss.sample_size[0], the_boss.sample_size[1])
             except TypeError:
                 pass
         else:
-            raise ValueError("No beam_width given in setup of {}.".format(yaml_file))
+            raise ValueError("No beam width given in setup of {}.".format(yaml_file))
         if 'theta_axis' in recipe['setup'].keys():
             the_boss.theta_axis_name = recipe['setup']['theta_axis']
-        if 'q_axis' in recipe['setup'].keys():
-            the_boss.q_axis_name = recipe['setup']['theta_axis']
+        if 'q axis' in recipe['setup'].keys():
+            the_boss.q_axis_name = recipe['setup']['q axis']
         if 'transpose' in recipe['setup'].keys():
             the_boss.transpose = recipe['setup']['transpose']
             if the_boss.transpose:
@@ -158,8 +162,8 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=Non
     else:
         raise ValueError("No setup given in {}.".format(yaml_file))
     if 'rebin' in keys:
-        if 'n_qvectors' in recipe['rebin'].keys():
-            the_boss.n_qvectors = recipe['rebin']['n_qvectors']
+        if 'n qvectors' in recipe['rebin'].keys():
+            the_boss.n_qvectors = recipe['rebin']['n qvectors']
         elif 'min' in recipe['rebin'].keys() and 'max' in recipe['rebin'].keys() and 'step' in recipe['rebin'].keys():
             the_boss.q_min = recipe['rebin']['min']
             the_boss.q_max = recipe['rebin']['max']
@@ -193,11 +197,13 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=Non
     print('Background Subtraction')
     print("-" * 10)
     refl.bkg_sub(the_boss.bkg_function, the_boss.bkg_kwargs)
+    the_boss.metadata['reduction']['data state']['background'] = 'corrected'
 
     print("-" * 10)
     print('Estimating Resolution Function')
     print("-" * 10)
     refl.resolution_function(the_boss.qz_dimension, progress=True)
+    the_boss.metadata['reduction']['data state']['resolution'] = 'estimated'
 
     print("-" * 10)
     print('Performing Data Corrections')
@@ -205,10 +211,13 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=Non
     if the_boss.dcd_normalisation is not None:
         itp = corrections.get_interpolator(the_boss.dcd_normalisation, the_boss.parser)
         refl.qdcd_normalisation(itp)
+        the_boss.metadata['reduction']['data state']['dcd'] = 'normalised'
     refl.footprint_correction(the_boss.beam_width, the_boss.sample_size)
     refl.transmission_normalisation()
+    the_boss.metadata['reduction']['data state']['transmission'] = 'normalised'
     refl.concatenate()
     refl.normalise_ter()
+    the_boss.metadata['reduction']['data state']['intensity'] = 'normalised'
 
     print("-" * 10)
     print('Rebinning')
@@ -216,18 +225,24 @@ def reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/', metadata=Non
     if the_boss.q_min is None:
         refl.rebin(number_of_q_vectors=the_boss.n_qvectors)
     else:
-        if the_boss.q_space is 'linear':
+        if the_boss.q_space == 'linear':
             spacing = np.linspace
-        elif the_boss.q_space is 'log':
+        elif the_boss.q_space == 'log':
             spacing = np.logspace
         refl.rebin(new_q=spacing(the_boss.q_min, the_boss.q_max, the_boss.q_step))
+    the_boss.metadata['reduction']['data state']['rebinned'] = the_boss.q_shape
 
+    the_boss.metadata['data source']['experiment']['measurement']['q range'] = [str(refl.q.min()), str(refl.q.max())]
+    the_boss.metadata['data']['column 1'] = 'Qz / Aa^-1'
+    the_boss.metadata['data']['column 2'] = 'RQz'
+    the_boss.metadata['data']['column 3'] = 'sigma RQz, standard deviation'
     if the_boss.output_columns == 3:
         data = np.array([refl.q, refl.R, refl.dR]).T
-        np.savetxt(the_boss.directory_path + '/processing/' + run_numbers[0] + '.dat', data, header='{}'.format(the_boss.header))
+        np.savetxt(the_boss.directory_path + '/processing/XRR_' + run_numbers[0] + '.dat', data, header='{}\n 1 2 3'.format(dump(the_boss.metadata)))
     elif the_boss.output_columns == 4:
         data = np.array([refl.q, refl.R, refl.dR, refl.dq]).T
-        np.savetxt(the_boss.directory_path + '/processing/' + run_numbers[0] + '.dat', data, header='{}'.format(the_boss.header))
+        the_boss.metadata['data']['column 4'] = 'sigma Qz / Aa^-1, standard deviation'
+        np.savetxt(the_boss.directory_path + '/processing/XRR_' + run_numbers[0] + '.dat', data, header='{}\n 1 2 3 4'.format(dump(the_boss.metadata)))
     print("-" * 10)
     print('Reduced Data Stored in Processing Directory')
     print("-" * 10)
