@@ -65,6 +65,7 @@ class Image:
         array_error = np.sqrt(array)
         array_error[np.where(array == 0)] = 1
         self.array = unp.uarray(array, array_error)
+        self.array_original = np.copy(array)
         self.bkg = 0
         self.n_pixel = 0
 
@@ -157,10 +158,18 @@ class Image:
             **kwargs (:py:attr:`dict`): The background substraction function
                 keyword arguments.
         """
-        bkg_popt, bkg_idx = background_subtraction_function(
-            self.n, self.s, **kwargs
-        )
-        self.bkg = bkg_popt[bkg_idx]
+        if background_subtraction_function is None:
+            y_start = kwargs['y_start']
+            y_end = kwargs['y_end']
+            x_start = kwargs['x_start']
+            x_end = kwargs['x_end']
+            bkg_popt = (self.array_original[y_start:y_end, x_start:x_end]).mean()
+            self.bkg = bkg_popt
+        else:
+            bkg_popt, bkg_idx = background_subtraction_function(
+                self.n, self.s, **kwargs
+            )
+            self.bkg = bkg_popt[bkg_idx]
         self.array -= self.bkg
 
     def sum(self, axis=None):

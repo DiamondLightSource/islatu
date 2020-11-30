@@ -18,7 +18,8 @@ from uncertainties import ufloat
 import numpy as np
 
 function_map = {'gaussian_1d': background.fit_gaussian_1d,
-                'guassian_2d': background.fit_gaussian_2d,
+                'gaussian_2d': background.fit_gaussian_2d,
+                'area': None,
                 'i07': io.i07_dat_parser,
                 'crop': cropping.crop_2d,
                 'crop_peak': cropping.crop_around_peak_2d,
@@ -126,6 +127,9 @@ class Data:
         self.column_2 = columns[1]
         self.column_3 = columns[2]
         if len(columns) == 4:
+            self.column_4 = columns[3]
+        if columns=='both':
+            self.both = True
             self.column_4 = columns[3]
         self.rebin = True
         self.n_qvectors = n_qvectors
@@ -249,10 +253,12 @@ class Foreperson:
         else:
             raise ValueError("No setup given in {}.".format(yaml_file))
         if 'output_columns' in keys:
-            if recipe['output_columns'] == 3:
+            if recipe['output columns'] == 3:
                 self.data = Data(
                     columns=[
                         'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'])
+            if recipe['output columns'] == 34:
+                self.data = Data(columns='both')
         if 'rebin' in keys:
             if 'n qvectors' in recipe['rebin'].keys():
                 self.data.n_qvectors = recipe['rebin']['n qvectors']
@@ -293,6 +299,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
          None, 0, the_boss.data_source.experiment.measurement.pixel_max,
          the_boss.data_source.experiment.measurement.hot_pixel_max,
          the_boss.data_source.experiment.measurement.transpose)
+
     print("-" * 10)
     print('Cropping')
     print("-" * 10)
@@ -354,6 +361,12 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             (the_boss.directory_path + '/processing/XRR_{}.dat'.format(
                 run_numbers[0])), data,
              header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
+        if the_boss.data.both:
+            data = np.array([refl.q, refl.R, refl.dR]).T
+            np.savetxt(
+                (the_boss.directory_path + '/processing/XRR_{}_3col.dat'.format(
+                    run_numbers[0])), data,
+                 header='{}\n 1 2 3'.format(dump(vars(the_boss))))
     except:
         data = np.array([refl.q, refl.R, refl.dR]).T
         np.savetxt(
