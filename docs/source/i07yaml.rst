@@ -48,9 +48,9 @@ Here we document all of the options that are available in this interface.
      # (either gaussian_1d, gaussian_2d, or area)
      # (optional, default gaussian_1d)
      method: gaussian_1d
-     # The kwargs for the background method (optional)
-     # If 'area' then kwargs should be x_start, etc.
-     # If 'gaussian_1d', kwargs should be the axis (either 0 or 1)
+     # The kwargs for the background method (optional, default 'None')
+     # If 'area' then kwargs should be x_start, etc (as with 'crop' above).
+     # If 'gaussian_1d', kwargs should be the qxy axis (either 0 or 1)
      kwargs: {'axis': 0}
    # If rebin is not present the data will not be rebinned at all
    rebin:
