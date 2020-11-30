@@ -45,11 +45,13 @@ Here we document all of the options that are available in this interface.
      kwargs: {'x_start': 200, 'x_end':220, 'y_start': 70, 'y_end': 105}
    background:
      # How the background subtraction should be performed
-     # (either gaussian_1d or gaussian_2d)
+     # (either gaussian_1d, gaussian_2d, or area)
      # (optional, default gaussian_1d)
      method: gaussian_1d
-     # The qxy axis of the detector image (optional, defaults 0)
-     axis: 0
+     # The kwargs for the background method (optional)
+     # If 'area' then kwargs should be x_start, etc.
+     # If 'gaussian_1d', kwargs should be the axis (either 0 or 1)
+     kwargs: {'axis': 0}
    # If rebin is not present the data will not be rebinned at all
    rebin:
      # Number of q vectors to be used (optional, default 50)
