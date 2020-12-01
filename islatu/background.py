@@ -35,7 +35,8 @@ def bivariate_normal(data, mu_1, mu_2, sigma_1, sigma_2, offset, factor):
             distribution.
 
     Returns:
-        :py:attr:`array_like`: Flattened ordinate data for bivariate normal distribution.
+        :py:attr:`array_like`: Flattened ordinate data for bivariate normal
+            distribution.
     """
     # Setting the data up in the correct format
     pos = np.empty(data[0].shape + (2,))

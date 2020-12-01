@@ -275,7 +275,7 @@ class Foreperson:
 
 
 def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
-           title='Unknown'):
+              title='Unknown'):
     """
     The runner that parses the yaml file and performs the data reduction.
 
