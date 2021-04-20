@@ -31,15 +31,6 @@ class TestCropping(unittest.TestCase):
         """
         Test crop_2d with rectanglar crop.
         """
-        initial_array = np.ones((50, 50))
-        expected_array = np.ones((10, 20))
-        result = cropping.crop_2d(initial_array, None, 20, 40, 10, 20)
-        assert_almost_equal(result, expected_array)
-
-    def test_crop_2d_b(self):
-        """
-        Test crop_2d with rectanglar crop.
-        """
         initial_array = np.ones((50, 50)) * 10
         initial_array_e = np.ones((50, 50))
         expected_array = np.ones((10, 20)) * 10
