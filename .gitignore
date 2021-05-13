@@ -6,6 +6,7 @@ islatu.egg-info
 .coverage
 .eggs
 .vscode
+*.pyc
 data
 htmlcov
 **/.ipynb_checkpoints
