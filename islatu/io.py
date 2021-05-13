@@ -4,7 +4,7 @@ Parsers for inputing experimental files.
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey
+# authors: Andrew R. McCluskey, Richard Brearton
 
 import pandas as pd
 
@@ -80,4 +80,104 @@ def i07_dat_parser(file_path):
             count += 1
         else:
             data_dict[titles[j]] = list_to_add
+    return metadata_dict, pd.DataFrame(data_dict)
+
+
+def rigaku_data_parser(file_path):
+    """
+    Parses the .dat and .ras files from a Rigaku smartlab diffractometer.
+
+    Args:
+        (:py:attr:`str`): The ``.dat`` file to be read.
+
+    Returns:
+        :py:attr:`tuple`: Containing:
+            - :py:attr:`dict`: The metadata from the ``.dat`` file.
+            - :py:class:`pandas.DataFrame`: The data from the ``.dat`` file.
+    """
+    # work out what type of file we have, currently supporting .ras and .dat
+    ras_ending = ".ras"
+    dat_ending = ".dat"
+
+    # if file_path argument wasn't a string, error naturally thrown here
+    if file_path.endswith(ras_ending):
+        file_ending = ras_ending
+    elif file_path.endswith(dat_ending):
+        file_ending = dat_ending
+    else:
+        raise IOError("Only .ras and .dat rigaku files are currently " +
+                      "supported.")
+
+    # prepare dictionaries to populate with data/metadata
+    data_dict = {}
+    metadata_dict = {}
+
+    # prepare to store angles and intensities - the Q conversion will come later
+    angles = []
+    intensities = []
+    attenuations = []
+
+    with open(file_path) as open_file:
+        # this flag is ignored for .dat files. For .ras, we start with metadata
+        reading_metadata = True
+
+        for line in open_file:
+            # clean the line independent of file type
+            line = line.strip()
+
+            # dat files are very simple, just iterate through the file grabbing
+            # 2theta and intensities
+            if file_ending == dat_ending:
+                split_line = line.split('\t')
+
+                angle = float(split_line[0])
+                intensity = float(split_line[1])
+
+                angles.append(angle)
+                intensities.append(intensity)
+            elif file_ending == ras_ending:
+                # ras files contain much more metadata. First grab this all
+                if reading_metadata:
+                    # intensity list is about to start, switch metadata flag
+                    if "RAS_INT_START" in line:
+                        reading_metadata = False
+                    # skips the preamble and the useless _END flag
+                    if line.strip().endswith("_START"):
+                        continue
+                    if line.strip().endswith("_END"):
+                        continue
+                    # metadata is given in the format <TITLE "DATA">
+
+                    split_line = line.split(" ")
+
+                    # strip quotation marks from DATA
+                    split_line[1].strip('"')
+
+                    # add title + data as key value pair to metadata dict
+                    metadata_dict[split_line[0]] = split_line[1]
+                # we're reading intensity/angle/attenuation now
+                else:
+                    # throw away the meaningless *RAS_END messages etc.
+                    if "*" in line:
+                        continue
+
+                    # now it's safe to acces split_line[i] for i > 0
+                    split_line = line.split(" ")
+                    angle = float(split_line[0])
+                    intensity = float(split_line[1])
+                    attenuation = float(split_line[2])
+
+                    # store the stuff
+                    angles.append(angle)
+                    intensities.append(intensity)
+                    attenuations.append(attenuation)
+
+    # populate the data dict (TODO: calculate Q-vectors from angles and include)
+    data_dict["Angles"] = angles
+    data_dict["Intensities"] = intensities
+
+    # if this was from a .ras, then we also have attenuation information
+    if file_ending == ras_ending:
+        data_dict["Attenuation"] = attenuations
+
     return metadata_dict, pd.DataFrame(data_dict)
