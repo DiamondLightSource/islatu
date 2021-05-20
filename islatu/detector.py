@@ -29,7 +29,9 @@ class Detector:
             Metadata key for energy of incident probe particle.
         metakey_file (:py:attr:`str`):
             Metadata key for the path to the file containing intensity data, 
-                pointed to by the file parsed by parser. 
+                pointed to by the file parsed by parser. Takes the value 
+                :py:attr:`None` if the file parsed by the parser contained the
+                intensity data.
         metakey_transmission (:py:attr:`str`):
             Metadata key for the transmission.
         metakey_roi_1_maxval (:py:attr:`str`):
@@ -56,8 +58,9 @@ class Detector:
                 :py:attr:`None`.
         metakey_file (:py:attr:`str`, optional):
             Metadata key for the path to the file containing intensity data, 
-                pointed to by the file parsed by parser. Defaults to 
-                :py:attr:`None`.
+                pointed to by the file parsed by parser. Takes the value 
+                :py:attr:`None` if the file parsed by the parser contained the
+                intensity data. Defaults to :py:attr:`None`.
         metakey_transmission (:py:attr:`str`, optional):
             Metadata key for the transmission. Defaults to :py:attr:`None`.
         metakey_roi_1_maxval (:py:attr:`str`, optional): 
@@ -87,7 +90,7 @@ class Detector:
     metakey_detector_distance: str = None
     # energy of the incident probe particle
     metakey_probe_energy: str = None
-    # this must only be not none when points_to_data is true
+    # this must only be not None when the parsed file points to data
     metakey_file: str = None
     metakey_transmission: str = None
     metakey_roi_1_maxval: str = None

@@ -7,15 +7,16 @@ reflectometry data.
 
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey
+# authors: Andrew R. McCluskey, Richard Brearton
 
-from os import path
+import os
 import numpy as np
 from scipy.constants import physical_constants
 from scipy.interpolate import splev
 from uncertainties import ufloat
 from uncertainties import unumpy as unp
 from islatu import corrections, image, stitching
+import islatu.detector
 
 
 class Profile:
@@ -55,6 +56,7 @@ class Profile:
         progress (:py:attr:`bool`, optional): Show a progress bar.
             Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
     """
+
     def __init__(self, file_paths, parser, q_axis_name="qdcd",
                  theta_axis_name="dcdtheta", energy=None, pixel_min=0,
                  pixel_max=1000000, hot_pixel_max=1e5, transpose=False):
@@ -74,7 +76,8 @@ class Profile:
         for i, fyle in enumerate(file_paths):
             self.scans.append(
                 Scan(fyle, parser, q_axis_name, theta_axis_name,
-                     pixel_min=pixel_min[i], pixel_max=pixel_max[i], hot_pixel_max=hot_pixel_max[i], transpose=transpose))
+                     pixel_min=pixel_min[i], pixel_max=pixel_max[i],
+                     hot_pixel_max=hot_pixel_max[i], transpose=transpose))
         self.q_vectors = None
         self.reflected_intensity = None
 
@@ -178,8 +181,8 @@ class Profile:
         self.scans = stitching.correct_attentuation(self.scans)
 
     def resolution_function(self, qz_dimension=1, progress=True,
-                                 detector_distance=None, energy=None,
-                                 pixel_size=172e-6):
+                            detector_distance=None, energy=None,
+                            pixel_size=172e-6):
         """
         Class method for
         :func:`~islatu.refl_data.Scan.q_uncertainty_from_pixel` for each
@@ -259,6 +262,8 @@ class Scan:
         file_paths (:py:attr:`str`): File path for scan file.
         metadata (:py:attr:`dict`): The metadata from the ``.dat`` file.
         data (:py:class:`pandas.DataFrame`): The data from the ``.dat`` file.
+        detector (instance of :py:class:`islatu.detector.Detector`):
+            Information pertaining to the detector used in the experiment.
         images (:py:attr:`list` of :py:class:`islatu.image.Image`): The
             detector images in the given scan.
         q (:py:attr:`array_like`): The measured q-values in the scan.
@@ -273,11 +278,12 @@ class Scan:
         parser (:py:attr:`callable`): Parser function for the reflectometry
             scan files.
         q_axis_name (:py:attr:`str`, optional): Label for the q-axis in the
-            scan. Defaults to :py:attr:`'q_axis_name'`.
+            scan. Defaults to :py:attr:`None`.
         theta_axis_name (:py:attr:`str`, optional): Label for the theta axis
             in the scan. Defaults to :py:attr:`'dcdtheta'`.
         energy (:py:attr:`float`): The energy of the probing X-ray, in keV.
-            Defaults to finding from metadata if no value given.
+            Defaults to finding from metadata if no value given. Defaults to
+            :py:attr:`None`.
         pixel_min (:py:attr:`int`): The minimum pixel value possible, all
             pixels found with less than this value will have this value
             assigned. Defaults to :py:attr:`0`.
@@ -293,51 +299,65 @@ class Scan:
             Requires the :py:mod:`tqdm` package. Defaults to :py:attr:`True`.
     """
 
-    def __init__(self, file_path, parser, q_axis_name="qdcd",
+    def __init__(self, file_path, parser, q_axis_name=None,
                  theta_axis_name="dcdtheta", energy=None, pixel_min=0,
                  pixel_max=1000000, hot_pixel_max=2e5,
                  transpose=False, progress=True):
         self.file_path = file_path
         self.metadata, self.data = parser(self.file_path)
+
+        # Now that the metadata has been extracted, attempt to infer which
+        # detector was used to carry out this scan.
+        self.detector = self._infer_detector(parser)
+
+        # If q data wasn't directly recorded, then calculate it from the data.
         if q_axis_name is None:
-            planck = physical_constants["Planck constant in eV s"][0] * 1e-3
-            speed_of_light = physical_constants[
-                "speed of light in vacuum"][0] * 1e10
-            if energy is None:
-                energy = self.metadata["dcm1energy"][0]
-            q_values = energy * 4 * np.pi * unp.sin(
-                unp.radians(
-                    self.data[theta_axis_name])) / (planck * speed_of_light)
-            self.q = unp.uarray(
-                q_values, np.zeros(self.data[theta_axis_name].size))
+            self._calculate_q(theta_axis_name, energy)
         else:
             self.q = unp.uarray(
                 self.data[q_axis_name], np.zeros(self.data[q_axis_name].size)
             )
-        self.data = self._check_files_exist()
+
+        # If the file parsed by scan did not contain the raw intensity data,
+        # but instead pointed to that data, then ensure that the intensity
+        # data files can be found before continuing.
+        self.data = self._check_and_correct_file_data()
+
+        # Initialize theta, R, and metadata such as n_pixels and transpose.
         self.theta = unp.uarray(
             self.data[theta_axis_name],
             np.zeros(self.data[theta_axis_name].size))
         self.R = unp.uarray(np.zeros(self.q.size), np.zeros(self.q.size),)
         self.n_pixels = np.zeros(self.q.size)
         self.transpose = transpose
-        self.images = []
-        iterator = _get_iterator(unp.nominal_values(self.q), progress)
-        to_remove = []
-        for i in iterator:
-            if self.data['roi1_maxval'][i] <= pixel_max:
-                img = image.Image(self.data["file"][i], self.data,
-                                  self.metadata, pixel_min=pixel_min,
-                                  hot_pixel_max=hot_pixel_max,
-                                  transpose=self.transpose)
-                self.images.append(img)
-            else:
-                to_remove.append(i)
-        self.R = np.delete(self.R, to_remove)
-        self.theta = np.delete(self.theta, to_remove)
-        self.n_pixels = np.delete(self.n_pixels, to_remove)
-        self.q = np.delete(self.q, to_remove)
 
+        # Now load the intensity data. If the detector is a 2D detector, then
+        # the images from the 2D detector should be loaded into RAM. In the case
+        # of a point detector, population of R is trivial and should be done
+        # immediately.
+        if self.detector.is_2d_detector:
+            # A 2D detector's scan will generally be comprised of a series of
+            # images.
+            self.images = []
+            # Loading could take time, so show a loading bar.
+            iterator = _get_iterator(unp.nominal_values(self.q), progress)
+            to_remove = []
+            for i in iterator:
+                hottest_pixel = self.data[self.detector.metakey_roi_1_maxval][i]
+                if hottest_pixel <= pixel_max:
+                    # TODO: generalize image loading process properly.
+                    img = image.Image(
+                        self.data[self.detector.metakey_file][i], self.data,
+                        self.metadata, pixel_min=pixel_min,
+                        hot_pixel_max=hot_pixel_max, transpose=self.transpose)
+                    self.images.append(img)
+                else:
+                    to_remove.append(i)
+            # Remove any images containing a pixel hotter than hot_pixel_max.
+            self._remove_data_points(to_remove)
+        else:
+            raise NotImplementedError(
+                "Non-area detectors are not currently supported.")
 
     def __str__(self):
         """
@@ -359,35 +379,216 @@ class Scan:
         """
         return self.__str__()
 
-    def _check_files_exist(self):
+    def _remove_data_points(self, data_point_indices):
         """
-        Check that image files exist.
+        Removes the set of data points defined by data_point_indices from the 
+        R, theta, n_pixes, q and images lists/arrays.
+
+        Args:
+            data_point_indices (:py:attr:`list` of :py:attr:`int`): 
+                The indices of the data points to be deleted.
+        """
+        # Delete the simple stuff.
+        self.R = np.delete(self.R, data_point_indices)
+        self.theta = np.delete(self.theta, data_point_indices)
+        self.n_pixels = np.delete(self.n_pixels, data_point_indices)
+        self.q = np.delete(self.q, data_point_indices)
+
+        # There may not be a need to delete images; perhaps they were never
+        # loaded. If they were loaded, then there will be more images than
+        # q-vectors for instance, seeing as some q-vectors were just deleted.
+        if len(self.images) != len(self.q):
+            self.images = np.delete(self.images, data_point_indices)
+
+    def _calculate_q(self, theta_axis_name, energy):
+        """
+        Tries to calculate the scattering vector Q from diffractometer theta. If
+        energy isn't none, this is used directly. If energy is not provided, it
+        is acquired from the metadata. 
+
+        Args:
+            theta_axis_name (:py:attr:`str`): Dictionary key for the theta axis. 
+            energy (:py:attr:`float`): Energy of the incident probe particle.
+
+        Raises:
+            KeyError: Raised when islatu cannot locate energy metadata from the
+                user's input file.
+            NotImplementedError: Raised for neutron data.
+        """
+        # Calculate q for x-ray reflectometry data.
+        if self.detector.probe_mass == 0:
+            planck = physical_constants["Planck constant in eV s"][0] * 1e-3
+            speed_of_light = physical_constants[
+                "speed of light in vacuum"][0] * 1e10
+            # If the user didn't supply an energy as an input, then parse it
+            # from the scraped metadata.
+            try:
+                if energy is None:
+                    energy = self.metadata[
+                        self.detector.metakey_probe_energy][0]
+            except KeyError as e:
+                print(
+                    "Islatu was unable to locate any energy metadata in " +
+                    "your input file, and consequently failed to " +
+                    "calculate Q-vectors from your experimental data. " +
+                    "Consider passing your beam's energy directly to " +
+                    "this Scan's initializer, or, if your file type " +
+                    "should be supported by islatu, raising an issue on " +
+                    "the islatu github page."
+                )
+                raise e
+            q_values = energy * 4 * np.pi * unp.sin(
+                unp.radians(
+                    self.data[theta_axis_name])) / (planck * speed_of_light)
+            self.q = unp.uarray(
+                q_values, np.zeros(self.data[theta_axis_name].size))
+        # calculate q for neutron reflectometry data
+        else:
+            raise NotImplementedError(
+                "Reflectometry for massive probe particles is not yet " +
+                "supported."
+            )
+
+    def _check_and_correct_file_data(self):
+        """
+        Check that data files exist if the file parsed by parser pointed to a 
+        separate file containing intensity information. If the intensity data
+        file could not be found in its original location, check a series of
+        probable locations for the data file. If the data file is found in one
+        of these locations, update file's entry in self.data.
 
         Returns:
-            :py:class:`pandas.DataFrame`: Modified data with corrected file paths.
+            :py:class:`pandas.DataFrame`:
+                If no modification was necessary, returns :py:attr:`self.data`.
+                If modifications were necessary, returns modified data with 
+                corrected file paths.
         """
-        iterator = _get_iterator(unp.nominal_values(self.q), False)
+        # Firstly, if the file parsed doesn't point to a separate data file,
+        # just return self.data as is (as nothing needs to be done).
+        if self.detector.metakey_file == None:
+            return self.data
+
+        # If execution reaches here, we've got at least one data file to check.
+        data_files = self.data[self.detector.metakey_file]
+
+        # If we had only one file, make a list out of it.
+        if not hasattr(data_files, "__iter__"):
+            data_files = [data_files]
+
+        # This line allows for a loading bar to show as we check the file.
+        iterator = _get_iterator(data_files, False)
         for i in iterator:
-            im_file = self.data["file"][i]
-            if path.isfile(im_file):
+            # Better to be safe... Note: windows is happy with / even though it
+            # defaults to \
+            data_files[i] = str(data_files[i]).replace('\\', '/')
+
+            # Maybe we can see the file in its original storage location?
+            if os.path.isfile(data_files[i]):
                 continue
-            im_file = self.data["file"][i].split('/')[-2:]
-            im_file = path.join(im_file[0], im_file[1])
-            im_file = path.join(path.dirname(self.file_path), im_file)
-            if path.isfile(im_file):
-                self.data.iloc[
-                    i, self.data.keys().get_loc("file")] = im_file
-                continue
-            im_file = self.data["file"][i].split('/')[-1]
-            im_file = path.join(path.dirname(self.file_path), im_file)
-            if path.isfile(im_file):
-                self.data.iloc[
-                    i, self.data.keys().get_loc("file")] = im_file
-                continue
-            raise FileNotFoundError(
-                "The following image file could not be "
-                "found: {}.".format(self.data["file"][i]))
+
+            # If not, maybe it's stored locally? If the file was stored at
+            # location /a1/a2/.../aN/file originally, for a local directory LD,
+            # check locations LD/aj/aj+1/.../aN for all j<N and all LD's of
+            # interest. This algorithm is a generalization of Andrew McCluskey's
+            # original approach.
+            local_start_directories = [
+                os.cwd,  # maybe the file is stored near the current working dir
+                self.file_path  # maybe it's stored near the parsed file
+            ]
+
+            # now generate a list of all directories that we'd like to check
+            candidate_paths = []
+            split_file_path = str(data_files[i]).split('/')
+            for j in range(len(split_file_path)):
+                local_guess = '/'.join(split_file_path[j:])
+                for start_dir in local_start_directories:
+                    candidate_paths.append(
+                        os.path.join(start_dir, local_guess))
+
+            # Iterate over each of the candidate paths to see if any of them
+            # contain the data file we're looking for.
+            found_file = False
+            for candidate_path in candidate_paths:
+                if os.path.isfile(candidate_path):
+                    # We found the file! Now update file's entry in self.data
+                    # with the correct file location.
+                    self.data.iloc[
+                        i, self.data.keys().get_loc(
+                            self.detector.metakey_file)] = candidate_path
+                    found_file = not found_file
+                    break
+
+            # If we didn't find the file, tell the user.
+            if not found_file:
+                raise FileNotFoundError(
+                    "The data file with the name " + data_files[i] + " could "
+                    "not be found. The following paths were searched:\n" +
+                    "\n".join(candidate_paths)
+                )
         return self.data
+
+    def _infer_detector(self, parser):
+        """
+        Attempt to infer which detector was used to carry out this scan. This is
+        currently done somewhat crudely by checking self.metadata for keys known
+        to be unique to a particular detector. Additionally, parser.__name__ is
+        used to disambiguate between detectors.
+
+        Args:
+            parser (:py:attr:`callable`): Parser function for the reflectometry
+                scan files.
+
+        Returns:
+            :py:class:`islatu.detector.Detector`:
+                Information pertaining to the detector used in the experiment.
+        """
+        class FileNotRecognizedError(NotImplementedError):
+            """
+            A convenience error class for throwing detailed not implemented
+            errors. This is a particularly important exception to throw; here
+            we can prompt users to help maintain the code by raising issues on
+            the github page when a file format of theirs is not supported, but
+            could be parsed. This will occur when metadata keys at an instrument
+            are changed, for instance.
+
+            Attributes:
+                message (:py:attr:`str`): the message to be passed on to the 
+                    base exception.
+
+            Args:
+                parser (:py:attr:`callable`): Parser function for the 
+                    reflectometry scan files.
+            """
+
+            def __init__(self, parser):
+                self.parser = parser
+                self.message = (
+                    "Islatu does not recognize your data file. Did you mean " +
+                    "to use a different parser? Parser detected: " +
+                    parser.__name__ + ". If metadata at your instrument has " +
+                    "been updated, please raise an issue on islatu's github " +
+                    "repository, indicating the instrument whose data we are " +
+                    "unable to parse.")
+                super().__init__(self.message)
+
+        if str(parser.__name__).startswith("i07_"):
+            # check to see if we've got older data
+            if "diff1halpha" in self.metadata:
+                # this key has been renamed and does not appear in modern scans
+                return islatu.detector.i07_pilatus_legacy
+
+            # If execution reaches here, it's a new detector. Check to see if
+            # it's the excalibur detector or the pilatus detector. This is easy,
+            # since they use different keys to report regions of interest
+            if islatu.detector.i07_excalibur.metakey_roi_1_maxval in self.data:
+                return islatu.detector.i07_excalibur
+            if islatu.detector.i07_pilatus.metakey_roi_1_maxval in self.data:
+                return islatu.detector.i07_pilatus
+
+        # If execution reaches here, we haven't been able to identify the
+        # detector. Alert the user, and prompt them to raise an issue on
+        # github.
+        raise FileNotRecognizedError(parser)
 
     def crop(self, crop_function, kwargs=None, progress=True):
         """
