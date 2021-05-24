@@ -7,6 +7,8 @@ Parsers for inputing experimental files.
 # Distributed under the terms of the MIT License
 # authors: Richard Brearton and Andrew R. McCluskey
 
+import os
+from islatu.refl_data import _get_iterator
 from numpy.lib.type_check import imag
 from islatu.scan import Scan2D
 from islatu.image import Image
@@ -16,6 +18,7 @@ from islatu.data import Data
 import pandas as pd
 from uncertainties import unumpy as unp
 import numpy as np
+import copy
 
 
 def i07_dat_parser(file_path, theta_axis_name):
@@ -112,6 +115,10 @@ def i07_dat_parser(file_path, theta_axis_name):
                            np.zeros(metadata.roi_1_maxval.size))
     energy = metadata.probe_energy
     data = Data(theta, intensity, energy)
+
+    # Our metadata's file information is most likely wrong (unless this code is
+    # being run on site). Try to correct these files.
+    metadata.file = _try_to_find_files(metadata.file)
 
     # This .dat file will point to images. Load them, use them to populate a
     # Scan2D object, and return the scan.
@@ -217,3 +224,73 @@ def rigaku_data_parser(file_path):
         data_dict["Attenuation"] = attenuations
 
     return metadata_dict, pd.DataFrame(data_dict)
+
+
+def _try_to_find_files(filenames):
+    """
+    Check that data files exist if the file parsed by parser pointed to a
+    separate file containing intensity information. If the intensity data
+    file could not be found in its original location, check a series of
+    probable locations for the data file. If the data file is found in one
+    of these locations, update file's entry in self.data.
+
+    Returns:
+        :py:attr:`list` of :py:attr:`str`:
+            List of the corrected, actual paths to the files.
+    """
+    found_files = []
+
+    # If we had only one file, make a list out of it.
+    if not hasattr(filenames, "__iter__"):
+        filenames = [filenames]
+
+    # This line allows for a loading bar to show as we check the file.
+    iterator = _get_iterator(filenames, False)
+    for i in iterator:
+        # Better to be safe... Note: windows is happy with / even though it
+        # defaults to \
+        filenames[i] = str(filenames[i]).replace('\\', '/')
+
+        # Maybe we can see the file in its original storage location?
+        if os.path.isfile(filenames[i]):
+            continue
+
+        # If not, maybe it's stored locally? If the file was stored at
+        # location /a1/a2/.../aN/file originally, for a local directory LD,
+        # check locations LD/aj/aj+1/.../aN for all j<N and all LD's of
+        # interest. This algorithm is a generalization of Andrew McCluskey's
+        # original approach.
+        local_start_directories = [
+            os.cwd,  # maybe the file is stored near the current working dir
+            # To search additional directories, add them in here manually,
+            # or take additional search directories as an extra argument to this
+            # function.
+        ]
+
+        # now generate a list of all directories that we'd like to check
+        candidate_paths = []
+        split_file_path = str(filenames[i]).split('/')
+        for j in range(len(split_file_path)):
+            local_guess = '/'.join(split_file_path[j:])
+            for start_dir in local_start_directories:
+                candidate_paths.append(
+                    os.path.join(start_dir, local_guess))
+
+        # Iterate over each of the candidate paths to see if any of them contain
+        # the data file we're looking for.
+        found_file = False
+        for candidate_path in candidate_paths:
+            if os.path.isfile(candidate_path):
+                # File found - add the correct file location to found_files
+                found_files.append(candidate_path)
+                found_file = not found_file
+                break
+
+        # If we didn't find the file, tell the user.
+        if not found_file:
+            raise FileNotFoundError(
+                "The data file with the name " + filenames[i] + " could "
+                "not be found. The following paths were searched:\n" +
+                "\n".join(candidate_paths)
+            )
+    return found_files
