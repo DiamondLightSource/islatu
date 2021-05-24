@@ -21,9 +21,6 @@ class Image:
 
     Attributes:
         file_path (:py:attr:`str`): File path for the image.
-        data (:py:class:`pandas.DataFrame`): Experimental data about the
-            measurement.
-        metadata (:py:attr:`dict`): Metadata regarding the measurement.
         array (:py:attr:`array_like`): The image described as an array.
         bkg (:py:class:`uncertainties.cores.Variable`): The background that
             was subtracted from the image.
@@ -46,15 +43,14 @@ class Image:
             should be less than the :py:attr:`pixel_max` value. Defaults to
             :py:attr:`2e5`.
     """
-    def __init__(self, file_path, data=None, metadata=None, transpose=False,
-                 pixel_min=0, hot_pixel_max=2e5):
+
+    def __init__(self, file_path, transpose=False, pixel_min=0,
+                 hot_pixel_max=2e5):
         """
         Initialisation of the :py:class:`islatu.image.Image` class, includes
         assigning uncertainties.
         """
         self.file_path = file_path
-        self.data = data
-        self.metadata = metadata
         img = PILIm.open(file_path)
         array = np.array(img)
         img.close()
@@ -163,7 +159,8 @@ class Image:
             y_end = kwargs['y_end']
             x_start = kwargs['x_start']
             x_end = kwargs['x_end']
-            bkg_popt = (self.array_original[y_start:y_end, x_start:x_end]).mean()
+            bkg_popt = (
+                self.array_original[y_start:y_end, x_start:x_end]).mean()
             self.bkg = bkg_popt
         else:
             bkg_popt, bkg_idx = background_subtraction_function(
