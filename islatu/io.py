@@ -6,10 +6,18 @@ Parsers for inputing experimental files.
 # Distributed under the terms of the MIT License
 # authors: Andrew R. McCluskey, Richard Brearton
 
+from numpy.lib.type_check import imag
+from islatu.scan import Scan2D
+from islatu.image import Image
+from islatu import detector
+from islatu.metadata import Metadata
+from islatu.data import Data
 import pandas as pd
+from uncertainties import unumpy as unp
+import numpy as np
 
 
-def i07_dat_parser(file_path):
+def i07_dat_parser(file_path, theta_axis_name):
     """
     Parsing the .dat file from I07.
 
@@ -80,7 +88,34 @@ def i07_dat_parser(file_path):
             count += 1
         else:
             data_dict[titles[j]] = list_to_add
-    return metadata_dict, pd.DataFrame(data_dict)
+
+    # The "data_dict" actually contains a lot of metadata, and is small.
+    # Appending this to the metadata_dict makes a lot of sense.
+    metadata_dict.update(data_dict)
+
+    # Now store this metadata in an object of type Metadata, checking to see if
+    # we need to use the updated or legacy detector object to decipher this file
+    if "diff1halpha" in metadata_dict:
+        metadata = Metadata(detector.i07_pilatus_legacy, metadata_dict)
+    elif detector.i07_excalibur.metakey_roi_1_maxval in metadata_dict:
+        metadata = Metadata(detector.i07_excalibur, metadata_dict)
+    elif detector.i07_pilatus.metakey_roi_1_maxval in metadata_dict:
+        metadata = Metadata(detector.i07_pilatus, metadata_dict)
+
+    # Now build a Data instance to hold the theta/intensity values. It is
+    # important to note that this provides the most naive estimate of intensity,
+    # simply using the maximum pixel value to represent the intensity.
+    theta = unp.uarray(metadata.raw_metada[theta_axis_name],
+                       np.zeros(metadata.raw_metada[theta_axis_name].size))
+    intensity = unp.uarray(metadata.roi_1_maxval,
+                           np.zeros(metadata.roi_1_maxval.size))
+    energy = metadata.probe_energy
+    data = Data(theta, intensity, energy)
+
+    # This .dat file will point to images. Load them, use them to populate a
+    # Scan2D object, and return the scan.
+    images = [Image(metadata.file[i]) for i in range(theta.size)]
+    return Scan2D(data, metadata, images)
 
 
 def rigaku_data_parser(file_path):
