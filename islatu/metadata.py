@@ -5,6 +5,10 @@ returned by different detectors/instruments, and also contains a dictionary
 of all of the metadata as scraped from the parsed file.
 """
 
+# Copyright (c) 2021 Richard Brearton
+# Copyright (c) Andrew R. McCluskey
+# Distributed under the terms of the MIT License
+# authors: Richard Brearton and Andrew R. McCluskey
 
 from islatu.detector import Detector
 

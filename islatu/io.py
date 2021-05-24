@@ -2,9 +2,10 @@
 Parsers for inputing experimental files.
 """
 
+# Copyright (c) 2021 Richard Brearton
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# authors: Andrew R. McCluskey, Richard Brearton
+# authors: Richard Brearton and Andrew R. McCluskey
 
 from numpy.lib.type_check import imag
 from islatu.scan import Scan2D

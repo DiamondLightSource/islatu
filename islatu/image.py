@@ -4,9 +4,10 @@ The purpose of this class is the investigation and manipulation of these
 images.
 """
 
+# Copyright (c) 2021 Richard Brearton
 # Copyright (c) Andrew R. McCluskey
 # Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
+# authors: Richard Brearton and Andrew R. McCluskey
 
 import numpy as np
 from PIL import Image as PILIm

@@ -15,14 +15,15 @@ from uncertainties import unumpy as unp
 
 def correct_attentuation(scan_list):
     """
-    Correct the attentuation level between a a series of elements in lists.
+    Correct the attentuation level between different scans.
 
     Args:
         scans (:py:attr:`list` of :py:class:`islatu.refl_data.Scan`):
             Reflectometry scans.
 
     Returns:
-        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: Reflectometry scans with attenuation corrected.
+        :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: 
+            Reflectometry scans with attenuation corrected.
     """
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n

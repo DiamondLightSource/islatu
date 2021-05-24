@@ -6,6 +6,7 @@ reflectometry data.
 """
 
 # Copyright (c) Andrew R. McCluskey
+# Copyright (c) 2021 Richard Brearton
 # Distributed under the terms of the MIT License
 # authors: Andrew R. McCluskey, Richard Brearton
 
