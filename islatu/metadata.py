@@ -29,6 +29,9 @@ class Metadata:
         for attr_name in dir(detector):
             attr = getattr(detector, attr_name)
 
+            if attr is None:
+                continue
+
             if attr_name.startswith('metakey_'):
                 setattr(self, attr_name.replace("metakey_", ""),
                         raw_metadata[attr])
