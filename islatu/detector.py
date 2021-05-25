@@ -95,7 +95,11 @@ class Detector:
     metakey_transmission: str = None
     metakey_roi_1_maxval: str = None
     metakey_roi_2_maxval: str = None
-    is_point_detector: bool = not is_2d_detector
+    is_point_detector: bool = None
+
+    def __post_init__(self):
+        if self.is_point_detector is None:
+            self.is_point_detector = not self.is_2d_detector
 
 
 i07_pilatus_legacy = Detector(
