@@ -67,10 +67,10 @@ class Data:
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
         speed_of_light = physical_constants[
             "speed of light in vacuum"][0] * 1e10
+        q_values = unp.sin(unp.radians(theta)) / (planck * speed_of_light)
 
-        q_values = energy * 4 * np.pi * unp.sin(
-            unp.radians(theta)) / (planck * speed_of_light)
-        return unp.uarray(q_values, np.zeros(theta.size))
+        q_values *= energy * 4.0 * np.pi
+        return q_values
 
     def _q_to_theta(self, q_values, energy) -> unp.uarray:
         """
@@ -114,9 +114,9 @@ class MeasurementBase:
         self.data.theta = value
 
     @property
-    def intensity(self):
+    def R(self):
         return self.data.intensity
 
-    @intensity.setter
-    def intensity(self, value):
+    @R.setter
+    def R(self, value):
         self.data.intensity = value
