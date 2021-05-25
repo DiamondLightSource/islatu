@@ -18,7 +18,6 @@ from islatu.data import Data
 import pandas as pd
 from uncertainties import unumpy as unp
 import numpy as np
-import copy
 
 
 def i07_dat_parser(file_path, theta_axis_name):
@@ -109,20 +108,22 @@ def i07_dat_parser(file_path, theta_axis_name):
     # Now build a Data instance to hold the theta/intensity values. It is
     # important to note that this provides the most naive estimate of intensity,
     # simply using the maximum pixel value to represent the intensity.
-    theta = unp.uarray(metadata.raw_metada[theta_axis_name],
-                       np.zeros(metadata.raw_metada[theta_axis_name].size))
-    intensity = unp.uarray(metadata.roi_1_maxval,
-                           np.zeros(metadata.roi_1_maxval.size))
-    energy = metadata.probe_energy
+    theta = unp.uarray(np.array(metadata.raw_metada[theta_axis_name]),
+                       np.zeros(len(metadata.raw_metada[theta_axis_name])))
+    intensity = unp.uarray(np.array(metadata.roi_1_maxval),
+                           np.zeros(len(metadata.roi_1_maxval)))
+    # Not 100% on why energy gets scraped as a list of length 1, but hey ho.
+    energy = metadata.probe_energy[0]
     data = Data(theta, intensity, energy)
 
     # Our metadata's file information is most likely wrong (unless this code is
     # being run on site). Try to correct these files.
-    metadata.file = _try_to_find_files(metadata.file)
+    metadata.file = _try_to_find_files(metadata.file,
+                                       additional_search_paths=[file_path])
 
     # This .dat file will point to images. Load them, use them to populate a
     # Scan2D object, and return the scan.
-    images = [Image(metadata.file[i]) for i in range(theta.size)]
+    images = [Image(metadata.file[i]) for i in range(len(metadata.file))]
     return Scan2D(data, metadata, images)
 
 
@@ -226,7 +227,7 @@ def rigaku_data_parser(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
-def _try_to_find_files(filenames):
+def _try_to_find_files(filenames, additional_search_paths):
     """
     Check that data files exist if the file parsed by parser pointed to a
     separate file containing intensity information. If the intensity data
@@ -262,10 +263,8 @@ def _try_to_find_files(filenames):
         # original approach.
         local_start_directories = [
             os.cwd,  # maybe the file is stored near the current working dir
-            # To search additional directories, add them in here manually,
-            # or take additional search directories as an extra argument to this
-            # function.
-        ]
+            # To search additional directories, add them in here manually.
+        ].extend(additional_search_paths)
 
         # now generate a list of all directories that we'd like to check
         candidate_paths = []
