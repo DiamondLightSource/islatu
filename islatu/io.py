@@ -108,12 +108,12 @@ def i07_dat_parser(file_path, theta_axis_name):
     # Now build a Data instance to hold the theta/intensity values. It is
     # important to note that this provides the most naive estimate of intensity,
     # simply using the maximum pixel value to represent the intensity.
-    theta = unp.uarray(np.array(metadata.raw_metada[theta_axis_name]),
-                       np.zeros(len(metadata.raw_metada[theta_axis_name])))
+    theta = unp.uarray(np.array(metadata.raw_metadata[theta_axis_name]),
+                       np.zeros(len(metadata.raw_metadata[theta_axis_name])))
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
                            np.zeros(len(metadata.roi_1_maxval)))
-    # Not 100% on why energy gets scraped as a list of length 1, but hey ho.
-    energy = metadata.probe_energy[0]
+
+    energy = metadata.probe_energy
     data = Data(theta, intensity, energy)
 
     # Our metadata's file information is most likely wrong (unless this code is
@@ -254,6 +254,7 @@ def _try_to_find_files(filenames, additional_search_paths):
 
         # Maybe we can see the file in its original storage location?
         if os.path.isfile(filenames[i]):
+            found_files.append(filenames[i])
             continue
 
         # If not, maybe it's stored locally? If the file was stored at
@@ -262,7 +263,7 @@ def _try_to_find_files(filenames, additional_search_paths):
         # interest. This algorithm is a generalization of Andrew McCluskey's
         # original approach.
         local_start_directories = [
-            os.cwd,  # maybe the file is stored near the current working dir
+            os.getcwd(),  # maybe file is stored near the current working dir
             # To search additional directories, add them in here manually.
         ].extend(additional_search_paths)
 

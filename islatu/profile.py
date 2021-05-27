@@ -110,7 +110,6 @@ class Profile(MeasurementBase):
         self.scans = stitching.correct_attentuation(self.scans)
 
     def resolution_function(self, qz_dimension=1, progress=True,
-                            detector_distance=None, energy=None,
                             pixel_size=172e-6):
         """
         Class method for
@@ -132,8 +131,7 @@ class Profile(MeasurementBase):
         """
         for scan in self.scans:
             scan.resolution_function(
-                qz_dimension, progress, detector_distance,
-                energy, pixel_size
+                qz_dimension, progress, pixel_size
             )
 
     def qdcd_normalisation(self, itp):
@@ -179,5 +177,6 @@ class Profile(MeasurementBase):
                 Defaults to :py:attr:`400`.
         """
         self.q_vectors, self.reflected_intensity = stitching.rebin(
-            self.q_vectors, self.reflected_intensity,
-            new_q, number_of_q_vectors, interpolate)
+            self.q_vectors, self.reflected_intensity, new_q,
+            number_of_q_vectors, interpolate
+        )

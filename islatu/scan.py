@@ -92,7 +92,6 @@ class Scan2D(Scan):
             self.R[i] = ufloat(self.images[i].sum().n, self.images[i].sum().s)
 
     def resolution_function(self, qz_dimension=1, progress=True,
-                            detector_distance=None, energy=None,
                             pixel_size=172e-6):
         """
         Estimate the q-resolution function based on the reflected intensity
@@ -115,12 +114,15 @@ class Scan2D(Scan):
         iterator = _get_iterator(self.images, progress)
         for i in iterator:
             self.images[i].q_resolution(qz_dimension)
-        if detector_distance is None:
-            detector_distance = self.metadata["diff1detdist"][0] * 1e-3
-        if energy is None:
-            energy = self.metadata["dcm1energy"][0]
+        # Grab the detector distance from the metadata. TODO: build units into
+        # the detector dataclass, and automatically noramlize units on
+        # initialization of a metadata instance.
+        detector_distance = self.metadata.detector_distance * 1e-3
+        energy = self.metadata.probe_energy
+        # The width of the peak in pixels should be indep. of image.
+        n_pixels = unp.nominal_values(self.images[0].n_pixels)
         offset = np.arctan(
-            pixel_size * 1.96 * self.n_pixels * 0.5 / (detector_distance)
+            pixel_size * 1.96 * n_pixels * 0.5 / (detector_distance)
         )
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
         speed_of_light = physical_constants[
@@ -147,7 +149,7 @@ class Scan2D(Scan):
         """
         Perform the transmission correction.
         """
-        self.R /= float(self.metadata["transmission"][0])
+        self.R /= float(self.metadata.transmission)
 
     def qdcd_normalisation(self, itp):
         """

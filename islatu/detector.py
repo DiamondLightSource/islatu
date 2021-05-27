@@ -75,6 +75,9 @@ class Detector:
             :py:attr:`True` if the detector is a point detector. Defaults to 
                 :: not is_2d_detector ::.
     """
+    # TODO: build units into the detector dataclass, and automatically noramlize
+    # units on initialization of a metadata instance.
+
     # a unique, readable ID for the detector name (e.g. "I07_pilatus")
     detector_name: str
     is_2d_detector: bool

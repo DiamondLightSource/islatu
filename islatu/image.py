@@ -64,7 +64,7 @@ class Image:
         self.array = unp.uarray(array, array_error)
         self.array_original = np.copy(array)
         self.bkg = 0
-        self.n_pixel = 0
+        self.n_pixels = 0
 
     @property
     def nominal_values(self):
@@ -195,7 +195,7 @@ class Image:
         bkg_popt, bkg_idx = fit_gaussian_1d(
             self.n, self.s, axis=qz_dimension
         )
-        self.n_pixel = bkg_popt[1]
+        self.n_pixels = bkg_popt[1]
 
 
 def _average_out_hot(array, hot_pixel_max=2e5):

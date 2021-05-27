@@ -14,9 +14,11 @@ from islatu.detector import Detector
 
 
 class Metadata:
+    # TODO: build units into the detector dataclass, and automatically noramlize
+    # units on initialization of a metadata instance.
     def __init__(self, detector: Detector, raw_metadata: dict) -> None:
         self.detector = detector
-        self.raw_metada = raw_metadata
+        self.raw_metadata = raw_metadata
 
         # Explicitly add a few important attributes for intelligent code
         # completion. This is redundant, but convenient.
@@ -33,5 +35,10 @@ class Metadata:
                 continue
 
             if attr_name.startswith('metakey_'):
-                setattr(self, attr_name.replace("metakey_", ""),
-                        raw_metadata[attr])
+                # If this metadata is in a list of length one, it probably shouldn't
+                # be wrapped in a list.
+                if len(self.raw_metadata[attr]) == 1:
+                    self.raw_metadata[attr] = self.raw_metadata[attr][0]
+
+                setattr(self, attr_name.strip().replace("metakey_", ""),
+                        (self.raw_metadata[attr]))
