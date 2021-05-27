@@ -37,8 +37,14 @@ class Metadata:
             if attr_name.startswith('metakey_'):
                 # If this metadata is in a list of length one, it probably shouldn't
                 # be wrapped in a list.
-                if len(self.raw_metadata[attr]) == 1:
-                    self.raw_metadata[attr] = self.raw_metadata[attr][0]
+                try:
+                    stripped_name = attr_name.strip().replace("metakey_", "")
+                    if len(self.raw_metadata[attr]) == 1:
+                        self.raw_metadata[attr] = self.raw_metadata[attr][0]
 
-                setattr(self, attr_name.strip().replace("metakey_", ""),
-                        (self.raw_metadata[attr]))
+                    setattr(self, stripped_name,
+                            (self.raw_metadata[attr]))
+                except KeyError as e:
+                    print("Could not find necessary metadata with name: " +
+                          stripped_name + ", is your input file malformed?")
+                    raise e
