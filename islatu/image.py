@@ -45,16 +45,12 @@ class Image:
             :py:attr:`2e5`.
     """
 
-    def __init__(self, file_path, transpose=False, pixel_min=0,
+    def __init__(self, array, transpose=False, pixel_min=0,
                  hot_pixel_max=2e5):
         """
         Initialisation of the :py:class:`islatu.image.Image` class, includes
         assigning uncertainties.
         """
-        self.file_path = file_path
-        img = PILIm.open(file_path)
-        array = np.array(img)
-        img.close()
         if transpose:
             array = array.T
         array = _average_out_hot(array, hot_pixel_max)
@@ -65,6 +61,14 @@ class Image:
         self.array_original = np.copy(array)
         self.bkg = 0
         self.n_pixels = 0
+
+    @classmethod
+    def from_img_file_name(cls, file_path, transpose=False, pixel_min=0,
+                           hot_pixel_max=2e5):
+        img = PILIm.open(file_path)
+        array = np.array(img)
+        img.close()
+        return cls(array, file_path, transpose, pixel_min, hot_pixel_max)
 
     @property
     def nominal_values(self):

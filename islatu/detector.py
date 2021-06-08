@@ -121,13 +121,25 @@ i07_pilatus_legacy = Detector(
 # between i07_pilatus and i07_pilatus_legacy
 i07_pilatus = i07_pilatus_legacy
 
+i07_excalibur_nxs = Detector(
+    detector_name="i07_excalibur_saved_as_nexus",
+    is_2d_detector=True,
+    probe_mass=0,
+    metakey_detector_distance="/root/entry/instrument/diff1detdist/value",
+    metakey_probe_energy="/root/entry/instrument/dcm1energy/value",
+    metakey_file="/root/entry/excroi_data/data",
+    metakey_transmission="/root/entry/instrument/filterset/transmission",
+    metakey_roi_1_maxval="Region_1_max_val",
+    metakey_roi_2_maxval="Region_2_max_val"
+)
+
 i07_excalibur = Detector(
     detector_name="I07_Excalibur",
     is_2d_detector=True,
     probe_mass=0,
     metakey_detector_distance="diff1detdist",
     metakey_probe_energy="dcm1energy",
-    metakey_file="file",  # TODO UPDATE THIS!!!
+    metakey_file="CURRENTLY_BUGGED",  # TODO: fix when fixed!
     metakey_transmission="transmission",
     metakey_roi_1_maxval="Region_1_max_val",
     metakey_roi_2_maxval="Region_2_max_val"

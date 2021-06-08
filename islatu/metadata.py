@@ -11,12 +11,13 @@ of all of the metadata as scraped from the parsed file.
 # authors: Richard Brearton and Andrew R. McCluskey
 
 from islatu.detector import Detector
+from nexusformat.nexus.tree import NXgroup
 
 
 class Metadata:
     # TODO: build units into the detector dataclass, and automatically noramlize
     # units on initialization of a metadata instance.
-    def __init__(self, detector: Detector, raw_metadata: dict) -> None:
+    def __init__(self, detector: Detector, raw_metadata) -> None:
         self.detector = detector
         self.raw_metadata = raw_metadata
 
@@ -25,6 +26,10 @@ class Metadata:
         self.is_2d_detector = detector.is_2d_detector
         self.probe_mass = detector.probe_mass
         self.is_point_detector = detector.is_point_detector
+
+        # If the raw_metadata is an NXgroup, give up hope.
+        if isinstance(raw_metadata, NXgroup):
+            return
 
         # Now retrieve the dictionary data from the raw_metadata using the keys
         # in the detector object.

@@ -130,11 +130,17 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
     """
     ordinate = image.mean(axis=axis)
     ordinate_e = image_e.mean(axis=axis)
+
+    maximum = image.max()
+    if maximum == 0:
+        # A small quantity by which we can shift image.max() such that it's > 0.
+        epsilon = 0.001
+        maximum += epsilon
     # Setting default values
     if p0 is None:
         p0 = [ordinate.shape[0] / 2, 1, 0, image.max()]
     if bounds is None:
-        bounds = (0, [ordinate.shape[0], 100, image.max(), image.max() * 10])
+        bounds = (0, [ordinate.shape[0], 100, maximum, maximum * 10])
     # Perform the fitting
     popt, pcov = curve_fit(
         univariate_normal,

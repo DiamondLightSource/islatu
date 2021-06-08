@@ -128,9 +128,11 @@ class Scan2D(Scan):
         speed_of_light = physical_constants[
             "speed of light in vacuum"][0] * 1e10
         q_uncertainty = energy * 4 * np.pi * unp.sin(
-            offset) / (planck * speed_of_light)
+            np.array(offset)) / (planck * speed_of_light)
+
         self.q = unp.uarray(
-            unp.nominal_values(self.q), unp.std_devs(self.q) + q_uncertainty)
+            unp.nominal_values(self.q),
+            unp.std_devs(self.q) + q_uncertainty)
 
     def footprint_correction(self, beam_width, sample_size):
         """

@@ -8,6 +8,8 @@ Parsers for inputing experimental files.
 # authors: Richard Brearton and Andrew R. McCluskey
 
 import os
+from re import split
+from islatu import metadata
 from islatu.refl_data import _get_iterator
 from numpy.lib.type_check import imag
 from islatu.scan import Scan2D
@@ -18,6 +20,8 @@ from islatu.data import Data
 import pandas as pd
 from uncertainties import unumpy as unp
 import numpy as np
+import nexus
+import h5py
 
 
 def i07_dat_parser(file_path, theta_axis_name):
@@ -123,7 +127,148 @@ def i07_dat_parser(file_path, theta_axis_name):
 
     # This .dat file will point to images. Load them, use them to populate a
     # Scan2D object, and return the scan.
-    images = [Image(metadata.file[i]) for i in range(len(metadata.file))]
+    images = [Image.from_img_file_name(metadata.file[i])
+              for i in range(len(metadata.file))]
+    return Scan2D(data, metadata, images)
+
+
+def i07_nxs_parser(file_path, theta_axis_name):
+    """Location of the data:
+    "entry/excroi_data/data"
+    found by:
+    infile["entry/excroi_data"].dir()
+    Otherwise, walk through the .nxs file recursively and grab all metadata.
+    This can be done using for example:
+
+    from nexusformat.nexus import nxload
+    in_file = nxload("/path/to/file.nxs")
+
+    for line in in_file.tree.split("\n"):
+        if ":" not in line:
+            do_logic_to_work_out_relative_path_name()
+            store_data_in_dictionary()
+
+    Metadata dict should be dealt with using full .nxs paths as keys, i.e.:
+    metadata.raw_metadata["Region_1.max_val"] should instead be:
+    metadata.raw_metadata["entry/excroi_Region_1.max_val/Region_1.max_val"]
+    ... while a little unwieldy, this is the most general way to avoid naming
+    conflicts. 
+    """
+    from nexusformat.nexus import nxload
+
+    nx_file = nxload(file_path)
+
+    # Split up the .nxs file.
+    file_lines = nx_file.tree.split("\n")
+
+    # The following is a reasonably general routine for the compactification of
+    # a .nxs file onto a dictionary.
+    entry_path = []
+    raw_metadata = {}
+    for line in file_lines:
+        # Check the indentation level.
+        stripped_line = line.lstrip(" ")
+        indent_lvl = int((len(line) - len(stripped_line))/2)
+
+        if len(stripped_line.split(" = ")) != 1:
+            # We found data/metadata.
+            split_line = stripped_line.split(" = ")
+        elif len(stripped_line.split(" -> ")) != 1:
+            # We found a pointer/link.
+            split_line = stripped_line.split(" -> ")
+            # Make sure that information is not lost by putting the pointer
+            # symbol back in.
+            split_line[1] = " -> " + split_line[1]
+        else:
+            # We found a new class. This should be obvious by its file_contents.
+            split_line = stripped_line.split(":")
+
+        # Something went wrong if our delimiter has shown up twice. Note that
+        # this bans dumb NXClass names with colons in them, etc..
+        if len(split_line) != 2:
+            raise ValueError("Islatu cannot parse this .nxs file.")
+        file_name = split_line[0]
+        file_contents = split_line[1]
+
+        # Form the new path.
+        if indent_lvl > len(entry_path):
+            entry_path.append(file_name)
+        else:
+            entry_path = entry_path[:indent_lvl]
+            entry_path.append(file_name)
+        current_path = "/" + "/".join(entry_path)
+
+        # Now update the metadata dictionary.
+        raw_metadata[current_path] = file_contents
+
+        if "max_val" in current_path:
+            # print(current_path, file_contents)
+            pass
+
+    # Now grab the real metadata corresponding to each path we found.
+    # for path in raw_metadata:
+    #     new_path = path.lstrip("/root")
+    #     if new_path == "":
+    #         continue
+    #     try:
+    #         contents = nx_file[new_path]._value
+    #     except:
+    #         continue
+    #     print(new_path + " || " + str(contents))
+
+    # The raw_metada dictionary is now populated.
+    # Key pieces of metadata:
+    # detector_distance = /entry/instrument/diff1detdist/value
+    # probe_energy = /entry/instrument/dcm1energy/value
+    # file = /entry/excroi_data/data
+    # transmission = /entry/instrument/filterset/transmission
+    # roi_1_maxval = /entry/instrument/excroi/Region_1.max_val
+    # roi_2_maxval = /entry/instrument/excroi/Region_2.max_val
+
+    # Scrape the essential metadata by force.
+    metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
+    metadata.detector_distance = nx_file["/entry/instrument/diff1detdist/value"]
+    metadata.probe_energy = nx_file["/entry/instrument/dcm1energy/value"]._value
+    metadata.file = nx_file["/entry/excroi_data/data"]
+    metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
+    metadata.roi_1_maxval = nx_file["/entry/instrument/excroi/Region_1.max_val"]
+    metadata.roi_2_maxval = nx_file["/entry/instrument/excroi/Region_2.max_val"]
+
+    print("---------------------------------------------------------------")
+    # Now prepare the Data object.
+    # TODO: work out how to find this generally.
+    theta_parsed = nx_file["entry/instrument/diff1chi/value"]._value
+    theta = theta_parsed
+    theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
+    intensity = unp.uarray(np.array(metadata.roi_1_maxval),
+                           np.zeros(len(metadata.roi_1_maxval)))
+
+    energy = metadata.probe_energy
+    data = Data(theta, intensity, energy)
+
+    # Our metadata's file information is most likely wrong (unless this code is
+    # being run on site). Try to correct these files.
+    # TODO: find file properly, fixing file mod error.
+    # metadata.file = _try_to_find_files(metadata.file,
+    #                                    additional_search_paths=[file_path])
+
+    # This .dat file will point to images. Load them, use them to populate a
+    # Scan2D object, and return the scan.
+
+    # Now load the images from the file:
+    # TODO: do this properly!
+    file_path = "i07_test/excaliburScan394605_000001.h5"
+    internal_data_path = 'data'
+
+    with h5py.File(file_path, "r") as file_handle:
+        dataset = file_handle[internal_data_path][()]
+        # images = [Image(dataset[i]) for i in range(dataset.shape[0])]
+        images = []
+        for i in range(dataset.shape[0]):
+            print("Loading image " + str(i) + " of " + str(dataset.shape[0]))
+            images.append(Image(dataset[i]))
+        # images = [Image(dataset[i]) for i in range(3)]
+
     return Scan2D(data, metadata, images)
 
 
