@@ -31,8 +31,8 @@ def correct_attentuation(scan_list):
         if overlap_start > overlap_end:
             warnings.warn('Using extrapolation to correct attenuation between '
                           'scans {} and {}. Please double check these '
-                          'results.'.format(scan_list[i].file_path,
-                                            scan_list[i+1].file_path))
+                          'results.'.format(scan_list[i].metadata.file,
+                                            scan_list[i+1].metadata.file))
             overlap_start_index = -2
             overlap_end_index = 1
         else:

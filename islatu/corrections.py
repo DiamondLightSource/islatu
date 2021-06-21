@@ -28,6 +28,12 @@ def footprint_correction(beam_width, sample_size, theta):
     Returns:
         (:py:class:`uncertainties.core.Variable`): Correction factor.
     """
+    for i in range(len(theta)):
+        if theta[i] == 0:
+            # The footprint correction for theta=0 is infinite, so just choose
+            # a small value. Theta=0 data is trivial anyway.
+            theta[i] = 1 * 10**(-3)
+
     beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
     length = sample_size * unp.sin(unp.radians(theta))
     mid = unp.nominal_values(length) / 2.0 / beam_sd

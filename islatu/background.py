@@ -129,23 +129,31 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
             - :py:attr:`None`: As it is not possible to describe the reflected peak width.
     """
     ordinate = image.mean(axis=axis)
+
+    # A small quantity by which we can shift parameters such that they're > 0.
+    # This can prevent various silly /0 errors, and forces upper bounds > lower.
+    epsilon = 0.001
+
+    # If errors on the image aren't being calculated, generate them here.
     ordinate_e = image_e.mean(axis=axis)
+
+    # Ensure that errors are finite or fitting will throw a ValueError.
+    ordinate_e = np.sqrt(ordinate) + epsilon
 
     maximum = image.max()
     if maximum == 0:
-        # A small quantity by which we can shift image.max() such that it's > 0.
-        epsilon = 0.001
         maximum += epsilon
     # Setting default values
     if p0 is None:
-        p0 = [ordinate.shape[0] / 2, 1, 0, image.max()]
+        p0 = [ordinate.shape[0] / 2, 1, epsilon, maximum]
     if bounds is None:
         bounds = (0, [ordinate.shape[0], 100, maximum, maximum * 10])
+
     # Perform the fitting
     popt, pcov = curve_fit(
         univariate_normal,
         np.arange(0, ordinate.shape[0], 1), ordinate, bounds=bounds,
         sigma=ordinate_e.flatten(), p0=p0, maxfev=2000 * (len(p0) + 1))
-    # Determine uncertainty from covarience matrix
-    p_sigma = np.sqrt(np.diag(pcov))
-    return unp.uarray(popt, p_sigma), 2
+    # Determine uncertainty from covarience matrix (DEPRECATED)
+    # p_sigma = np.sqrt(np.diag(pcov))
+    return np.array(popt), 2

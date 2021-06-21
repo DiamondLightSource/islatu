@@ -8,7 +8,10 @@ Parsers for inputing experimental files.
 # authors: Richard Brearton and Andrew R. McCluskey
 
 import os
-from re import split
+from re import search, split
+
+from nexusformat import nexus
+from nexusformat.nexus.tree import NeXusError
 from islatu import metadata
 from islatu.refl_data import _get_iterator
 from numpy.lib.type_check import imag
@@ -20,7 +23,6 @@ from islatu.data import Data
 import pandas as pd
 from uncertainties import unumpy as unp
 import numpy as np
-import nexus
 import h5py
 
 
@@ -158,6 +160,7 @@ def i07_nxs_parser(file_path, theta_axis_name):
 
     nx_file = nxload(file_path)
 
+    # ------------- BEGIN GENERIC NEXUS PARSER ----------------------------- #
     # Split up the .nxs file.
     file_lines = nx_file.tree.split("\n")
 
@@ -201,9 +204,11 @@ def i07_nxs_parser(file_path, theta_axis_name):
         # Now update the metadata dictionary.
         raw_metadata[current_path] = file_contents
 
-        if "max_val" in current_path:
+        # Useful for debugging/double checking.
+        if ("Region_" in file_contents) or ("Region_" in current_path):
             # print(current_path, file_contents)
             pass
+    # ------------- END GENERIC NEXUS PARSER ----------------------------- #
 
     # Now grab the real metadata corresponding to each path we found.
     # for path in raw_metadata:
@@ -229,7 +234,15 @@ def i07_nxs_parser(file_path, theta_axis_name):
     metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
     metadata.detector_distance = nx_file["/entry/instrument/diff1detdist/value"]
     metadata.probe_energy = nx_file["/entry/instrument/dcm1energy/value"]._value
-    metadata.file = nx_file["/entry/excroi_data/data"]
+    metadata.file = [nx_file["/entry/excroi_data/data"]._filename]
+
+    metadata.x_end = [
+        nx_file["/entry/instrument/excroi/Region_1.max_x"]]
+    metadata.x = [
+        nx_file["/entry/instrument/excroi/Region_1_X"]]
+    # print("X METADATA: ", metadata.x)
+    # print("X end METADATA: ", metadata.x_end)
+
     metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
     metadata.roi_1_maxval = nx_file["/entry/instrument/excroi/Region_1.max_val"]
     metadata.roi_2_maxval = nx_file["/entry/instrument/excroi/Region_2.max_val"]
@@ -237,7 +250,7 @@ def i07_nxs_parser(file_path, theta_axis_name):
     print("---------------------------------------------------------------")
     # Now prepare the Data object.
     # TODO: work out how to find this generally.
-    theta_parsed = nx_file["entry/instrument/diff1chi/value"]._value
+    theta_parsed = nx_file["/entry/instrument/diff1delta/value"]._value
     theta = theta_parsed
     theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
@@ -249,23 +262,24 @@ def i07_nxs_parser(file_path, theta_axis_name):
     # Our metadata's file information is most likely wrong (unless this code is
     # being run on site). Try to correct these files.
     # TODO: find file properly, fixing file mod error.
-    # metadata.file = _try_to_find_files(metadata.file,
-    #                                    additional_search_paths=[file_path])
+    metadata.file = _try_to_find_files(metadata.file,
+                                       additional_search_paths=[file_path])
 
     # This .dat file will point to images. Load them, use them to populate a
     # Scan2D object, and return the scan.
 
     # Now load the images from the file:
     # TODO: do this properly!
-    file_path = "i07_test/excaliburScan394605_000001.h5"
+    # file_path = "i07_test/excaliburScan394602_000001.h5"
     internal_data_path = 'data'
 
-    with h5py.File(file_path, "r") as file_handle:
+    print("Loading images from file " + metadata.file[0])
+    with h5py.File(metadata.file[0], "r") as file_handle:
         dataset = file_handle[internal_data_path][()]
         # images = [Image(dataset[i]) for i in range(dataset.shape[0])]
         images = []
         for i in range(dataset.shape[0]):
-            print("Loading image " + str(i) + " of " + str(dataset.shape[0]))
+            print("Loading image " + str(i+1) + " of " + str(dataset.shape[0]))
             images.append(Image(dataset[i]))
         # images = [Image(dataset[i]) for i in range(3)]
 
@@ -390,6 +404,27 @@ def _try_to_find_files(filenames, additional_search_paths):
     if not hasattr(filenames, "__iter__"):
         filenames = [filenames]
 
+    cwd = os.getcwd()
+    local_start_directories = [
+        cwd,  # maybe file is stored near the current working dir
+        # To search additional directories, add them in here manually.
+    ]
+    local_start_directories.extend(additional_search_paths)
+
+    # Better to be consistent.
+    for i in range(len(local_start_directories)):
+        local_start_directories[i] = local_start_directories[i].replace(
+            '\\', '/')
+
+    # Now extend the additional search paths.
+    for i in range(len(local_start_directories)):
+        search_path = local_start_directories[i]
+        split_srch_path = search_path.split('/')
+        for j in range(len(split_srch_path)):
+            extra_path_list = split_srch_path[:-(j+1)]
+            extra_path = '/'.join(extra_path_list)
+            local_start_directories.append(extra_path)
+
     # This line allows for a loading bar to show as we check the file.
     iterator = _get_iterator(filenames, False)
     for i in iterator:
@@ -407,10 +442,6 @@ def _try_to_find_files(filenames, additional_search_paths):
         # check locations LD/aj/aj+1/.../aN for all j<N and all LD's of
         # interest. This algorithm is a generalization of Andrew McCluskey's
         # original approach.
-        local_start_directories = [
-            os.getcwd(),  # maybe file is stored near the current working dir
-            # To search additional directories, add them in here manually.
-        ].extend(additional_search_paths)
 
         # now generate a list of all directories that we'd like to check
         candidate_paths = []
@@ -429,6 +460,7 @@ def _try_to_find_files(filenames, additional_search_paths):
                 # File found - add the correct file location to found_files
                 found_files.append(candidate_path)
                 found_file = not found_file
+                print("Data file found at " + candidate_path + ".")
                 break
 
         # If we didn't find the file, tell the user.

@@ -98,7 +98,7 @@ class Profile(MeasurementBase):
         for scan in self.scans:
             scan.footprint_correction(beam_width, sample_size)
 
-    def transmission_normalisation(self):
+    def transmission_normalisation(self, allow_stitching=False):
         """
         Perform the transmission correction
         (:func:`~islatu.refl_data.Scan.transmission_normalisation`) for each
@@ -107,7 +107,10 @@ class Profile(MeasurementBase):
         """
         for scan in self.scans:
             scan.transmission_normalisation()
-        self.scans = stitching.correct_attentuation(self.scans)
+
+        if allow_stitching:
+            self.scans = stitching.correct_attentuation(
+                self.scans, allow_stitching)
 
     def resolution_function(self, qz_dimension=1, progress=True,
                             pixel_size=172e-6):

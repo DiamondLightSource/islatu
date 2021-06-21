@@ -11,7 +11,6 @@ images.
 
 import numpy as np
 from PIL import Image as PILIm
-from uncertainties import unumpy as unp
 
 from islatu.background import fit_gaussian_1d
 
@@ -55,9 +54,7 @@ class Image:
             array = array.T
         array = _average_out_hot(array, hot_pixel_max)
         array[np.where(array < pixel_min)] = 0
-        array_error = np.sqrt(array)
-        array_error[np.where(array == 0)] = 1
-        self.array = unp.uarray(array, array_error)
+        self.array = array
         self.array_original = np.copy(array)
         self.bkg = 0
         self.n_pixels = 0
@@ -78,7 +75,7 @@ class Image:
         Returns:
             :py:attr:`array_like`: Nominal values of image.
         """
-        return unp.nominal_values(self.array)
+        return self.array
 
     @property
     def std_devs(self):
@@ -88,7 +85,9 @@ class Image:
         Returns:
             :py:attr:`array_like`: Standard deviation values of image.
         """
-        return unp.std_devs(self.array)
+        array_error = np.sqrt(self.array)
+        array_error[np.where(self.array == 0)] = 1
+        return array_error
 
     @property
     def n(self):
@@ -98,7 +97,7 @@ class Image:
         Returns:
             :py:attr:`array_like`: Nominal values of image.
         """
-        return unp.nominal_values(self.array)
+        return self.array
 
     @property
     def s(self):
@@ -108,7 +107,7 @@ class Image:
         Returns:
             :py:attr:`array_like`: Standard deviation values of image.
         """
-        return unp.std_devs(self.array)
+        return self.std_devs
 
     @property
     def shape(self):
@@ -118,7 +117,7 @@ class Image:
         Returns:
             :py:attr:`tuple` of :py:attr:`int`: The shape of the image.
         """
-        return unp.nominal_values(self.array).shape
+        return self.array.shape
 
     def __repr__(self):
         """
@@ -146,7 +145,7 @@ class Image:
             crop_function (:py:attr:`callable`): The function to crop the data.
             **kwargs (:py:attr:`dict`): The crop function keyword arguments.
         """
-        self.array = unp.uarray(*crop_function(self.n, self.s, **kwargs))
+        self.array = crop_function(self.array, **kwargs)
 
     def background_subtraction(self, background_subtraction_function,
                                **kwargs):
@@ -171,8 +170,9 @@ class Image:
             bkg_popt, bkg_idx = background_subtraction_function(
                 self.n, self.s, **kwargs
             )
-            self.bkg = bkg_popt[bkg_idx]
-        self.array -= self.bkg
+            self.bkg = np.float64(bkg_popt[bkg_idx])
+        # Clipping ensures array is +ve definite before casting back to uint
+        self.array = np.uint32((np.float64(self.array) - self.bkg).clip(0))
 
     def sum(self, axis=None):
         """

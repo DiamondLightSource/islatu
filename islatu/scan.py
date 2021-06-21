@@ -66,7 +66,9 @@ class Scan2D(Scan):
                 self.images[i].crop(crop_function)
             else:
                 self.images[i].crop(crop_function, **kwargs)
-            self.R[i] = ufloat(self.images[i].sum().n, self.images[i].sum().s)
+
+            self.R[i] = ufloat(self.images[i].sum(),
+                               np.sqrt(self.images[i].sum()))
 
     def bkg_sub(self, bkg_sub_function, kwargs=None, progress=True):
         """
@@ -89,7 +91,8 @@ class Scan2D(Scan):
             else:
                 self.images[i].background_subtraction(
                     bkg_sub_function, **kwargs)
-            self.R[i] = ufloat(self.images[i].sum().n, self.images[i].sum().s)
+            self.R[i] = ufloat(self.images[i].sum(),
+                               np.sqrt(self.images[i].sum()))
 
     def resolution_function(self, qz_dimension=1, progress=True,
                             pixel_size=172e-6):
@@ -151,6 +154,7 @@ class Scan2D(Scan):
         """
         Perform the transmission correction.
         """
+        print("Transmission:", self.metadata.transmission)
         self.R /= float(self.metadata.transmission)
 
     def qdcd_normalisation(self, itp):
