@@ -232,10 +232,10 @@ def i07_nxs_parser(file_path, theta_axis_name):
 
     # Scrape the essential metadata by force.
     metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
-    metadata.detector_distance = nx_file["/entry/instrument/diff1detdist/value"]
+    metadata.detector_distance = nx_file[
+        "/entry/instrument/diff1detdist/value"]._value
     metadata.probe_energy = nx_file["/entry/instrument/dcm1energy/value"]._value
     metadata.file = [nx_file["/entry/excroi_data/data"]._filename]
-
     metadata.x_end = [
         nx_file["/entry/instrument/excroi/Region_1.max_x"]]
     metadata.x = [
@@ -254,7 +254,7 @@ def i07_nxs_parser(file_path, theta_axis_name):
     theta = theta_parsed
     theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
-                           np.zeros(len(metadata.roi_1_maxval)))
+                           np.sqrt(np.array(metadata.roi_1_maxval)))
 
     energy = metadata.probe_energy
     data = Data(theta, intensity, energy)

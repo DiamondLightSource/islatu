@@ -61,14 +61,15 @@ class Scan2D(Scan):
                 to :py:attr:`True`.
         """
         iterator = _get_iterator(self.images, progress)
+        vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
         for i in iterator:
             if kwargs is None:
                 self.images[i].crop(crop_function)
             else:
                 self.images[i].crop(crop_function, **kwargs)
 
-            self.R[i] = ufloat(self.images[i].sum(),
-                               np.sqrt(self.images[i].sum()))
+            vals[i], stdevs[i] = self.images[i].sum()
+        self.R = unp.uarray(vals, stdevs)
 
     def bkg_sub(self, bkg_sub_function, kwargs=None, progress=True):
         """
@@ -85,14 +86,15 @@ class Scan2D(Scan):
                 to :py:attr:`True`.
         """
         iterator = _get_iterator(self.images, progress)
+        vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
         for i in iterator:
             if kwargs is None:
                 self.images[i].background_subtraction(bkg_sub_function)
             else:
                 self.images[i].background_subtraction(
                     bkg_sub_function, **kwargs)
-            self.R[i] = ufloat(self.images[i].sum(),
-                               np.sqrt(self.images[i].sum()))
+            vals[i], stdevs[i] = self.images[i].sum()
+        self.R = unp.uarray(vals, stdevs)
 
     def resolution_function(self, qz_dimension=1, progress=True,
                             pixel_size=172e-6):
@@ -127,6 +129,7 @@ class Scan2D(Scan):
         offset = np.arctan(
             pixel_size * 1.96 * n_pixels * 0.5 / (detector_distance)
         )
+        print("OFFSET:", offset)
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
         speed_of_light = physical_constants[
             "speed of light in vacuum"][0] * 1e10

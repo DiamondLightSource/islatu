@@ -55,6 +55,7 @@ class Image:
         array = _average_out_hot(array, hot_pixel_max)
         array[np.where(array < pixel_min)] = 0
         self.array = array
+        self.array_s = np.sqrt(array)
         self.array_original = np.copy(array)
         self.bkg = 0
         self.n_pixels = 0
@@ -146,6 +147,7 @@ class Image:
             **kwargs (:py:attr:`dict`): The crop function keyword arguments.
         """
         self.array = crop_function(self.array, **kwargs)
+        self.array_s = crop_function(self.array_s, **kwargs)
 
     def background_subtraction(self, background_subtraction_function,
                                **kwargs):
@@ -170,9 +172,10 @@ class Image:
             bkg_popt, bkg_idx = background_subtraction_function(
                 self.n, self.s, **kwargs
             )
-            self.bkg = np.float64(bkg_popt[bkg_idx])
+            self.bkg, bkg_sigma = bkg_popt[0][bkg_idx], bkg_popt[1][bkg_idx]
         # Clipping ensures array is +ve definite before casting back to uint
         self.array = np.uint32((np.float64(self.array) - self.bkg).clip(0))
+        self.array_s += bkg_sigma
 
     def sum(self, axis=None):
         """
@@ -182,7 +185,7 @@ class Image:
             axis (:py:attr:`int`, optional): The axis of the array to perform
                 the summation over. Defaults to :py:attr:`None`.
         """
-        return self.array.sum(axis)
+        return self.array.sum(axis), self.array_s.sum(axis)
 
     def q_resolution(self, qz_dimension=1):
         """
@@ -199,7 +202,7 @@ class Image:
         bkg_popt, bkg_idx = fit_gaussian_1d(
             self.n, self.s, axis=qz_dimension
         )
-        self.n_pixels = bkg_popt[1]
+        self.n_pixels = bkg_popt[0][1]
 
 
 def _average_out_hot(array, hot_pixel_max=2e5):

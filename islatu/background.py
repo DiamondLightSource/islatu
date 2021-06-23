@@ -154,6 +154,6 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
         univariate_normal,
         np.arange(0, ordinate.shape[0], 1), ordinate, bounds=bounds,
         sigma=ordinate_e.flatten(), p0=p0, maxfev=2000 * (len(p0) + 1))
-    # Determine uncertainty from covarience matrix (DEPRECATED)
-    # p_sigma = np.sqrt(np.diag(pcov))
-    return np.array(popt), 2
+    # Determine uncertainty from covarience matrix
+    p_sigma = np.sqrt(np.diag(pcov))
+    return (popt, p_sigma), 2

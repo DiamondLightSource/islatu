@@ -65,6 +65,7 @@ class Profile(MeasurementBase):
         """
         for scan in self.scans:
             scan.crop(crop_function, kwargs, progress)
+        self.concatenate()
 
     def bkg_sub(self, bkg_sub_function, kwargs=None, progress=True):
         """
@@ -83,6 +84,7 @@ class Profile(MeasurementBase):
         """
         for scan in self.scans:
             scan.bkg_sub(bkg_sub_function, kwargs, progress)
+        self.concatenate()
 
     def footprint_correction(self, beam_width, sample_size):
         """
@@ -97,6 +99,7 @@ class Profile(MeasurementBase):
         """
         for scan in self.scans:
             scan.footprint_correction(beam_width, sample_size)
+        self.concatenate()
 
     def transmission_normalisation(self, allow_stitching=False):
         """
@@ -111,6 +114,7 @@ class Profile(MeasurementBase):
         if allow_stitching:
             self.scans = stitching.correct_attentuation(
                 self.scans, allow_stitching)
+        self.concatenate()
 
     def resolution_function(self, qz_dimension=1, progress=True,
                             pixel_size=172e-6):
@@ -136,6 +140,7 @@ class Profile(MeasurementBase):
             scan.resolution_function(
                 qz_dimension, progress, pixel_size
             )
+        self.concatenate()
 
     def qdcd_normalisation(self, itp):
         """
@@ -148,6 +153,7 @@ class Profile(MeasurementBase):
         """
         for scan in self.scans:
             scan.qdcd_normalisation(itp)
+        self.concatenate()
 
     def concatenate(self):
         """
@@ -167,6 +173,7 @@ class Profile(MeasurementBase):
         self.reflected_intensity = stitching.normalise_ter(
             self.q_vectors, self.reflected_intensity, max_q
         )
+        self.concatenate()
 
     def rebin(self, new_q=None, number_of_q_vectors=400, interpolate=False):
         """
