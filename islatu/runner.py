@@ -4,6 +4,7 @@ from islatu import cropping
 from islatu import image
 from islatu import io
 from islatu import refl_data
+from islatu.profile import Profile
 from islatu import stitching
 from islatu import __version__
 from yaml import load, dump
@@ -12,18 +13,21 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 import datetime
+import os
 from os import path
 from ast import literal_eval as make_tuple
 from uncertainties import ufloat
+from uncertainties.unumpy import nominal_values, std_devs
 import numpy as np
 
 function_map = {'gaussian_1d': background.fit_gaussian_1d,
                 'gaussian_2d': background.fit_gaussian_2d,
                 'area': None,
-                'i07': io.i07_dat_parser,
+                'i07': io.i07_nxs_parser,
                 'crop': cropping.crop_2d,
                 'crop_peak': cropping.crop_around_peak_2d,
                 }
+
 
 class Creator:
     def __init__(self, name='Unknown', affiliation='Unknown'):
@@ -100,7 +104,7 @@ class DataState:
 
 class Reduction:
     def __init__(self, software=Software(), input_files=[],
-                 data_state=DataState(), parser=io.i07_dat_parser,
+                 data_state=DataState(), parser=io.i07_nxs_parser,
                  crop_function=cropping.crop_around_peak_2d, crop_kwargs=None,
                  bkg_function=background.fit_gaussian_1d, bkg_kwargs=None,
                  dcd_normalisation=None, sample_size=None, beam_width=None):
@@ -128,13 +132,14 @@ class Data:
         self.column_3 = columns[2]
         if len(columns) == 4:
             self.column_4 = columns[3]
-        if columns=='both':
+        if columns == 'both':
             self.both = True
             self.column_4 = columns[3]
         self.rebin = True
         self.n_qvectors = n_qvectors
         self.q_step = q_step
         self.q_shape = 'linear'
+
 
 class Foreperson:
     def __init__(self, run_numbers, yaml_file, directory, title):
@@ -159,8 +164,7 @@ class Foreperson:
                 "The experiment directory cannot be found.")
 
         self.reduction.input_files = [
-            self.directory_path + str(r) + '.dat' for r in run_numbers]
-
+            self.directory_path + 'i07-' + str(r) + '.nxs' for r in run_numbers]
 
     def setup(self, recipe):
         keys = recipe.keys()
@@ -180,7 +184,7 @@ class Foreperson:
                 self.creator.affiliation = recipe['visit']['user affiliation']
         else:
             raise ValueError(
-                "No visit given in {}. "\
+                "No visit given in {}. "
                 "You must at least give a visit id".format(yaml_file))
         # Populate informatio from the information section
         if 'instrument' in keys:
@@ -263,15 +267,15 @@ class Foreperson:
             if 'n qvectors' in recipe['rebin'].keys():
                 self.data.n_qvectors = recipe['rebin']['n qvectors']
             elif 'min' in recipe['rebin'].keys() and 'max' in recipe[
-                'rebin'].keys() and 'step' in recipe['rebin'].keys():
+                    'rebin'].keys() and 'step' in recipe['rebin'].keys():
                 self.data.q_step = recipe['rebin']['step']
                 if 'shape' in recipe['rebin'].keys():
                     self.data.q_shape = recipe['rebin']['shape']
             else:
-                raise ValueError("Please define parameters of "\
+                raise ValueError("Please define parameters of "
                                  "rebin in {}.".format(yaml_file))
         else:
-            self.data.rebin=False
+            self.data.rebin = False
 
 
 def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
@@ -285,20 +289,19 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     directory (:py:attr:`str`): Outline for directory path.
     title (:py:attr:`str`): A title for the experiment.
     """
+    # Make sure the directory is properly formatted.
+    if not str(directory).endswith("/"):
+        directory = directory + "/"
     the_boss = Foreperson(run_numbers, yaml_file, directory, title)
 
     files_to_reduce = the_boss.reduction.input_files
 
-
     print("-" * 10)
     print('File Parsing')
     print("-" * 10)
-    refl = refl_data.Profile(files_to_reduce, the_boss.reduction.parser,
-         the_boss.data_source.experiment.measurement.q_axis_name,
-         the_boss.data_source.experiment.measurement.theta_axis_name,
-         None, 0, the_boss.data_source.experiment.measurement.pixel_max,
-         the_boss.data_source.experiment.measurement.hot_pixel_max,
-         the_boss.data_source.experiment.measurement.transpose)
+    scan_axis_name = the_boss.data_source.experiment.measurement.theta_axis_name
+    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,
+                                 scan_axis_name)
 
     print("-" * 10)
     print('Cropping')
@@ -332,9 +335,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         the_boss.reduction.beam_width, the_boss.reduction.sample_size)
     refl.transmission_normalisation()
     the_boss.reduction.data_state.transmission = 'normalised'
-    refl.concatenate()
-    refl.normalise_ter()
-    the_boss.reduction.data_state.intensity = 'normalised'
+    # refl.normalise_ter()
+    # the_boss.reduction.data_state.intensity = 'normalised'
 
     if the_boss.data.rebin:
         print("-" * 10)
@@ -354,25 +356,48 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     the_boss.data_source.experiment.measurement.q_range = [
         str(refl.q.min()), str(refl.q.max())]
     the_boss.data.n_qvectors = str(len(refl.R))
+
+    refl.concatenate()
+    # Make sure that the processing directory exists.
+    processing_path = the_boss.directory_path + 'processing/'
+    if not os.path.exists(processing_path):
+        os.makedirs(processing_path)
     try:
-        _ = the_boss.data.column_4
-        data = np.array([refl.q, refl.R, refl.dR, refl.dq]).T
+        data = np.array([nominal_values(refl.q), nominal_values(refl.R),
+                         std_devs(refl.q), std_devs(refl.R)]).T
         np.savetxt(
-            (the_boss.directory_path + '/processing/XRR_{}.dat'.format(
+            (processing_path + 'XRR_{}_4col.dat'.format(
                 run_numbers[0])), data,
-             header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
+            header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
         if the_boss.data.both:
-            data = np.array([refl.q, refl.R, refl.dR]).T
+            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
+                             std_devs(refl.R)]).T
             np.savetxt(
-                (the_boss.directory_path + '/processing/XRR_{}_3col.dat'.format(
+                (processing_path + 'XRR_{}_3col.dat'.format(
                     run_numbers[0])), data,
-                 header='{}\n 1 2 3'.format(dump(vars(the_boss))))
+                header='{}\n 1 2 3'.format(dump(vars(the_boss))))
     except:
-        data = np.array([refl.q, refl.R, refl.dR]).T
-        np.savetxt(
-            (the_boss.directory_path + '/processing/XRR_{}.dat'.format(
-                run_numbers[0])), data,
-             header='{}\n 1 2 3'.format(dump(vars(the_boss))))
+        try:
+            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
+                             std_devs(refl.R)]).T
+            np.savetxt(
+                (processing_path + 'XRR_{}_3col.dat'.format(
+                    run_numbers[0])), data,
+                header='{}\n 1 2 3'.format(dump(vars(the_boss))))
+            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
+                             std_devs(refl.q), std_devs(refl.R)]).T
+            # TODO: uncomment when resolution_function does sensible stuff
+            # np.savetxt(
+            #     (processing_path + 'XRR_{}_4col.dat'.format(
+            #         run_numbers[0])), data,
+            #     header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
+        except:
+            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
+                             std_devs(refl.R)]).T
+            np.savetxt(
+                (processing_path + 'XRR_{}_3col.dat'.format(
+                    run_numbers[0])), data,
+                header='{}\n 1 2 3'.format(dump(vars(the_boss))))
 
     print("-" * 10)
     print('Reduced Data Stored in Processing Directory')

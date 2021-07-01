@@ -30,7 +30,11 @@ class Data:
 
     @property
     def R(self) -> unp.uarray:
-        return self.intensity/unp.maximum(self.intensity)
+        return self.intensity
+
+    @R.setter
+    def R(self, value) -> None:
+        self.intensity = value
 
     @property
     def q(self) -> unp.uarray:

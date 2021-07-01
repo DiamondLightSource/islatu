@@ -129,7 +129,6 @@ class Scan2D(Scan):
         offset = np.arctan(
             pixel_size * 1.96 * n_pixels * 0.5 / (detector_distance)
         )
-        print("OFFSET:", offset)
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
         speed_of_light = physical_constants[
             "speed of light in vacuum"][0] * 1e10

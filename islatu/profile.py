@@ -159,7 +159,7 @@ class Profile(MeasurementBase):
         """
         Class method for :func:`~islatu.stitching.concatenate`.
         """
-        self.q_vectors, self.reflected_intensity = stitching.concatenate(
+        self.q, self.R = stitching.concatenate(
             self.scans)
 
     def normalise_ter(self, max_q=0.1):
@@ -171,7 +171,7 @@ class Profile(MeasurementBase):
                 the critical angle.
         """
         self.reflected_intensity = stitching.normalise_ter(
-            self.q_vectors, self.reflected_intensity, max_q
+            self.q, self.R, max_q
         )
         self.concatenate()
 
@@ -186,7 +186,7 @@ class Profile(MeasurementBase):
                 q-vectors to be using initially in the rebinning of the data.
                 Defaults to :py:attr:`400`.
         """
-        self.q_vectors, self.reflected_intensity = stitching.rebin(
-            self.q_vectors, self.reflected_intensity, new_q,
+        self.q, self.R = stitching.rebin(
+            self.q, self.R, new_q,
             number_of_q_vectors, interpolate
         )
