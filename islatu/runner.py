@@ -161,7 +161,8 @@ class Foreperson:
             self.directory_path = directory_path
         else:
             raise FileNotFoundError(
-                "The experiment directory cannot be found.")
+                "The experiment directory <" + directory_path +
+                "> cannot be found.")
 
         self.reduction.input_files = [
             self.directory_path + 'i07-' + str(r) + '.nxs' for r in run_numbers]

@@ -11,6 +11,7 @@ import os
 from re import search, split
 
 from nexusformat import nexus
+import nexusformat
 from nexusformat.nexus.tree import NeXusError
 from islatu import metadata
 from islatu.refl_data import _get_iterator
@@ -205,7 +206,7 @@ def i07_nxs_parser(file_path, theta_axis_name):
         raw_metadata[current_path] = file_contents
 
         # Useful for debugging/double checking.
-        if ("Region_" in file_contents) or ("Region_" in current_path):
+        if ("hex" in file_contents) or ("hex" in current_path):
             # print(current_path, file_contents)
             pass
     # ------------- END GENERIC NEXUS PARSER ----------------------------- #
@@ -230,28 +231,41 @@ def i07_nxs_parser(file_path, theta_axis_name):
     # roi_1_maxval = /entry/instrument/excroi/Region_1.max_val
     # roi_2_maxval = /entry/instrument/excroi/Region_2.max_val
 
-    # Scrape the essential metadata by force.
+    # Scrape the essential metadata directly.
     metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
     metadata.detector_distance = nx_file[
         "/entry/instrument/diff1detdist/value"]._value
     metadata.probe_energy = nx_file["/entry/instrument/dcm1energy/value"]._value
     metadata.file = [nx_file["/entry/excroi_data/data"]._filename]
-    metadata.x_end = [
-        nx_file["/entry/instrument/excroi/Region_1.max_x"]]
+    try:
+        metadata.x_end = [
+            nx_file["/entry/instrument/excroi/Region_1.max_x"]]
+    except NeXusError:
+        metadata.x_end = [
+            nx_file["/entry/instrument/excroi/Region_1_max_x"]]
     metadata.x = [
         nx_file["/entry/instrument/excroi/Region_1_X"]]
     # print("X METADATA: ", metadata.x)
     # print("X end METADATA: ", metadata.x_end)
 
     metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
-    metadata.roi_1_maxval = nx_file["/entry/instrument/excroi/Region_1.max_val"]
-    metadata.roi_2_maxval = nx_file["/entry/instrument/excroi/Region_2.max_val"]
+    try:
+        metadata.roi_1_maxval = nx_file[
+            "/entry/instrument/excroi/Region_1.max_val"]
+        metadata.roi_2_maxval = nx_file[
+            "/entry/instrument/excroi/Region_2.max_val"]
+    except NeXusError:
+        metadata.roi_1_maxval = nx_file[
+            "/entry/instrument/excroi/Region_1_max_val"]
+        metadata.roi_2_maxval = nx_file[
+            "/entry/instrument/excroi/Region_2_max_val"]
 
-    print("---------------------------------------------------------------")
     # Now prepare the Data object.
     # TODO: work out how to find this generally.
     theta_parsed = nx_file["/entry/instrument/diff1delta/value"]._value
-    theta = theta_parsed
+    if isinstance(theta_parsed, float):
+        theta_parsed = nx_file["/entry/instrument/hex1z/value"]._value
+    print(theta_parsed)
     theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
                            np.sqrt(np.array(metadata.roi_1_maxval)))

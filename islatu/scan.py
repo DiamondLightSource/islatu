@@ -60,7 +60,7 @@ class Scan2D(Scan):
                 Requires the :py:mod:`tqdm` package. Defaults
                 to :py:attr:`True`.
         """
-        iterator = _get_iterator(self.images, progress)
+        iterator = _get_iterator(self.q, progress)
         vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
         for i in iterator:
             if kwargs is None:
@@ -85,7 +85,7 @@ class Scan2D(Scan):
                 Requires the :py:mod:`tqdm` package. Defaults
                 to :py:attr:`True`.
         """
-        iterator = _get_iterator(self.images, progress)
+        iterator = _get_iterator(self.q, progress)
         vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
         for i in iterator:
             if kwargs is None:
@@ -116,7 +116,7 @@ class Scan2D(Scan):
             energy (:py:attr:`float`): X-ray energy in keV
             pixel_size (:py:attr:`float`, optional): Pixel size in metres
         """
-        iterator = _get_iterator(self.images, progress)
+        iterator = _get_iterator(self.q, progress)
         for i in iterator:
             self.images[i].q_resolution(qz_dimension)
         # Grab the detector distance from the metadata. TODO: build units into
