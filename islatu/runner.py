@@ -307,7 +307,27 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     print("-" * 10)
     print('Cropping')
     print("-" * 10)
-    refl.crop(the_boss.reduction.crop_function, the_boss.reduction.crop_kwargs)
+    # Check to see if we should default to the ROI cropping regions
+    if ((the_boss.reduction.crop_function is cropping.crop_2d) and
+            the_boss.reduction.crop_kwargs is None):
+        the_boss.reduction.crop_kwargs = {
+            'x_start': refl.scans[0].metadata.roi_1_x1,
+            'x_end': refl.scans[0].metadata.roi_1_x2,
+            'y_start': refl.scans[0].metadata.roi_1_y1,
+            'y_end': refl.scans[0].metadata.roi_1_y2
+        }
+        print("Crop region of interest (ROI) generated from excalibur's ROI.")
+    print("crop_kwargs:", the_boss.reduction.crop_kwargs)
+    refl.crop(the_boss.reduction.crop_function,
+              the_boss.reduction.crop_kwargs)
+
+    import matplotlib.pyplot as plt
+    topscan = refl.scans[0]
+    topimage = topscan.images[5]
+    plt.imshow(np.log(topimage.n))
+    plt.xlabel('x-Pixel')
+    plt.ylabel('y-Pixel')
+    plt.show()
 
     print("-" * 10)
     print('Background Subtraction')

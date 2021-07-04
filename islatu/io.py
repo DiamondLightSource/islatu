@@ -243,10 +243,20 @@ def i07_nxs_parser(file_path, theta_axis_name):
     except NeXusError:
         metadata.x_end = [
             nx_file["/entry/instrument/excroi/Region_1_max_x"]]
-    metadata.x = [
-        nx_file["/entry/instrument/excroi/Region_1_X"]]
-    # print("X METADATA: ", metadata.x)
-    # print("X end METADATA: ", metadata.x_end)
+
+    # Locate the excalibur regions of interest for autoprocessing. Note that,
+    # currently, Region_1_X/Y are the wrong way around in the .nxs file.
+    # TODO: refactor so that constant ROI assumption can be relaxed.
+    metadata.roi_1_y1 = int(
+        nx_file["/entry/instrument/excroi/Region_1_X"]._value[0])
+    metadata.roi_1_y2 = int(
+        nx_file["/entry/instrument/excroi/Region_1_Width"]._value[0] +
+        metadata.roi_1_y1)
+    metadata.roi_1_x1 = int(
+        nx_file["/entry/instrument/excroi/Region_1_Y"]._value[0])
+    metadata.roi_1_x2 = int(
+        nx_file["/entry/instrument/excroi/Region_1_Height"]._value[0] +
+        metadata.roi_1_x1)
 
     metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
     try:
@@ -265,7 +275,6 @@ def i07_nxs_parser(file_path, theta_axis_name):
     theta_parsed = nx_file["/entry/instrument/diff1delta/value"]._value
     if isinstance(theta_parsed, float):
         theta_parsed = nx_file["/entry/instrument/hex1z/value"]._value
-    print(theta_parsed)
     theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
                            np.sqrt(np.array(metadata.roi_1_maxval)))
