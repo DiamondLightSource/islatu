@@ -249,14 +249,20 @@ def i07_nxs_parser(file_path, theta_axis_name):
     # TODO: refactor so that constant ROI assumption can be relaxed.
     metadata.roi_1_y1 = int(
         nx_file["/entry/instrument/excroi/Region_1_X"]._value[0])
+    metadata.roi_1_x1 = int(
+        nx_file["/entry/instrument/excroi/Region_1_Y"]._value[0])
     metadata.roi_1_y2 = int(
         nx_file["/entry/instrument/excroi/Region_1_Width"]._value[0] +
         metadata.roi_1_y1)
-    metadata.roi_1_x1 = int(
-        nx_file["/entry/instrument/excroi/Region_1_Y"]._value[0])
     metadata.roi_1_x2 = int(
         nx_file["/entry/instrument/excroi/Region_1_Height"]._value[0] +
         metadata.roi_1_x1)
+    # Future proof this hack.
+    if metadata.roi_1_y1 > metadata.roi_1_x1:
+        metadata.roi_1_y1, metadata.roi_1_x1 = metadata.roi_1_x1, \
+            metadata.roi_1_y1
+        metadata.roi_1_y2, metadata.roi_1_x2 = metadata.roi_1_x2, \
+            metadata.roi_1_y2
 
     metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
     try:
