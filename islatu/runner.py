@@ -320,6 +320,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             'y_end': refl.scans[0].metadata.roi_1_y2
         }
         print("Crop region of interest (ROI) generated from excalibur's ROI.")
+        print("Generated cropping kwargs:", the_boss.reduction.crop_kwargs)
     refl.crop(the_boss.reduction.crop_function,
               the_boss.reduction.crop_kwargs)
 
