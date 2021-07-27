@@ -27,7 +27,85 @@ import numpy as np
 import h5py
 
 
-def i07_dat_parser(file_path, theta_axis_name):
+def i07_dat_to_dict_dataframe(file_path):
+    """
+    Parses a .dat file recorded by I07, returning a [now mostly obsolete] tuple
+    containing a metadata dictionary and a pandas dataframe of the data.
+
+    Though outdated, this is still a handy way to parse the DCD normalization 
+    .dat file.
+
+    Args:
+        (:py:attr:`str`): The ``.dat`` file to be read.
+
+    Returns:
+        :py:attr:`tuple`: Containing:
+            - :py:attr:`dict`: The metadata from the ``.dat`` file.
+            - :py:class:`pandas.DataFrame`: The data from the ``.dat`` file.
+    """
+    f_open = open(file_path, "r")
+    # Neither the data nor the metadata are being read yet.
+    data_reading = False
+    metadata_reading = False
+
+    # Create the dictionaries to be populated.
+    data_dict = {}
+    metadata_dict = {}
+    # Create the list to be filled with lists for each line
+    data_lines = []
+
+    for line in f_open:
+        # This string incidates the start of the metadata.
+        if "<MetaDataAtStart>" in line:
+            metadata_reading = True
+        # This string indicates the end of the metadata.
+        if "</MetaDataAtStart>" in line:
+            metadata_reading = False
+        # This string indicates the start of the data.
+        if " &END" in line:
+            data_reading = True
+            # Set counter to minus two, such that when is
+            # reaches the data it is 0.
+            count = -2
+        # When the metadata section is being read populate the metadata_dict
+        if metadata_reading:
+            if "=" in line:
+                metadata_in_line = []
+                for i in line.split("=")[1:]:
+                    try:
+                        j = float(i)
+                    except ValueError:
+                        j = i
+                    metadata_in_line.append(j)
+                metadata_dict[line.split("=")[0]] = metadata_in_line
+        # When the data section is being read, make the list of the zeroth line
+        # the titles and everything after is the data_lines list of lists.
+        if data_reading:
+            count += 1
+            if count == 0:
+                titles = line.split()
+            if count > 0:
+                data_lines.append(line.split())
+    f_open.close()
+    # Sort the data_lines list of lists to transpore and make into a dict where
+    # the keys are the titles.
+    for j in range(len(data_lines[0])):
+        list_to_add = []
+        for i in range(len(data_lines)):
+            try:
+                list_to_add.append(float(data_lines[i][j]))
+            except ValueError:
+                list_to_add.append(data_lines[i][j])
+        count = 0
+        if j >= len(titles):
+            data_dict[str(count)] = list_to_add
+            count += 1
+        else:
+            data_dict[titles[j]] = list_to_add
+    return metadata_dict, pd.DataFrame(data_dict)
+
+
+def i07_dat_parser(file_path, theta_axis_name=None):
     """
     Parsing the .dat file from I07.
 
@@ -135,7 +213,7 @@ def i07_dat_parser(file_path, theta_axis_name):
     return Scan2D(data, metadata, images)
 
 
-def i07_nxs_parser(file_path, theta_axis_name):
+def i07_nxs_parser(file_path, theta_axis_name=None):
     """Location of the data:
     "entry/excroi_data/data"
     found by:
@@ -206,7 +284,7 @@ def i07_nxs_parser(file_path, theta_axis_name):
         raw_metadata[current_path] = file_contents
 
         # Useful for debugging/double checking.
-        if ("hex" in file_contents) or ("hex" in current_path):
+        if ("qdcd" in file_contents) or ("qdcd" in current_path):
             # print(current_path, file_contents)
             pass
     # ------------- END GENERIC NEXUS PARSER ----------------------------- #
@@ -244,9 +322,7 @@ def i07_nxs_parser(file_path, theta_axis_name):
         metadata.x_end = [
             nx_file["/entry/instrument/excroi/Region_1_max_x"]]
 
-    # Locate the excalibur regions of interest for autoprocessing. Note that,
-    # currently, Region_1_X/Y are the wrong way around in the .nxs file.
-    # TODO: refactor so that constant ROI assumption can be relaxed.
+    # Locate the excalibur regions of interest for autoprocessing.
     metadata.roi_1_y1 = int(
         nx_file["/entry/instrument/excroi/Region_1_X"]._value[0])
     metadata.roi_1_x1 = int(
@@ -257,7 +333,8 @@ def i07_nxs_parser(file_path, theta_axis_name):
     metadata.roi_1_x2 = int(
         nx_file["/entry/instrument/excroi/Region_1_Height"]._value[0] +
         metadata.roi_1_x1)
-    # Future proof this hack.
+
+    # TODO: This is a hack that relies on detector geometry. Future proof this.
     if metadata.roi_1_y1 > metadata.roi_1_x1:
         metadata.roi_1_y1, metadata.roi_1_x1 = metadata.roi_1_x1, \
             metadata.roi_1_y1
@@ -279,18 +356,29 @@ def i07_nxs_parser(file_path, theta_axis_name):
     # Now prepare the Data object.
     # TODO: work out how to find this generally.
     theta_parsed = nx_file["/entry/instrument/diff1delta/value"]._value
-    if isinstance(theta_parsed, float):
-        theta_parsed = nx_file["/entry/instrument/hex1z/value"]._value
-    theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
+
+    # If theta_parsed is just a float, we must be scanning something else!
+    # Currently, if theta_parsed isn't isn't being scanned, we're just assuming
+    # that qdcd is the scannable of interest.
+    # TODO: Work out how to generally locate the independent variable in a nexus
+    # file.
+
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
                            np.sqrt(np.array(metadata.roi_1_maxval)))
 
     energy = metadata.probe_energy
-    data = Data(theta, intensity, energy)
 
-    # Our metadata's file information is most likely wrong (unless this code is
+    # Instantiate a Data object with q if using DCD setup, theta otherwise
+    if isinstance(theta_parsed, float):
+        q_parsed = nx_file["/entry/instrument/qdcd/value"]._value
+        q_vals = unp.uarray(q_parsed, np.zeros(len(q_parsed)))
+        data = Data(intensity=intensity, energy=energy, q=q_vals)
+    else:
+        theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
+        data = Data(intensity=intensity, energy=energy, theta=theta)
+
+    # Our metadata's file information is wrong (unless this code is
     # being run on site). Try to correct these files.
-    # TODO: find file properly, fixing file mod error.
     metadata.file = _try_to_find_files(metadata.file,
                                        additional_search_paths=[file_path])
 
@@ -298,8 +386,6 @@ def i07_nxs_parser(file_path, theta_axis_name):
     # Scan2D object, and return the scan.
 
     # Now load the images from the file:
-    # TODO: do this properly!
-    # file_path = "i07_test/excaliburScan394602_000001.h5"
     internal_data_path = 'data'
 
     print("Loading images from file " + metadata.file[0])

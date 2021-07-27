@@ -3,6 +3,7 @@ from islatu import corrections
 from islatu import cropping
 from islatu import image
 from islatu import io
+from islatu.io import i07_dat_to_dict_dataframe
 from islatu import refl_data
 from islatu.profile import Profile
 from islatu import stitching
@@ -137,8 +138,10 @@ class Data:
             self.column_4 = columns[3]
         self.rebin = True
         self.n_qvectors = n_qvectors
+        self.q_min = q_min
+        self.q_max = q_max
         self.q_step = q_step
-        self.q_shape = 'linear'
+        self.q_shape = q_shape
 
 
 class Foreperson:
@@ -331,20 +334,21 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                  the_boss.reduction.bkg_kwargs)
     the_boss.reduction.data_state.background = 'corrected'
 
-    print("-" * 10)
-    print('Estimating Resolution Function')
-    print("-" * 10)
-    refl.resolution_function(
-        the_boss.data_source.experiment.measurement.qz_dimension,
-        progress=True)
-    the_boss.reduction.data_state.resolution = 'estimated'
+    # TODO: FIX RESOLUTION FUNCTION MY GOD
+    # print("-" * 10)
+    # print('Estimating Resolution Function')
+    # print("-" * 10)
+    # refl.resolution_function(
+    #     the_boss.data_source.experiment.measurement.qz_dimension,
+    #     progress=True)
+    # the_boss.reduction.data_state.resolution = 'estimated'
 
     print("-" * 10)
     print('Performing Data Corrections')
     print("-" * 10)
     if the_boss.reduction.dcd_normalisation is not None:
         itp = corrections.get_interpolator(
-            the_boss.reduction.dcd_normalisation, the_boss.reduction.parser)
+            the_boss.reduction.dcd_normalisation, i07_dat_to_dict_dataframe)
         refl.qdcd_normalisation(itp)
         the_boss.reduction.data_state.dcd = 'normalised'
     refl.footprint_correction(
@@ -353,6 +357,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     the_boss.reduction.data_state.transmission = 'normalised'
     # refl.normalise_ter()
     # the_boss.reduction.data_state.intensity = 'normalised'
+    refl.concatenate()
 
     if the_boss.data.rebin:
         print("-" * 10)
@@ -373,7 +378,6 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         str(refl.q.min()), str(refl.q.max())]
     the_boss.data.n_qvectors = str(len(refl.R))
 
-    refl.concatenate()
     # Make sure that the processing directory exists.
     processing_path = the_boss.directory_path + 'processing/'
     if not os.path.exists(processing_path):
@@ -381,10 +385,16 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     try:
         data = np.array([nominal_values(refl.q), nominal_values(refl.R),
                          std_devs(refl.q), std_devs(refl.R)]).T
+        # TODO: fix q-uncertainties and uncomment the following 4 lines,
+        # also deleting the redundant double save of the 3col data.
+        # np.savetxt(
+        #     (processing_path + 'XRR_{}_'.format(
+        #         run_numbers[0]) + yaml_pipeline_name + "_4col.dat"), data,
+        #     header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
         np.savetxt(
             (processing_path + 'XRR_{}_'.format(
-                run_numbers[0]) + yaml_pipeline_name + "_4col.dat"), data,
-            header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
+                run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
+            header='{}\n 1 2 3'.format(dump(vars(the_boss))))
         if the_boss.data.both:
             data = np.array([nominal_values(refl.q), nominal_values(refl.R),
                              std_devs(refl.R)]).T

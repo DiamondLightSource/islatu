@@ -10,4 +10,6 @@ islatu.egg-info
 data
 htmlcov
 **/.ipynb_checkpoints
+i07_test
+DCD
 docs/source/refl_reduced.txt

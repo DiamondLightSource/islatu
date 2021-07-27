@@ -22,10 +22,17 @@ from uncertainties import unumpy as unp
 
 
 class Data:
-    def __init__(self, theta, intensity, energy, q=None) -> None:
-        self._theta = theta
+    def __init__(self, intensity, energy, theta=None, q=None):
         self.intensity = intensity
         self.energy = energy
+
+        if (theta is None) and (q is None):
+            raise ValueError(
+                "Either theta or q must be provided to create a Data instance"
+            )
+
+        # When using properties, it wont matter which of these ends up as None.
+        self._theta = theta
         self._q = q
 
     @property
