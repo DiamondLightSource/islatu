@@ -99,6 +99,8 @@ class Data:
         theta_values = planck * speed_of_light * \
             unp.arcsin(q_values / (energy * 4 * np.pi))
 
+        theta_values = theta_values*180/np.pi
+
         return theta_values
 
 

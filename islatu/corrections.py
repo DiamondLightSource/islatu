@@ -28,6 +28,13 @@ def footprint_correction(beam_width, sample_size, theta):
     Returns:
         (:py:class:`uncertainties.core.Variable`): Correction factor.
     """
+    # The footprint correction is just a number. It doesn't make sense to think
+    # of uncertainties in sample size or theta, we just want to calculate our
+    # best estimate of the footprint correction.
+    theta = unp.nominal_values(theta)
+    sample_size = unp.nominal_values(sample_size)
+
+    # Deal with [the trivial point] theta being exactly 0.
     for i in range(len(theta)):
         if theta[i] == 0:
             # The footprint correction for theta=0 is infinite, so just choose
@@ -35,14 +42,12 @@ def footprint_correction(beam_width, sample_size, theta):
             theta[i] = 1 * 10**(-3)
 
     beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
-    length = sample_size * unp.sin(unp.radians(theta))
-    mid = unp.nominal_values(length) / 2.0 / beam_sd
-    upper = (unp.nominal_values(length) + unp.std_devs(length)) / 2.0 / beam_sd
-    lower = (unp.nominal_values(length) - unp.std_devs(length)) / 2.0 / beam_sd
-    probability = 2.0 * (
-        unp.uarray(
-            norm.cdf(mid), (norm.cdf(upper) - norm.cdf(lower)) / 2) - 0.5)
-    return probability
+    projected_beam_sd = beam_sd / np.sin(np.radians(theta))
+    frac_of_beam_sampled = (
+        norm.cdf(sample_size/2, 0, projected_beam_sd) -
+        norm.cdf(-sample_size/2, 0, projected_beam_sd)
+    )
+    return frac_of_beam_sampled
 
 
 def get_interpolator(

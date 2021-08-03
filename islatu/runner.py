@@ -359,6 +359,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     # the_boss.reduction.data_state.intensity = 'normalised'
     refl.concatenate()
 
+    # Normalize the reflectivity properly.
+    refl.R = refl.R/np.amax(refl.R)
+
     if the_boss.data.rebin:
         print("-" * 10)
         print('Rebinning')
