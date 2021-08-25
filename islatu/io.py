@@ -284,7 +284,7 @@ def i07_nxs_parser(file_path, theta_axis_name=None):
         raw_metadata[current_path] = file_contents
 
         # Useful for debugging/double checking.
-        if ("qdcd" in file_contents) or ("qdcd" in current_path):
+        if ("max_val" in file_contents) or ("max_val" in current_path):
             # print(current_path, file_contents)
             pass
     # ------------- END GENERIC NEXUS PARSER ----------------------------- #
@@ -334,12 +334,27 @@ def i07_nxs_parser(file_path, theta_axis_name=None):
         nx_file["/entry/instrument/excroi/Region_1_Height"]._value[0] +
         metadata.roi_1_x1)
 
+    metadata.roi_2_y1 = int(
+        nx_file["/entry/instrument/excroi/Region_2_X"]._value[0])
+    metadata.roi_2_x1 = int(
+        nx_file["/entry/instrument/excroi/Region_2_Y"]._value[0])
+    metadata.roi_2_y2 = int(
+        nx_file["/entry/instrument/excroi/Region_2_Width"]._value[0] +
+        metadata.roi_2_y1)
+    metadata.roi_2_x2 = int(
+        nx_file["/entry/instrument/excroi/Region_2_Height"]._value[0] +
+        metadata.roi_2_x1)
+
     # TODO: This is a hack that relies on detector geometry. Future proof this.
     if metadata.roi_1_y1 > metadata.roi_1_x1:
         metadata.roi_1_y1, metadata.roi_1_x1 = metadata.roi_1_x1, \
             metadata.roi_1_y1
         metadata.roi_1_y2, metadata.roi_1_x2 = metadata.roi_1_x2, \
             metadata.roi_1_y2
+        metadata.roi_2_y1, metadata.roi_2_x1 = metadata.roi_2_x1, \
+            metadata.roi_2_y1
+        metadata.roi_2_y2, metadata.roi_2_x2 = metadata.roi_2_x2, \
+            metadata.roi_2_y2
 
     metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
     try:
@@ -365,6 +380,8 @@ def i07_nxs_parser(file_path, theta_axis_name=None):
 
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
                            np.sqrt(np.array(metadata.roi_1_maxval)))
+    for i in intensity:
+        print(unp.nominal_values(i))
 
     energy = metadata.probe_energy
 
