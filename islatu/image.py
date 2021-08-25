@@ -161,11 +161,15 @@ class Image:
                 keyword arguments.
         """
         if background_subtraction_function is None:
+            # By default, don't do any fancy fitting - instead just subtract the
+            # mean count of a specified background region.
             y_start = kwargs['y_start']
             y_end = kwargs['y_end']
             x_start = kwargs['x_start']
             x_end = kwargs['x_end']
             bkg_popt = (
+                self.array_original[y_start:y_end, x_start:x_end]).mean()
+            bkg_sigma = np.sqrt(
                 self.array_original[y_start:y_end, x_start:x_end]).mean()
             self.bkg = bkg_popt
         else:

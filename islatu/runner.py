@@ -23,6 +23,7 @@ import numpy as np
 
 function_map = {'gaussian_1d': background.fit_gaussian_1d,
                 'gaussian_2d': background.fit_gaussian_2d,
+                'roi_subtraction': None,
                 'area': None,
                 'i07': io.i07_nxs_parser,
                 'crop': cropping.crop_2d,
@@ -330,6 +331,18 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     print("-" * 10)
     print('Background Subtraction')
     print("-" * 10)
+    # Before subtracting background, make sure that, by default, we're at least
+    # trying to subtract background from roi_2.
+    if ((the_boss.reduction.bkg_function is None) and
+            (the_boss.reduction.bkg_kwargs is None)):
+        bkg_sub_kwargs = {
+            'x_start': refl.scans[0].metadata.roi_2_x1,
+            'x_end': refl.scans[0].metadata.roi_2_x2,
+            'y_start': refl.scans[0].metadata.roi_2_y1,
+            'y_end': refl.scans[0].metadata.roi_2_y2
+        }
+        the_boss.reduction.bkg_kwargs = bkg_sub_kwargs
+
     refl.bkg_sub(the_boss.reduction.bkg_function,
                  the_boss.reduction.bkg_kwargs)
     the_boss.reduction.data_state.background = 'corrected'
