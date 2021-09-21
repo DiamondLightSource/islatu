@@ -137,24 +137,40 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
     # If errors on the image aren't being calculated, generate them here.
     ordinate_e = image_e.mean(axis=axis)
 
-    # Ensure that errors are finite or fitting will throw a ValueError.
+    # Ensure that errors are finite or we wont be able to fit.
     ordinate_e = np.sqrt(ordinate) + epsilon
 
-    maximum = image.max()
-    if maximum == 0:
-        maximum += epsilon
-    # Setting default values
-    if p0 is None:
-        p0 = [ordinate.shape[0] / 2, 1, epsilon, maximum]
-    if bounds is None:
-        bounds = (0, [ordinate.shape[0], 100, maximum, maximum * 10])
+    # Now we generate the initial values for our Gaussian fit.
+    # These values are crucial - as this is a high dimensional fitting problem
+    # it is likely that we'll get stuck in a local minimum if these aren't good.
 
-    # Perform the fitting
+    # Guess that the mean of the Gaussian is at the largest data point.
+    mean0 = np.argmax(ordinate)
+    # Guess that the standard deviation is a single pixel.
+    sdev0 = 1
+    # Guess that the background (offset) is the median pixel value.
+    offset0 = np.median(ordinate)
+    # Guess that the scale is equal to the largest recorded value.
+    scale0 = image.max()
+    if scale0 == 0:
+        # Is there really no data in this detector image?
+        print("Warning: no data found in detector image while fitting.")
+        scale0 += epsilon
+
+    # Setting default values.
+    if p0 is None:
+        p0 = [mean0, sdev0, offset0, scale0]
+    if bounds is None:
+        bounds = ([0, 0, 0, 0],
+                  [ordinate.shape[0], ordinate.shape[0], scale0, scale0 * 10])
+
+    # Perform the fitting.
     popt, pcov = curve_fit(
         univariate_normal,
         np.arange(0, ordinate.shape[0], 1), ordinate, bounds=bounds,
-        sigma=ordinate_e.flatten(), p0=p0, maxfev=2000 * (len(p0) + 1))
-    # Determine uncertainty from covarience matrix
+        sigma=ordinate_e, p0=p0, maxfev=2000 * (len(p0) + 1))
+
+    # Determine uncertainty from covarience matrix.
     # Note: the stddev of the fit Gaussian can be accessed via popt[1]
     p_sigma = np.sqrt(np.diag(pcov))
 
