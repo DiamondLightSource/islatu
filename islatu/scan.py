@@ -85,16 +85,26 @@ class Scan2D(Scan):
                 Requires the :py:mod:`tqdm` package. Defaults
                 to :py:attr:`True`.
         """
+        # Required for the progress bar.
         iterator = _get_iterator(self.q, progress)
         vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
+
+        # Required to expose fitting parameters.
+        optimized_params = []
         for i in iterator:
             if kwargs is None:
-                self.images[i].background_subtraction(bkg_sub_function)
+                optimized_params.append(
+                    self.images[i].background_subtraction(
+                        bkg_sub_function))
             else:
-                self.images[i].background_subtraction(
-                    bkg_sub_function, **kwargs)
+                optimized_params.append(
+                    self.images[i].background_subtraction(
+                        bkg_sub_function, **kwargs))
             vals[i], stdevs[i] = self.images[i].sum()
         self.R = unp.uarray(vals, stdevs)
+
+        # Expose the optimized fit parameters for meta-analysis.
+        return optimized_params
 
     def resolution_function(self, qz_dimension=1, progress=True,
                             pixel_size=172e-6):
@@ -156,7 +166,6 @@ class Scan2D(Scan):
         """
         Perform the transmission correction.
         """
-        print("Transmission:", self.metadata.transmission)
         self.R /= float(self.metadata.transmission)
 
     def qdcd_normalisation(self, itp):
