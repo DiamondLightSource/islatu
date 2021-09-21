@@ -20,7 +20,7 @@ class Profile(MeasurementBase):
         self.scans = scans
 
     @classmethod
-    def fromfilenames(cls, filenames, parser, scan_axis_name):
+    def fromfilenames(cls, filenames, parser, scan_axis_name=None):
         """
         Instantiate a profile from a list of scan filenames.
 
@@ -32,10 +32,16 @@ class Profile(MeasurementBase):
                 Parser function for the reflectometry scan files.
             scan_axis_name (:py:attr:`str`):
                 Name of the independent variable scanned, typically a theta- or 
-                q- axis.
+                q- axis. Specifying this parameter is not necessary for file 
+                formats such as .nxs for which the independent variable can be
+                inferred.
         """
-        # Load the scans.
-        scans = [parser(filename, scan_axis_name) for filename in filenames]
+        # Load the scans, specifying the scan axis name if necessary.
+        if scan_axis_name is not None:
+            scans = [parser(filename, scan_axis_name)
+                     for filename in filenames]
+        else:
+            scans = [parser(filename)for filename in filenames]
 
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the
@@ -82,9 +88,15 @@ class Profile(MeasurementBase):
                 Requires the :py:mod:`tqdm` package. Defaults to
                 :py:attr:`True`.
         """
+        optimized_params = []
         for scan in self.scans:
-            scan.bkg_sub(bkg_sub_function, kwargs, progress)
+            optimized_params.append(scan.bkg_sub(
+                bkg_sub_function, kwargs, progress))
+
         self.concatenate()
+
+        # Expose the optimized fit parameters for meta-analysis.
+        return optimized_params
 
     def footprint_correction(self, beam_width, sample_size):
         """

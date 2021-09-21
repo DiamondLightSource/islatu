@@ -213,7 +213,7 @@ def i07_dat_parser(file_path, theta_axis_name=None):
     return Scan2D(data, metadata, images)
 
 
-def i07_nxs_parser(file_path, theta_axis_name=None):
+def i07_nxs_parser(file_path, progress_bar=False):
     """Location of the data:
     "entry/excroi_data/data"
     found by:
@@ -380,8 +380,6 @@ def i07_nxs_parser(file_path, theta_axis_name=None):
 
     intensity = unp.uarray(np.array(metadata.roi_1_maxval),
                            np.sqrt(np.array(metadata.roi_1_maxval)))
-    for i in intensity:
-        print(unp.nominal_values(i))
 
     energy = metadata.probe_energy
 
@@ -410,9 +408,15 @@ def i07_nxs_parser(file_path, theta_axis_name=None):
         dataset = file_handle[internal_data_path][()]
         # images = [Image(dataset[i]) for i in range(dataset.shape[0])]
         images = []
-        for i in range(dataset.shape[0]):
-            print("Loading image " + str(i+1) + " of " + str(dataset.shape[0]))
+
+        # Prepare to show a progress bar for image loading.
+        iterator = _get_iterator(dataset, progress_bar)
+        print("Loading " + str(dataset.shape[0]) + " images.")
+        for i in iterator:
+            if not progress_bar:
+                print("Currently loaded " + str(i+1) + " images.",  end="\r")
             images.append(Image(dataset[i]))
+        print("Loaded all " + str(dataset.shape[0]) + " images.")
         # images = [Image(dataset[i]) for i in range(3)]
 
     return Scan2D(data, metadata, images)
