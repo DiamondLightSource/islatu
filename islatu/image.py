@@ -177,9 +177,12 @@ class Image:
                 self.n, self.s, **kwargs
             )
             self.bkg, bkg_sigma = bkg_popt[0][bkg_idx], bkg_popt[1][bkg_idx]
-        # Clipping ensures array is +ve definite before casting back to uint
-        self.array = np.uint32((np.float64(self.array) - self.bkg).clip(0))
+
+        self.array = np.float64(self.array) - self.bkg
         self.array_s += bkg_sigma
+
+        # Expose the optimized fit parameters for meta-analysis.
+        return bkg_popt
 
     def sum(self, axis=None):
         """
