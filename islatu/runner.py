@@ -307,9 +307,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     print("-" * 10)
     print('File Parsing')
     print("-" * 10)
-    scan_axis_name = the_boss.data_source.experiment.measurement.theta_axis_name
-    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,
-                                 scan_axis_name)
+    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
     print("-" * 10)
     print('Cropping')
