@@ -15,6 +15,7 @@ from nexusformat.nexus.tree import NXgroup
 
 
 class Metadata:
+    # In the far future, this would be useful to bullet-proof everything:
     # TODO: build units into the detector dataclass, and automatically noramlize
     # units on initialization of a metadata instance.
     def __init__(self, detector: Detector, raw_metadata) -> None:
@@ -40,8 +41,8 @@ class Metadata:
                 continue
 
             if attr_name.startswith('metakey_'):
-                # If this metadata is in a list of length one, it probably shouldn't
-                # be wrapped in a list.
+                # If this metadata is in a list of length one, it probably
+                # shouldn't be wrapped in a list.
                 try:
                     stripped_name = attr_name.strip().replace("metakey_", "")
                     if len(self.raw_metadata[attr]) == 1:

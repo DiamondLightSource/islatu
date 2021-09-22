@@ -214,26 +214,23 @@ def i07_dat_parser(file_path, theta_axis_name=None):
 
 
 def i07_nxs_parser(file_path, progress_bar=False):
-    """Location of the data:
-    "entry/excroi_data/data"
-    found by:
-    infile["entry/excroi_data"].dir()
-    Otherwise, walk through the .nxs file recursively and grab all metadata.
-    This can be done using for example:
+    """
+    Parses a .nxs file, returning an instance of Scan2D. This process involves
+    loading the images contained in the hdf file pointed at by the .nxs file, as
+    well as the metadata written in the .nxs file that is relevant for XRR 
+    reduction.
 
-    from nexusformat.nexus import nxload
-    in_file = nxload("/path/to/file.nxs")
+    Args:
+        file_path (:py:attr:`str`): 
+            Path to the .nxs file.
+        progress_bar (:py:attr:`bool`, optional): 
+            True if user wants a progress bar to indicate how many images from 
+            the scan have been loaded. Defaults to False.
 
-    for line in in_file.tree.split("\n"):
-        if ":" not in line:
-            do_logic_to_work_out_relative_path_name()
-            store_data_in_dictionary()
-
-    Metadata dict should be dealt with using full .nxs paths as keys, i.e.:
-    metadata.raw_metadata["Region_1.max_val"] should instead be:
-    metadata.raw_metadata["entry/excroi_Region_1.max_val/Region_1.max_val"]
-    ... while a little unwieldy, this is the most general way to avoid naming
-    conflicts. 
+    Returns:
+        :py:class:`islatu.scan.Scan2D`:
+            A scan2D object containing all loaded detector frames, as well as
+            all relevant metadata scraped from the .nxs file.
     """
     from nexusformat.nexus import nxload
 
