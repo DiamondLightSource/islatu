@@ -21,8 +21,6 @@ from islatu.data import Data, MeasurementBase
 from islatu import corrections
 
 import numpy as np
-from uncertainties import unumpy as unp
-from uncertainties import ufloat
 from scipy.constants import physical_constants
 from scipy.interpolate import splev
 
@@ -50,18 +48,21 @@ class Scan2D(Scan):
 
     def crop(self, crop_function, kwargs=None, progress=True):
         """
-        Crop every image in images according to crop_function
+        Crop every image in images according to crop_function.
 
         args:
-            crop_function (:py:attr:`callable`): Cropping function to be used.
-            kwargs (:py:attr:`dict`, optional): Keyword arguments for the
-                cropping function. Defaults to :py:attr:`None`.
-            progress (:py:attr:`bool`, optional): Show a progress bar.
-                Requires the :py:mod:`tqdm` package. Defaults
-                to :py:attr:`True`.
+            crop_function (:py:attr:`callable`): 
+                Cropping function to be used.
+            kwargs (:py:attr:`dict`, optional): 
+                Keyword arguments for the cropping function. Defaults to 
+                :py:attr:`None`.
+            progress (:py:attr:`bool`, optional): 
+                Show a progress bar. Requires the :py:mod:`tqdm` package. 
+                Defaults to :py:attr:`True`.
         """
         iterator = _get_iterator(self.q, progress)
-        vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
+        (vals, stdevs) = (np.zeros(len(self.intensity)),
+                          np.zeros(len(self.intensity)))
         for i in iterator:
             if kwargs is None:
                 self.images[i].crop(crop_function)
@@ -69,7 +70,8 @@ class Scan2D(Scan):
                 self.images[i].crop(crop_function, **kwargs)
 
             vals[i], stdevs[i] = self.images[i].sum()
-        self.R = unp.uarray(vals, stdevs)
+        self.intensity = np.array(vals)
+        self.intensity_e = np.array(stdevs)
 
     def bkg_sub(self, bkg_sub_function, kwargs=None, progress=True):
         """
@@ -87,7 +89,8 @@ class Scan2D(Scan):
         """
         # Required for the progress bar.
         iterator = _get_iterator(self.q, progress)
-        vals, stdevs = np.zeros(len(self.R)), np.zeros(len(self.R))
+        vals, stdevs = np.zeros(
+            len(self.intensity)), np.zeros(len(self.intensity))
 
         # Required to expose fitting parameters.
         optimized_params = []
@@ -101,7 +104,10 @@ class Scan2D(Scan):
                     self.images[i].background_subtraction(
                         bkg_sub_function, **kwargs))
             vals[i], stdevs[i] = self.images[i].sum()
-        self.R = unp.uarray(vals, stdevs)
+
+        # Store the intensity(Q) to the new value, corrected for
+        self.intensity = np.array(vals)
+        self.intensity_e = np.array(stdevs)
 
         # Expose the optimized fit parameters for meta-analysis.
         return optimized_params
@@ -110,7 +116,7 @@ class Scan2D(Scan):
                             pixel_size=172e-6):
         """
         Estimate the q-resolution function based on the reflected intensity
-        on the detector and add this to the q uncertainty.
+        on the detector and returns this q uncertainty.
 
         Args:
             qz_dimension (:py:attr:`int`, optional): The dimension of q_z in
@@ -125,6 +131,10 @@ class Scan2D(Scan):
                 metres
             energy (:py:attr:`float`): X-ray energy in keV
             pixel_size (:py:attr:`float`, optional): Pixel size in metres
+
+        Returns:
+            (py:attr:`float`):
+                The uncertainty in q, estimated from the peak profile.
         """
         iterator = _get_iterator(self.q, progress)
         for i in iterator:
@@ -135,19 +145,17 @@ class Scan2D(Scan):
         detector_distance = self.metadata.detector_distance * 1e-3
         energy = self.metadata.probe_energy
         # The width of the peak in pixels should be indep. of image.
-        n_pixels = unp.nominal_values(self.images[0].n_pixels)
+        n_pixels = self.images[0].n_pixels
         offset = np.arctan(
             pixel_size * 1.96 * n_pixels * 0.5 / (detector_distance)
         )
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
         speed_of_light = physical_constants[
             "speed of light in vacuum"][0] * 1e10
-        q_uncertainty = energy * 4 * np.pi * unp.sin(
+        q_uncertainty = energy * 4 * np.pi * np.sin(
             np.array(offset)) / (planck * speed_of_light)
 
-        self.q = unp.uarray(
-            unp.nominal_values(self.q),
-            unp.std_devs(self.q) + q_uncertainty)
+        return q_uncertainty
 
     def footprint_correction(self, beam_width, sample_size):
         """
@@ -159,14 +167,14 @@ class Scan2D(Scan):
                 sample in the dimension of the beam, in metres.
             theta (:py:attr:`float`): Incident angle, in degrees.
         """
-        self.R /= corrections.footprint_correction(
+        self.intensity /= corrections.footprint_correction(
             beam_width, sample_size, self.theta)
 
     def transmission_normalisation(self):
         """
         Perform the transmission correction.
         """
-        self.R /= float(self.metadata.transmission)
+        self.intensity /= float(self.metadata.transmission)
 
     def qdcd_normalisation(self, itp):
         """
@@ -177,4 +185,4 @@ class Scan2D(Scan):
                 (:py:attr:`array_like`), B-spline coefficients
                 (:py:attr:`array_like`), and degree of spline (:py:attr:`int`).
         """
-        self.R /= splev(unp.nominal_values(self.q), itp)
+        self.intensity /= splev(self.q, itp)
