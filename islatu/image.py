@@ -20,12 +20,17 @@ class Image:
     This class stores information about the detector images.
 
     Attributes:
-        file_path (:py:attr:`str`): File path for the image.
-        array (:py:attr:`array_like`): The image described as an array.
-        bkg (:py:class:`uncertainties.cores.Variable`): The background that
-            was subtracted from the image.
-        n_pixels (:py:attr:`float`): The width of the peak in number of
-            pixels, used to calculate an uncertainty in q on the detector.
+        file_path (:py:attr:`str`): 
+            File path for the image.
+        array (:py:attr:`array_like`): 
+            The image described as an array.
+        bkg (:py:attr:`float`):
+            The background that was subtracted from the image.
+        bkg_e (:py:attr:`float`):
+            The uncertainty on the background.
+        n_pixels (:py:attr:`float`):
+            The width of the peak in number of pixels, used to calculate an 
+            uncertainty in q on the detector.
 
     Args:
         file_path (:py:attr:`str`): The file path for the image.
@@ -55,9 +60,10 @@ class Image:
         array = _average_out_hot(array, hot_pixel_max)
         array[np.where(array < pixel_min)] = 0
         self.array = array
-        self.array_s = np.sqrt(array)
+        self.array_e = np.sqrt(array)
         self.array_original = np.copy(array)
         self.bkg = 0
+        self.bkg_e = 0
         self.n_pixels = 0
 
     @classmethod
@@ -147,7 +153,7 @@ class Image:
             **kwargs (:py:attr:`dict`): The crop function keyword arguments.
         """
         self.array = crop_function(self.array, **kwargs)
-        self.array_s = crop_function(self.array_s, **kwargs)
+        self.array_e = crop_function(self.array_e, **kwargs)
 
     def background_subtraction(self, background_subtraction_function,
                                **kwargs):
@@ -169,17 +175,25 @@ class Image:
             x_end = kwargs['x_end']
             bkg_popt = (
                 self.array_original[y_start:y_end, x_start:x_end]).mean()
-            bkg_sigma = np.sqrt(
-                self.array_original[y_start:y_end, x_start:x_end]).mean()
+
+            # NOTE:
+            # If we would've saved the original array of errors, we would've
+            # been able to skip this step, but islatu would use up more memory.
+            # This is a classic memory vs CPU tradeoff. Here, memory is made the
+            # priority since taking a sqrt is pretty quick, but the images are
+            # large.
+            array_original_e = np.sqrt(self.array_original)
+            bkg_sigma = array_original_e[y_start:y_end, x_start:x_end].mean()
             self.bkg = bkg_popt
+            self.bkg_e = bkg_sigma
         else:
             bkg_popt, bkg_idx = background_subtraction_function(
                 self.n, self.s, **kwargs
             )
-            self.bkg, bkg_sigma = bkg_popt[0][bkg_idx], bkg_popt[1][bkg_idx]
+            self.bkg, self.bkg_e = bkg_popt[0][bkg_idx], bkg_popt[1][bkg_idx]
 
         self.array = np.float64(self.array) - self.bkg
-        self.array_s += bkg_sigma
+        self.array_e += self.bkg_e
 
         # Expose the optimized fit parameters for meta-analysis.
         return bkg_popt
@@ -192,7 +206,7 @@ class Image:
             axis (:py:attr:`int`, optional): The axis of the array to perform
                 the summation over. Defaults to :py:attr:`None`.
         """
-        return self.array.sum(axis), self.array_s.sum(axis)
+        return self.array.sum(axis), self.array_e.sum(axis)
 
     def q_resolution(self, qz_dimension=1):
         """
