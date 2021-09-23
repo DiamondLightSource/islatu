@@ -61,19 +61,24 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
 
     # A small quantity by which we can shift parameters such that they're > 0.
     # This can prevent various silly /0 errors, and forces upper bounds > lower.
+    # Crucially, this ensures that none of the image's data has an error of
+    # exactly 0.
     epsilon = 0.001
 
-    # If errors on the image aren't being calculated, generate them here.
+    # If errors haven't been calculated on this image before, then we'll have
+    # been passed an array of zeros as image_e. In that case, we should go ahead
+    # and calculate the errors on our intensity array now.
+    if np.amax(image_e) == 0:
+        image_e = np.sqrt(image) + epsilon
+
+    # Now we can generate an array of errors.
     ordinate_e = image_e.mean(axis=axis)
 
-    # Ensure that errors are finite or we wont be able to fit.
-    ordinate_e = np.sqrt(ordinate) + epsilon
-
     # Now we generate the initial values for our Gaussian fit.
-    # These values are crucial - as this is a high dimensional fitting problem
+    # These values are crucial - as this is a high dimensional fitting problem,
     # it is likely that we'll get stuck in a local minimum if these aren't good.
 
-    # Guess that the mean of the Gaussian is at the largest data point.
+    # Guess that the Gaussian is centred at the most intense mean pixel value.
     mean0 = np.argmax(ordinate)
     # Guess that the standard deviation is a single pixel.
     sdev0 = 1
@@ -81,10 +86,6 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
     offset0 = np.median(ordinate)
     # Guess that the scale is equal to the largest recorded value.
     scale0 = image.max()
-    if scale0 == 0:
-        # Is there really no data in this detector image?
-        print("Warning: no data found in detector image while fitting.")
-        scale0 += epsilon
 
     # Setting default values.
     if p0 is None:
