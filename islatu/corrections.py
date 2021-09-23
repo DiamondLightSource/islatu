@@ -11,7 +11,6 @@ DCD q-variance corrections.
 import numpy as np
 from scipy.stats import norm
 from scipy.interpolate import splrep
-from uncertainties import unumpy as unp
 
 
 def footprint_correction(beam_width, sample_size, theta):
@@ -20,20 +19,17 @@ def footprint_correction(beam_width, sample_size, theta):
     scattering geometry, where the beam is Gaussian in shape.
 
     Args:
-        beam_width (:py:attr:`float`): Width of incident beam, in metres.
-        sample_size (:py:class:`uncertainties.core.Variable`): Width of sample
-            in the dimension of the beam, in metres.
-        theta (:py:attr:`float`): Incident angle, in degrees.
+        beam_width (:py:attr:`float`): 
+            Width of incident beam, in metres.
+        sample_size (:py:attr:`float`): 
+            Width of sample in the dimension of the beam, in metres.
+        theta (:py:attr:`float`): 
+            Incident angle, in degrees.
 
     Returns:
-        (:py:class:`uncertainties.core.Variable`): Correction factor.
+        (:py:attr:`float`): 
+            Correction factor.
     """
-    # The footprint correction is just a number. It doesn't make sense to think
-    # of uncertainties in sample size or theta, we just want to calculate our
-    # best estimate of the footprint correction.
-    theta = unp.nominal_values(theta)
-    sample_size = unp.nominal_values(sample_size)
-
     # Deal with [the trivial point] theta being exactly 0.
     for i in range(len(theta)):
         if theta[i] == 0:
