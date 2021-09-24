@@ -17,8 +17,6 @@ import datetime
 import os
 from os import path
 from ast import literal_eval as make_tuple
-from uncertainties import ufloat
-from uncertainties.unumpy import nominal_values, std_devs
 import numpy as np
 
 function_map = {'gaussian_1d': background.fit_gaussian_1d,
@@ -345,15 +343,6 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                  the_boss.reduction.bkg_kwargs)
     the_boss.reduction.data_state.background = 'corrected'
 
-    # TODO: FIX RESOLUTION FUNCTION MY GOD
-    # print("-" * 10)
-    # print('Estimating Resolution Function')
-    # print("-" * 10)
-    # refl.resolution_function(
-    #     the_boss.data_source.experiment.measurement.qz_dimension,
-    #     progress=True)
-    # the_boss.reduction.data_state.resolution = 'estimated'
-
     print("-" * 10)
     print('Performing Data Corrections')
     print("-" * 10)
@@ -396,48 +385,19 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     processing_path = the_boss.directory_path + 'processing/'
     if not os.path.exists(processing_path):
         os.makedirs(processing_path)
-    try:
-        data = np.array([nominal_values(refl.q), nominal_values(refl.R),
-                         std_devs(refl.q), std_devs(refl.R)]).T
-        # TODO: fix q-uncertainties and uncomment the following 4 lines,
-        # also deleting the redundant double save of the 3col data.
-        # np.savetxt(
-        #     (processing_path + 'XRR_{}_'.format(
-        #         run_numbers[0]) + yaml_pipeline_name + "_4col.dat"), data,
-        #     header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
+
+    # Prepare the data array.
+    data = np.array([refl.q, refl.R, refl.R_e]).T
+    np.savetxt(
+        (processing_path + 'XRR_{}_'.format(
+            run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
+        header='{}\n 1 2 3'.format(dump(vars(the_boss))))
+    if the_boss.data.both:
+        data = np.array([refl.q, refl.R, refl.R_e]).T
         np.savetxt(
             (processing_path + 'XRR_{}_'.format(
                 run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
             header='{}\n 1 2 3'.format(dump(vars(the_boss))))
-        if the_boss.data.both:
-            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
-                             std_devs(refl.R)]).T
-            np.savetxt(
-                (processing_path + 'XRR_{}_'.format(
-                    run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
-                header='{}\n 1 2 3'.format(dump(vars(the_boss))))
-    except:
-        try:
-            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
-                             std_devs(refl.R)]).T
-            np.savetxt(
-                (processing_path + 'XRR_{}_'.format(
-                    run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
-                header='{}\n 1 2 3'.format(dump(vars(the_boss))))
-            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
-                             std_devs(refl.q), std_devs(refl.R)]).T
-            # TODO: uncomment when resolution_function does sensible stuff
-            # np.savetxt(
-            #     (processing_path + 'XRR_{}_'.format(
-            #     run_numbers[0]) + yaml_pipeline_name + "_4col.dat"), data,
-            #     header='{}\n 1 2 3 4'.format(dump(vars(the_boss))))
-        except:
-            data = np.array([nominal_values(refl.q), nominal_values(refl.R),
-                             std_devs(refl.R)]).T
-            np.savetxt(
-                (processing_path + 'XRR_{}_'.format(
-                    run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
-                header='{}\n 1 2 3'.format(dump(vars(the_boss))))
 
     print("-" * 10)
     print('Reduced Data Stored in Processing Directory')
