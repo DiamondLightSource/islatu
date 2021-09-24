@@ -10,7 +10,6 @@ import warnings
 import numpy as np
 from scipy.stats import linregress
 from scipy.interpolate import splrep, splev
-from uncertainties import unumpy as unp
 
 
 def correct_attentuation(scan_list):
@@ -41,14 +40,14 @@ def correct_attentuation(scan_list):
             overlap_end_index = np.argmin(
                 np.abs(scan_list[i + 1].q - overlap_end))
         res = linregress(
-            unp.nominal_values(scan_list[i].q[overlap_start_index:]),
-            np.log(unp.nominal_values(scan_list[i].R[overlap_start_index:])))
-        target_r = unp.exp(
+            (scan_list[i].q[overlap_start_index:]),
+            np.log(scan_list[i].intensity[overlap_start_index:]))
+        target_r = np.exp(
             scan_list[
                 i+1].q[: overlap_end_index + 1] * res.slope + res.intercept)
-        vary_r = scan_list[i+1].R[: overlap_end_index + 1]
+        vary_r = scan_list[i+1].intensity[: overlap_end_index + 1]
         ratio = target_r.mean() / vary_r.mean()
-        scan_list[i + 1].R *= ratio
+        scan_list[i + 1].intensity *= ratio
     return scan_list
 
 
@@ -68,12 +67,12 @@ def concatenate(scan_list):
     reflected_intensity = np.array([])
     q_vectors = np.array([])
     for scan in scan_list:
-        reflected_intensity = np.append(reflected_intensity, scan.R)
+        reflected_intensity = np.append(reflected_intensity, scan.intensity)
         q_vectors = np.append(q_vectors, scan.q)
     return q_vectors, reflected_intensity
 
 
-def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
+def normalise_ter(q, reflected_intensity, max_q=0.1):
     """
     Find the total external reflection region and normalise this to 1.
 
@@ -84,15 +83,12 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     Returns:
         :py:attr:`array_like`: Reflected intensities.
     """
-    q = unp.nominal_values(q_vectors)
     max_q_idx = q[np.where(q < max_q)].size
     if max_q_idx <= 1:
         end_of_ter_index = 1
     else:
         end_of_ter_index = np.argmax(
-            np.abs(
-                np.gradient(
-                    unp.nominal_values(reflected_intensity)[:max_q_idx]))
+            np.abs(np.gradient((reflected_intensity)[:max_q_idx]))
         )
     if end_of_ter_index == 0:
         end_of_ter_index = 1
@@ -101,55 +97,83 @@ def normalise_ter(q_vectors, reflected_intensity, max_q=0.1):
     return reflected_intensity
 
 
-def rebin(q_vectors, reflected_intensity, new_q=None, number_of_q_vectors=400,
-          interpolate=False):
+def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
+          number_of_q_vectors=400):
     """
-    Rebin the data on a logarithmic q-scale.
+    Rebin the data on a linear or logarithmic q-scale.
 
     Args:
-        q_vectors (:py:attr:`array_like`): The current q-values.
-        reflected_intensity (:py:attr:`array_like`): The current reflected
-            intensity.
-        new_q (:py:attr:`array_like`): Array of potential q-values. Defaults
-            to :py:attr:`None`.
-        number_of_q_vectors (:py:attr:`int`, optional): The max number of
-            q-vectors to be using initially in the rebinning of the data.
-            Defaults to :py:attr:`400`.
-        interpolate (:py:attr:`bool`, optional): Should values be interpolated
-            if no measured values are present for the given q-value.
+        q_vectors:
+            q - the current q vectors.
+        reflected_intensity (:py:attr:`tuple`):
+            (I, I_e) - The current reflected intensities, and their errors.
+        new_q (:py:attr:`array_like`): 
+            Array of potential q-values. Defaults to :py:attr:`None`. If this
+            argument is not specified, then the new q, R values are binned 
+            according to rebin_as and number_of_q_vectors.
+        rebin_as (py:attr:`str`):
+            String specifying how the data should be rebinned. Options are 
+            "linear" and "log". This is only used if the new_q are unspecified.
+        number_of_q_vectors (:py:attr:`int`, optional):
+            The max number of q-vectors to be using initially in the rebinning 
+            of the data. Defaults to :py:attr:`400`.
 
     Returns:
         :py:attr:`tuple`: Containing:
-            - :py:attr:`array_like`: q-values.
-            - :py:attr:`array_like`: Reflected intensities.
+            - q: rebinned q-values.
+            - intensity: rebinned intensities.
+            - intensity_e: rebinned intensity errors.
     """
+
+    # Unpack the arguments.
+    q = q_vectors
+    R = reflected_intensity[0]
+    R_e = reflected_intensity[1]
+
     if new_q is None:
-        new_q = np.logspace(
-            np.log10(q_vectors[0].n),
-            np.log10(q_vectors[-1].n), number_of_q_vectors)
+        # Our new q vectors have not been specified, so we should generate some.
+        if rebin_as == "log":
+            new_q = np.logspace(
+                np.log10(q[0]),
+                np.log10(q[-1]), number_of_q_vectors)
+        elif rebin_as == "linear":
+            new_q = np.linspace(q[0], q[-1], number_of_q_vectors)
 
-    binned_q = unp.uarray(np.zeros_like(new_q), np.zeros_like(new_q))
-    binned_r = unp.uarray(np.zeros_like(new_q), np.zeros_like(new_q))
-    for i in range(len(new_q) - 1):
-        count = 0
-        for j, q in enumerate(q_vectors):
-            if new_q[i] <= q < new_q[i + 1]:
-                binned_q[i] += q
-                binned_r[i] += reflected_intensity[j]
-                count += 1
-        if count > 0:
-            binned_q[i] /= count
-            binned_r[i] /= count
-    cleaned_q = np.delete(binned_q, np.argwhere(binned_r == 0))
-    cleaned_r = np.delete(binned_r, np.argwhere(binned_r == 0))
-    if interpolate:
-        r = unp.nominal_values(cleaned_r)
-        dr = unp.std_devs(cleaned_r)
-        itp1 = splrep(unp.nominal_values(cleaned_q), r + dr)
-        itp2 = splrep(unp.nominal_values(cleaned_q), r)
-        r_max = splev(new_q, itp1)
-        r_new = splev(new_q, itp2)
-        cleaned_q = new_q
-        cleaned_r = unp.uarray(r_new, r_max-r_new)
+    binned_q = np.zeros_like(new_q)
+    binned_R = np.zeros_like(new_q)
+    binned_R_e = np.zeros_like(new_q)
 
-    return cleaned_q, cleaned_r
+    for i in range(len(new_q)):
+        indices = []
+        inverse_e = []
+        for j in range(len(q)):
+            if new_q[i] <= q[j] < new_q[i + 1]:
+                indices.append(j)
+                inverse_e.append(1/R_e[j])
+
+        # Don't bother doing maths if there were no recorded q-values between
+        # the two bin points we were looking at.
+        if len(indices) == 0:
+            continue
+
+        # The inverse_e will weight an average, so we need to sum them.
+        sum_of_inverse_e = np.sum(inverse_e)
+
+        # If we measured multiple qs between these bin locations, then average
+        # the data, weighting by inverse error.
+        for j in indices:
+            binned_R += R[j]/R_e[j]
+            binned_q += q[j]/R_e[j]
+            binned_R_e += 1  # R_e[j]/R_e[j]!
+
+        # Divide by the sum of the average's weights
+        binned_R /= sum_of_inverse_e
+        binned_q /= sum_of_inverse_e
+        binned_R_e /= sum_of_inverse_e
+
+    # Get rid of any empty, unused elements of the array.
+    cleaned_q = np.delete(binned_q, np.argwhere(binned_R == 0))
+    cleaned_R = np.delete(binned_R, np.argwhere(binned_R == 0))
+    cleaned_R_e = np.delete(binned_R, np.argwhere(binned_R == 0))
+
+    return cleaned_q, cleaned_R, cleaned_R_e
