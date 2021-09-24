@@ -43,11 +43,11 @@ class Data:
         Args:
             intensity:
                 A numpy array of the intensities in this dataset.
-            intensity_e:
+            intensity_e: 
                 The errors on the intensities.
-            energy:
+            energy: 
                 The energy of the probe particle used to acquire this data.
-            theta:
+            theta: 
                 A numpy array containing the probe particle's angle of 
                 incidence at each intensity. NOTE: only one of theta/q needs to
                 be provided.
@@ -57,6 +57,7 @@ class Data:
                 theta/q needs to be provided.
         """
         self.intensity = intensity
+        self.intensity_e = intensity_e
         self.energy = energy
 
         if (theta is None) and (q is None):

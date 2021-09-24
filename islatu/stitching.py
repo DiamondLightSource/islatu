@@ -24,6 +24,7 @@ def correct_attentuation(scan_list):
         :py:attr:`list` of :py:class:`islatu.refl_data.Scan`: 
             Reflectometry scans with attenuation corrected.
     """
+
     for i in range(len(scan_list) - 1):
         overlap_start = scan_list[i + 1].q[0].n
         overlap_end = scan_list[i].q[-1].n
@@ -64,6 +65,7 @@ def concatenate(scan_list):
             - :py:attr:`array_like`: q-values.
             - :py:attr:`array_like`: Reflected intensities.
     """
+
     reflected_intensity = np.array([])
     q_vectors = np.array([])
     for scan in scan_list:
