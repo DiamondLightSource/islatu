@@ -14,7 +14,7 @@ from nexusformat import nexus
 import nexusformat
 from nexusformat.nexus.tree import NeXusError
 from islatu import metadata
-from islatu.refl_data import _get_iterator
+from iterator import _get_iterator
 from numpy.lib.type_check import imag
 from islatu.scan import Scan2D
 from islatu.image import Image
@@ -22,7 +22,6 @@ from islatu import detector
 from islatu.metadata import Metadata
 from islatu.data import Data
 import pandas as pd
-from uncertainties import unumpy as unp
 import numpy as np
 import h5py
 
@@ -193,13 +192,11 @@ def i07_dat_parser(file_path, theta_axis_name=None):
     # Now build a Data instance to hold the theta/intensity values. It is
     # important to note that this provides the most naive estimate of intensity,
     # simply using the maximum pixel value to represent the intensity.
-    theta = unp.uarray(np.array(metadata.raw_metadata[theta_axis_name]),
-                       np.zeros(len(metadata.raw_metadata[theta_axis_name])))
-    intensity = unp.uarray(np.array(metadata.roi_1_maxval),
-                           np.zeros(len(metadata.roi_1_maxval)))
-
+    theta = np.array(metadata.raw_metadata[theta_axis_name])
+    intensity = np.array(metadata.roi_1_maxval)
+    intensity_e = np.sqrt(metadata.roi_1_maxval)
     energy = metadata.probe_energy
-    data = Data(theta, intensity, energy)
+    data = Data(intensity, intensity_e, energy, theta=theta)
 
     # Our metadata's file information is most likely wrong (unless this code is
     # being run on site). Try to correct these files.
@@ -366,28 +363,29 @@ def i07_nxs_parser(file_path, progress_bar=False):
             "/entry/instrument/excroi/Region_2_max_val"]
 
     # Now prepare the Data object.
-    # TODO: work out how to find this generally.
+    # TODO: do this generally, without depending on a particular path.
     theta_parsed = nx_file["/entry/instrument/diff1delta/value"]._value
 
     # If theta_parsed is just a float, we must be scanning something else!
     # Currently, if theta_parsed isn't isn't being scanned, we're just assuming
     # that qdcd is the scannable of interest.
-    # TODO: Work out how to generally locate the independent variable in a nexus
-    # file.
+    # TODO: Generally locate the independent variable in a nexus file.
 
-    intensity = unp.uarray(np.array(metadata.roi_1_maxval),
-                           np.sqrt(np.array(metadata.roi_1_maxval)))
+    intensity = np.array(metadata.roi_1_maxval)
+    intensity_e = np.sqrt(intensity)
 
     energy = metadata.probe_energy
 
     # Instantiate a Data object with q if using DCD setup, theta otherwise
     if isinstance(theta_parsed, float):
         q_parsed = nx_file["/entry/instrument/qdcd/value"]._value
-        q_vals = unp.uarray(q_parsed, np.zeros(len(q_parsed)))
-        data = Data(intensity=intensity, energy=energy, q=q_vals)
+        q_vals = q_parsed
+        data = Data(intensity=intensity, intensity_e=intensity_e,
+                    energy=energy, q=q_vals)
     else:
-        theta = unp.uarray(theta_parsed, np.zeros(len(theta_parsed)))
-        data = Data(intensity=intensity, energy=energy, theta=theta)
+        theta = theta_parsed
+        data = Data(intensity=intensity, intensity_e=intensity_e,
+                    energy=energy, theta=theta)
 
     # Our metadata's file information is wrong (unless this code is
     # being run on site). Try to correct these files.
