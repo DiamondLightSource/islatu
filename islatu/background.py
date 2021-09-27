@@ -73,7 +73,7 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
         image_e = np.sqrt(image) + epsilon
 
     # Now we can generate an array of errors.
-    ordinate_e = image_e.mean(axis=axis)
+    ordinate_e = np.sqrt(np.mean(image_e**2, axis=axis))
 
     # Now we generate the initial values for our Gaussian fit.
     # These values are crucial - as this is a high dimensional fitting problem,
