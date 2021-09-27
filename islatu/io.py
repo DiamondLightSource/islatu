@@ -14,7 +14,7 @@ from nexusformat import nexus
 import nexusformat
 from nexusformat.nexus.tree import NeXusError
 from islatu import metadata
-from iterator import _get_iterator
+from islatu.iterator import _get_iterator
 from numpy.lib.type_check import imag
 from islatu.scan import Scan2D
 from islatu.image import Image

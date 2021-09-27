@@ -77,6 +77,7 @@ class Data:
         """
         return self.intensity/np.amax(self.intensity)
 
+    @property
     def R_e(self) -> np.array:
         """
         Returns the errors on the intensity, divided by the maximum value of the
@@ -169,8 +170,24 @@ class MeasurementBase:
 
     @property
     def R(self):
+        return self.data.R
+
+    @property
+    def R_e(self):
+        return self.data.R_e
+
+    @property
+    def intensity(self) -> np.array:
         return self.data.intensity
 
-    @R.setter
-    def R(self, value):
+    @intensity.setter
+    def intensity(self, value):
         self.data.intensity = value
+
+    @property
+    def intensity_e(self) -> np.array:
+        return self.data.intensity_e
+
+    @intensity_e.setter
+    def intensity_e(self, value):
+        self.data.intensity_e = value

@@ -36,6 +36,7 @@ class Profile(MeasurementBase):
                 formats such as .nxs for which the independent variable can be
                 inferred.
         """
+
         # Load the scans, specifying the scan axis name if necessary.
         if scan_axis_name is not None:
             scans = [parser(filename, scan_axis_name)
@@ -46,13 +47,13 @@ class Profile(MeasurementBase):
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the
         # data from each of the constituent scans.
-        q_vectors, reflectivities = concatenate(scans)
+        q, intensity, intensity_e = concatenate(scans)
 
         # Note: we are making the implicit assumption that energy is independent
         # of scan number at this point.
         energy = scans[0].metadata.probe_energy
 
-        data = Data(None, reflectivities, energy, q_vectors)
+        data = Data(intensity, intensity_e, energy, q=q)
 
         return cls(data, scans)
 
@@ -171,7 +172,7 @@ class Profile(MeasurementBase):
         """
         Class method for :func:`~islatu.stitching.concatenate`.
         """
-        self.q, self.intensity = stitching.concatenate(
+        self.q, self.intensity, self.intensity_e = stitching.concatenate(
             self.scans)
 
     def normalise_ter(self, max_q=0.1):
@@ -187,18 +188,23 @@ class Profile(MeasurementBase):
         )
         self.concatenate()
 
-    def rebin(self, new_q=None, number_of_q_vectors=400, interpolate=False):
+    def rebin(self, new_q=None, rebin_as="linear", number_of_q_vectors=400):
         """
         Class method for :func:`islatu.stitching.rebin`.
 
         Args:
-            new_q (:py:attr:`array_like`): Array of potential q-values.
-                Defaults to :py:attr:`None`.
-            number_of_q_vectors (:py:attr:`int`, optional): The max number of
-                q-vectors to be using initially in the rebinning of the data.
-                Defaults to :py:attr:`400`.
+            new_q (:py:attr:`array_like`): 
+                Array of potential q-values. Defaults to :py:attr:`None`. If 
+                this argument is not specified, then the new q, R values are 
+                binned according to rebin_as and number_of_q_vectors.
+            rebin_as (py:attr:`str`):
+                String specifying how the data should be rebinned. Options are 
+                "linear" and "log". This is only used if the new_q are 
+                unspecified.
+            number_of_q_vectors (:py:attr:`int`, optional):
+                The max number of q-vectors to be using initially in the 
+                rebinning of the data. Defaults to :py:attr:`400`.
         """
-        self.q, self.intensity = stitching.rebin(
-            self.q, self.intensity, new_q,
-            number_of_q_vectors, interpolate
-        )
+        self.q, self.intensity, self.intensity_e = stitching.rebin(
+            self.q, (self.intensity, self.intensity_e), new_q,
+            rebin_as=rebin_as, number_of_q_vectors=number_of_q_vectors)

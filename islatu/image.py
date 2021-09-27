@@ -24,6 +24,10 @@ class Image:
             File path for the image.
         array (:py:attr:`array_like`): 
             The image described as an array.
+        array_original (:py:attr:`array_like`):
+            The original value of the image array when it was loaded from disk.
+        array_e (:py:attr:`array_like`):
+            The errors on each pixel of the array.
         bkg (:py:attr:`float`):
             The background that was subtracted from the image.
         bkg_e (:py:attr:`float`):
@@ -60,8 +64,8 @@ class Image:
         array = _average_out_hot(array, hot_pixel_max)
         array[np.where(array < pixel_min)] = 0
         self.array = array
-        self.array_e = np.sqrt(array)
         self.array_original = np.copy(array)
+        self.array_e = self.initial_std_devs
         self.bkg = 0
         self.bkg_e = 0
         self.n_pixels = 0
@@ -85,15 +89,15 @@ class Image:
         return self.array
 
     @property
-    def std_devs(self):
+    def initial_std_devs(self):
         """
-        Get the standard deviation values of the image array.
+        Get the standard deviation values of the original raw image array.
 
         Returns:
             :py:attr:`array_like`: Standard deviation values of image.
         """
-        array_error = np.sqrt(self.array)
-        array_error[np.where(self.array == 0)] = 1
+        array_error = np.sqrt(self.array_original)
+        array_error[np.where(self.array_original == 0)] = 1
         return array_error
 
     @property
@@ -173,17 +177,18 @@ class Image:
             y_end = kwargs['y_end']
             x_start = kwargs['x_start']
             x_end = kwargs['x_end']
-            bkg_popt = (
-                self.array_original[y_start:y_end, x_start:x_end]).mean()
 
-            # NOTE:
-            # If we would've saved the original array of errors, we would've
-            # been able to skip this step, but islatu would use up more memory.
-            # This is a classic memory vs CPU tradeoff. Here, memory is made the
-            # priority since taking a sqrt is pretty quick, but the images are
-            # large.
-            array_original_e = np.sqrt(self.array_original)
-            bkg_sigma = array_original_e[y_start:y_end, x_start:x_end].mean()
+            # Calculate Poisson error as though this whole region was just one
+            # big pixel called bkg_area
+            sum_of_bkg_area = np.sum(
+                self.array_original[y_start:y_end, x_start:x_end])
+            err_of_bkg_area = np.sqrt(sum_of_bkg_area)
+            num_pixels = (y_end - y_start) * (x_end - x_start)
+
+            # Weird name so that we match names in the else statement.
+            bkg_popt = sum_of_bkg_area/num_pixels
+            bkg_sigma = err_of_bkg_area/num_pixels
+
             self.bkg = bkg_popt
             self.bkg_e = bkg_sigma
         else:
@@ -193,7 +198,7 @@ class Image:
             self.bkg, self.bkg_e = bkg_popt[0][bkg_idx], bkg_popt[1][bkg_idx]
 
         self.array = np.float64(self.array) - self.bkg
-        self.array_e += self.bkg_e
+        self.array_e = np.sqrt(self.bkg_e**2 + self.array_e**2)
 
         # Expose the optimized fit parameters for meta-analysis.
         return bkg_popt
@@ -206,7 +211,13 @@ class Image:
             axis (:py:attr:`int`, optional): The axis of the array to perform
                 the summation over. Defaults to :py:attr:`None`.
         """
-        return self.array.sum(axis), self.array_e.sum(axis)
+        intensity = self.array.sum(axis)
+
+        intensity_e_sq = self.intensity_e ** 2
+
+        intensity_e = np.sqrt(np.sum(intensity_e_sq))
+
+        return intensity, intensity_e
 
     def q_resolution(self, qz_dimension=1):
         """

@@ -66,12 +66,14 @@ def concatenate(scan_list):
             - :py:attr:`array_like`: Reflected intensities.
     """
 
-    reflected_intensity = np.array([])
     q_vectors = np.array([])
+    intensity = np.array([])
+    intensity_e = np.array([])
     for scan in scan_list:
-        reflected_intensity = np.append(reflected_intensity, scan.intensity)
         q_vectors = np.append(q_vectors, scan.q)
-    return q_vectors, reflected_intensity
+        intensity = np.append(intensity, scan.intensity)
+        intensity_e = np.append(intensity_e, scan.intensity_e)
+    return q_vectors, intensity, intensity_e
 
 
 def normalise_ter(q, reflected_intensity, max_q=0.1):
@@ -129,53 +131,59 @@ def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
 
     # Unpack the arguments.
     q = q_vectors
-    R = reflected_intensity[0]
-    R_e = reflected_intensity[1]
+    R, R_e = reflected_intensity
+
+    # Required so that logspace/linspace encapsulates the whole data.
+    epsilon = 0.001
 
     if new_q is None:
         # Our new q vectors have not been specified, so we should generate some.
         if rebin_as == "log":
             new_q = np.logspace(
                 np.log10(q[0]),
-                np.log10(q[-1]), number_of_q_vectors)
+                np.log10(q[-1] + epsilon), number_of_q_vectors)
         elif rebin_as == "linear":
-            new_q = np.linspace(q[0], q[-1], number_of_q_vectors)
+            new_q = np.linspace(q[0], q[-1] + epsilon, number_of_q_vectors)
 
     binned_q = np.zeros_like(new_q)
     binned_R = np.zeros_like(new_q)
     binned_R_e = np.zeros_like(new_q)
 
-    for i in range(len(new_q)):
+    for i in range(len(new_q)-1):
         indices = []
-        inverse_e = []
+        inverse_var = []
         for j in range(len(q)):
             if new_q[i] <= q[j] < new_q[i + 1]:
                 indices.append(j)
-                inverse_e.append(1/R_e[j])
+                inverse_var.append(1/float(R_e[j]**2))
 
         # Don't bother doing maths if there were no recorded q-values between
         # the two bin points we were looking at.
         if len(indices) == 0:
             continue
 
-        # The inverse_e will weight an average, so we need to sum them.
-        sum_of_inverse_e = np.sum(inverse_e)
+        # We will be using inverse-variance weighting to minimize the variance
+        # of the weighted mean.
+        sum_of_inverse_var = np.sum(inverse_var)
 
         # If we measured multiple qs between these bin locations, then average
-        # the data, weighting by inverse error.
+        # the data, weighting by inverse variance.
         for j in indices:
-            binned_R += R[j]/R_e[j]
-            binned_q += q[j]/R_e[j]
-            binned_R_e += 1  # R_e[j]/R_e[j]!
+            binned_R[i] += R[j]/(R_e[j]**2)
+            binned_q[i] += q[j]/(R_e[j]**2)
 
-        # Divide by the sum of the average's weights
-        binned_R /= sum_of_inverse_e
-        binned_q /= sum_of_inverse_e
-        binned_R_e /= sum_of_inverse_e
+        # Divide by the sum of the weights.
+        binned_R[i] /= sum_of_inverse_var
+        binned_q[i] /= sum_of_inverse_var
+
+        # The stddev of an inverse variance weighted mean is always:
+        binned_R_e[i] = np.sqrt(1/sum_of_inverse_var)
+
+        print(binned_R_e[i])
 
     # Get rid of any empty, unused elements of the array.
     cleaned_q = np.delete(binned_q, np.argwhere(binned_R == 0))
     cleaned_R = np.delete(binned_R, np.argwhere(binned_R == 0))
-    cleaned_R_e = np.delete(binned_R, np.argwhere(binned_R == 0))
+    cleaned_R_e = np.delete(binned_R_e, np.argwhere(binned_R == 0))
 
     return cleaned_q, cleaned_R, cleaned_R_e

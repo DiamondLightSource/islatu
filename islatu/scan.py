@@ -167,14 +167,17 @@ class Scan2D(Scan):
                 sample in the dimension of the beam, in metres.
             theta (:py:attr:`float`): Incident angle, in degrees.
         """
-        self.intensity /= corrections.footprint_correction(
+        frac_of_beam_sampled = corrections.footprint_correction(
             beam_width, sample_size, self.theta)
+        self.intensity /= frac_of_beam_sampled
+        self.intensity_e /= frac_of_beam_sampled
 
     def transmission_normalisation(self):
         """
         Perform the transmission correction.
         """
         self.intensity /= float(self.metadata.transmission)
+        self.intensity_e /= float(self.metadata.transmission)
 
     def qdcd_normalisation(self, itp):
         """
@@ -186,3 +189,4 @@ class Scan2D(Scan):
                 (:py:attr:`array_like`), and degree of spline (:py:attr:`int`).
         """
         self.intensity /= splev(self.q, itp)
+        self.intensity_e /= splev(self.q, itp)

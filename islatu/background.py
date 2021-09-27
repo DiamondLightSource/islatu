@@ -57,6 +57,7 @@ def fit_gaussian_1d(image, image_e, p0=None, bounds=None, axis=0):
             - :py:attr:`int`: The index of the offset.
             - :py:attr:`None`: As it is not possible to describe the reflected peak width.
     """
+
     ordinate = image.mean(axis=axis)
 
     # A small quantity by which we can shift parameters such that they're > 0.
