@@ -179,8 +179,6 @@ def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
         # The stddev of an inverse variance weighted mean is always:
         binned_R_e[i] = np.sqrt(1/sum_of_inverse_var)
 
-        print(binned_R_e[i])
-
     # Get rid of any empty, unused elements of the array.
     cleaned_q = np.delete(binned_q, np.argwhere(binned_R == 0))
     cleaned_R = np.delete(binned_R, np.argwhere(binned_R == 0))
