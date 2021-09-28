@@ -4,7 +4,6 @@ from islatu import cropping
 from islatu import image
 from islatu import io
 from islatu.io import i07_dat_to_dict_dataframe
-from islatu import refl_data
 from islatu.profile import Profile
 from islatu import stitching
 from islatu import __version__
@@ -20,7 +19,6 @@ from ast import literal_eval as make_tuple
 import numpy as np
 
 function_map = {'gaussian_1d': background.fit_gaussian_1d,
-                'gaussian_2d': background.fit_gaussian_2d,
                 'roi_subtraction': None,
                 'area': None,
                 'i07': io.i07_nxs_parser,
@@ -218,9 +216,7 @@ class Foreperson:
                     'setup']['sample size'])
                 try:
                     _ = len(self.reduction.sample_size)
-                    self.reduction.sample_size = ufloat(
-                        self.reduction.sample_size[0],
-                        self.reduction.sample_size[1])
+                    self.reduction.sample_size = self.reduction.sample_size[0]
                 except TypeError:
                     pass
             else:
@@ -231,9 +227,7 @@ class Foreperson:
                     'setup']['beam width'])
                 try:
                     _ = len(self.reduction.beam_width)
-                    self.reduction.beam_width = ufloat(
-                        self.reduction.beam_width[0],
-                        self.reduction.beam_width[1])
+                    self.reduction.beam_width = self.reduction.beam_width[0]
                 except TypeError:
                     pass
             else:
@@ -351,20 +345,18 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             the_boss.reduction.dcd_normalisation, i07_dat_to_dict_dataframe)
         refl.qdcd_normalisation(itp)
         the_boss.reduction.data_state.dcd = 'normalised'
+        print("Carried out DCD intensity normalization")
     refl.footprint_correction(
         the_boss.reduction.beam_width, the_boss.reduction.sample_size)
+    print("Carried out footprint correction")
     refl.transmission_normalisation()
+    print("Corrected for changes in beam attenuation")
     the_boss.reduction.data_state.transmission = 'normalised'
-    # refl.normalise_ter()
-    # the_boss.reduction.data_state.intensity = 'normalised'
     refl.concatenate()
-
-    # Normalize the reflectivity properly.
-    refl.R = refl.R/np.amax(refl.R)
 
     if the_boss.data.rebin:
         print("-" * 10)
-        print('Rebinning')
+        print('Rebinning the data.')
         print("-" * 10)
         if the_boss.data.q_min is None:
             refl.rebin(number_of_q_vectors=the_boss.data.n_qvectors)
@@ -388,16 +380,12 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Prepare the data array.
     data = np.array([refl.q, refl.R, refl.R_e]).T
+
+    # Write the data.
     np.savetxt(
         (processing_path + 'XRR_{}_'.format(
             run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
         header='{}\n 1 2 3'.format(dump(vars(the_boss))))
-    if the_boss.data.both:
-        data = np.array([refl.q, refl.R, refl.R_e]).T
-        np.savetxt(
-            (processing_path + 'XRR_{}_'.format(
-                run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
-            header='{}\n 1 2 3'.format(dump(vars(the_boss))))
 
     print("-" * 10)
     print('Reduced Data Stored in Processing Directory')
