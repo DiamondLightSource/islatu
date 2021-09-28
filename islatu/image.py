@@ -213,7 +213,7 @@ class Image:
         """
         intensity = self.array.sum(axis)
 
-        intensity_e_sq = self.intensity_e ** 2
+        intensity_e_sq = self.array_e ** 2
 
         intensity_e = np.sqrt(np.sum(intensity_e_sq))
 
