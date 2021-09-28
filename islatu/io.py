@@ -411,8 +411,7 @@ def i07_nxs_parser(file_path, progress_bar=False):
             if not progress_bar:
                 print("Currently loaded " + str(i+1) + " images.",  end="\r")
             images.append(Image(dataset[i]))
-        print("Loaded all " + str(dataset.shape[0]) + " images.")
-        # images = [Image(dataset[i]) for i in range(3)]
+        print("\nLoaded all " + str(dataset.shape[0]) + " images.")
 
     return Scan2D(data, metadata, images)
 
