@@ -363,17 +363,30 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
 
+    debug.log("All correction steps completed for q-range: {}Å-{}Å.".format(
+        np.min(refl.q), np.max(refl.q)
+    ), unimportance=2)
+
     if the_boss.data.rebin:
         debug.log("-" * 10)
         debug.log('Rebinning the data.', unimportance=0)
         debug.log("-" * 10)
         if the_boss.data.q_min is None:
+            debug.log("Linearly rebinning data into " +
+                      str(the_boss.data.n_qvectors) + " uniformly spaced " +
+                      "points in q-space.", unimportance=2)
             refl.rebin(number_of_q_vectors=the_boss.data.n_qvectors)
         else:
             if the_boss.data.q_space == 'linear':
+                debug.log("Rebinning data linearly.", unimportance=2)
                 spacing = np.linspace
             elif the_boss.data.q_space == 'log':
+                debug.log("Rebinning data logarithmically", unimportance=2)
                 spacing = np.logspace
+            debug.log(
+                "Spacing generated from " + str(refl.q.min())+ "Å to " +
+                str(refl.q.max()) + "Å.", unimportance=2
+            )
             refl.rebin(new_q=spacing(refl.q.min(), refl.q.max(),
                                      the_boss.data.q_step))
         the_boss.reduction.data_state.rebinned = the_boss.data.q_shape
@@ -389,9 +402,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Prepare the data array.
     data = np.array([refl.q, refl.R, refl.R_e]).T
-    debug.log("XRR reduction completed. q-range: {}-{}Å.".format(
+    debug.log("XRR reduction completed. q-range: {}Å-{}Å.".format(
         np.min(refl.q), np.max(refl.q)
-    ))
+    ), unimportance=2)
 
     if filename is None:
         filename = (processing_path + 'XRR_{}_'.format(

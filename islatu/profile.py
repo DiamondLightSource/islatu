@@ -188,7 +188,7 @@ class Profile(MeasurementBase):
         )
         self.concatenate()
 
-    def rebin(self, new_q=None, rebin_as="linear", number_of_q_vectors=400):
+    def rebin(self, new_q=None, rebin_as="linear", number_of_q_vectors=5000):
         """
         Class method for :func:`islatu.stitching.rebin`.
 

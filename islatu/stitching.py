@@ -102,7 +102,7 @@ def normalise_ter(q, reflected_intensity, max_q=0.1):
 
 
 def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
-          number_of_q_vectors=400):
+          number_of_q_vectors=5000):
     """
     Rebin the data on a linear or logarithmic q-scale.
 
@@ -143,7 +143,8 @@ def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
                 np.log10(q[0]),
                 np.log10(q[-1] + epsilon), number_of_q_vectors)
         elif rebin_as == "linear":
-            new_q = np.linspace(q[0], q[-1] + epsilon, number_of_q_vectors)
+            new_q = np.linspace(q.min(), q.max() + epsilon,
+                                number_of_q_vectors)
 
     binned_q = np.zeros_like(new_q)
     binned_R = np.zeros_like(new_q)
