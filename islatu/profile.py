@@ -20,7 +20,7 @@ class Profile(MeasurementBase):
         self.scans = scans
 
     @classmethod
-    def fromfilenames(cls, filenames, parser, scan_axis_name=None):
+    def fromfilenames(cls, filenames, parser, log_lvl=1, scan_axis_name=None):
         """
         Instantiate a profile from a list of scan filenames.
 
@@ -39,10 +39,10 @@ class Profile(MeasurementBase):
 
         # Load the scans, specifying the scan axis name if necessary.
         if scan_axis_name is not None:
-            scans = [parser(filename, scan_axis_name)
+            scans = [parser(filename, scan_axis_name, log_lvl)
                      for filename in filenames]
         else:
-            scans = [parser(filename)for filename in filenames]
+            scans = [parser(filename, log_lvl)for filename in filenames]
 
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the

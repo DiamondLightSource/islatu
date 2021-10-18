@@ -7,6 +7,7 @@ from islatu.io import i07_dat_to_dict_dataframe
 from islatu.profile import Profile
 from islatu import stitching
 from islatu import __version__
+from islatu.debug import Debug
 from yaml import load, dump
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -276,7 +277,7 @@ class Foreperson:
 
 
 def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
-              title='Unknown'):
+              title='Unknown', log_lvl=1, filename=None):
     """
     The runner that parses the yaml file and performs the data reduction.
 
@@ -285,7 +286,11 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     yaml_file (:py:attr:`str`): File path to instruction set.
     directory (:py:attr:`str`): Outline for directory path.
     title (:py:attr:`str`): A title for the experiment.
+    log_lvl: Degree of verbosity of logging requested.
     """
+    # First prepare our logger.
+    debug = Debug(log_lvl)
+
     # Make sure the directory is properly formatted.
     if not str(directory).endswith("/"):
         directory = directory + "/"
@@ -296,14 +301,15 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     files_to_reduce = the_boss.reduction.input_files
 
-    print("-" * 10)
-    print('File Parsing')
-    print("-" * 10)
-    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
+    debug.log("-" * 10)
+    debug.log('File Parsing', unimportance=0)
+    debug.log("-" * 10)
+    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,
+                                 log_lvl=log_lvl)
 
-    print("-" * 10)
-    print('Cropping')
-    print("-" * 10)
+    debug.log("-" * 10)
+    debug.log('Cropping', unimportance=0)
+    debug.log("-" * 10)
     # Check to see if we should default to the ROI cropping regions
     if ((the_boss.reduction.crop_function is cropping.crop_2d) and
             the_boss.reduction.crop_kwargs is None):
@@ -313,14 +319,17 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             'y_start': refl.scans[0].metadata.roi_1_y1,
             'y_end': refl.scans[0].metadata.roi_1_y2
         }
-        print("Crop region of interest (ROI) generated from excalibur's ROI.")
-        print("Generated cropping kwargs:", the_boss.reduction.crop_kwargs)
+        debug.log(
+            "Crop region of interest (ROI) generated from excalibur's ROI.",
+            unimportance=2)
+        debug.log("Generated cropping kwargs:" +
+                  str(the_boss.reduction.crop_kwargs), unimportance=2)
     refl.crop(the_boss.reduction.crop_function,
               the_boss.reduction.crop_kwargs)
 
-    print("-" * 10)
-    print('Background Subtraction')
-    print("-" * 10)
+    debug.log("-" * 10)
+    debug.log('Subtracting Background', unimportance=0)
+    debug.log("-" * 10)
     # Before subtracting background, make sure that, by default, we're at least
     # trying to subtract background from roi_2.
     if ((the_boss.reduction.bkg_function is None) and
@@ -337,27 +346,27 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                  the_boss.reduction.bkg_kwargs)
     the_boss.reduction.data_state.background = 'corrected'
 
-    print("-" * 10)
-    print('Performing Data Corrections')
-    print("-" * 10)
+    debug.log("-" * 10)
+    debug.log('Performing Data Corrections', unimportance=0)
+    debug.log("-" * 10)
     if the_boss.reduction.dcd_normalisation is not None:
         itp = corrections.get_interpolator(
             the_boss.reduction.dcd_normalisation, i07_dat_to_dict_dataframe)
         refl.qdcd_normalisation(itp)
         the_boss.reduction.data_state.dcd = 'normalised'
-        print("Carried out DCD intensity normalization")
+        debug.log("Carried out DCD intensity normalization")
     refl.footprint_correction(
         the_boss.reduction.beam_width, the_boss.reduction.sample_size)
-    print("Carried out footprint correction")
+    debug.log("Carried out footprint correction")
     refl.transmission_normalisation()
-    print("Corrected for changes in beam attenuation")
+    debug.log("Corrected for changes in beam attenuation")
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
 
     if the_boss.data.rebin:
-        print("-" * 10)
-        print('Rebinning the data.')
-        print("-" * 10)
+        debug.log("-" * 10)
+        debug.log('Rebinning the data.', unimportance=0)
+        debug.log("-" * 10)
         if the_boss.data.q_min is None:
             refl.rebin(number_of_q_vectors=the_boss.data.n_qvectors)
         else:
@@ -381,12 +390,15 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     # Prepare the data array.
     data = np.array([refl.q, refl.R, refl.R_e]).T
 
+    if filename is None:
+        filename = (processing_path + 'XRR_{}_'.format(
+            run_numbers[0]) + yaml_pipeline_name + ".dat")
+
     # Write the data.
     np.savetxt(
-        (processing_path + 'XRR_{}_'.format(
-            run_numbers[0]) + yaml_pipeline_name + ".dat"), data,
+        filename, data,
         header='{}\n 1 2 3'.format(dump(vars(the_boss))))
 
-    print("-" * 10)
-    print('Reduced Data Stored in Processing Directory')
-    print("-" * 10)
+    debug.log("-" * 10)
+    debug.log('Reduced Data Stored at {}'.format(filename), unimportance=0)
+    debug.log("-" * 10)

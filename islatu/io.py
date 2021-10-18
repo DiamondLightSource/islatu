@@ -14,6 +14,7 @@ from nexusformat import nexus
 import nexusformat
 from nexusformat.nexus.tree import NeXusError
 from islatu import metadata
+from islatu.debug import Debug
 from islatu.iterator import _get_iterator
 from numpy.lib.type_check import imag
 from islatu.scan import Scan2D
@@ -210,7 +211,7 @@ def i07_dat_parser(file_path, theta_axis_name=None):
     return Scan2D(data, metadata, images)
 
 
-def i07_nxs_parser(file_path, progress_bar=False):
+def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
     """
     Parses a .nxs file, returning an instance of Scan2D. This process involves
     loading the images contained in the hdf file pointed at by the .nxs file, as
@@ -231,6 +232,10 @@ def i07_nxs_parser(file_path, progress_bar=False):
     """
     from nexusformat.nexus import nxload
 
+    # Prepare the debug logger.
+    debug = Debug(log_lvl)
+
+    # Load the nexus file.
     nx_file = nxload(file_path)
 
     # ------------- BEGIN GENERIC NEXUS PARSER ----------------------------- #
@@ -279,7 +284,7 @@ def i07_nxs_parser(file_path, progress_bar=False):
 
         # Useful for debugging/double checking.
         if ("max_val" in file_contents) or ("max_val" in current_path):
-            # print(current_path, file_contents)
+            # debug.log(current_path, file_contents)
             pass
     # ------------- END GENERIC NEXUS PARSER ----------------------------- #
 
@@ -292,7 +297,7 @@ def i07_nxs_parser(file_path, progress_bar=False):
     #         contents = nx_file[new_path]._value
     #     except:
     #         continue
-    #     print(new_path + " || " + str(contents))
+    #     debug.log(new_path + " || " + str(contents))
 
     # The raw_metada dictionary is now populated.
     # Key pieces of metadata:
@@ -378,7 +383,7 @@ def i07_nxs_parser(file_path, progress_bar=False):
 
     # Instantiate a Data object with q if using DCD setup, theta otherwise
     if isinstance(theta_parsed, float):
-        q_parsed = nx_file["/entry/instrument/qdcd/value"]._value
+        q_parsed = nx_file["/entry/instrument/qdcd/lsvalue"]._value
         q_vals = q_parsed
         data = Data(intensity=intensity, intensity_e=intensity_e,
                     energy=energy, q=q_vals)
@@ -398,7 +403,7 @@ def i07_nxs_parser(file_path, progress_bar=False):
     # Now load the images from the file:
     internal_data_path = 'data'
 
-    print("Loading images from file " + metadata.file[0])
+    debug.log("Loading images from file " + metadata.file[0], unimportance=0)
     with h5py.File(metadata.file[0], "r") as file_handle:
         dataset = file_handle[internal_data_path][()]
         # images = [Image(dataset[i]) for i in range(dataset.shape[0])]
@@ -406,12 +411,18 @@ def i07_nxs_parser(file_path, progress_bar=False):
 
         # Prepare to show a progress bar for image loading.
         iterator = _get_iterator(dataset, progress_bar)
-        print("Loading " + str(dataset.shape[0]) + " images.")
+        debug.log("Loading " + str(dataset.shape[0]) + " images.",
+                  unimportance=2)
         for i in iterator:
             if not progress_bar:
-                print("Currently loaded " + str(i+1) + " images.",  end="\r")
+                debug.log("Currently loaded " + str(i+1) +
+                          " images.",  end="\r")
             images.append(Image(dataset[i]))
-        print("\nLoaded all " + str(dataset.shape[0]) + " images.")
+        # This line is necessary to prevent overwriting due to end="\r".
+        debug.log("")
+
+        debug.log("Loaded all " + str(dataset.shape[0]) + " images.",
+                  unimportance=2)
 
     return Scan2D(data, metadata, images)
 
@@ -516,7 +527,7 @@ def rigaku_data_parser(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
-def _try_to_find_files(filenames, additional_search_paths):
+def _try_to_find_files(filenames, additional_search_paths, log_lvl=1):
     """
     Check that data files exist if the file parsed by parser pointed to a
     separate file containing intensity information. If the intensity data
@@ -528,6 +539,7 @@ def _try_to_find_files(filenames, additional_search_paths):
         :py:attr:`list` of :py:attr:`str`:
             List of the corrected, actual paths to the files.
     """
+    debug = Debug(log_lvl)
     found_files = []
 
     # If we had only one file, make a list out of it.
@@ -590,7 +602,7 @@ def _try_to_find_files(filenames, additional_search_paths):
                 # File found - add the correct file location to found_files
                 found_files.append(candidate_path)
                 found_file = not found_file
-                print("Data file found at " + candidate_path + ".")
+                debug.log("Data file found at " + candidate_path + ".")
                 break
 
         # If we didn't find the file, tell the user.

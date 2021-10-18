@@ -1,28 +1,11 @@
 #!/usr/bin/env python3
 
+"Command line interface for the Islatu library."
+
 import argparse
 import os
 from islatu.runner import i07reduce
-
-
-class Debug:
-    def __init__(self, logging_level):
-        self.logging_level = logging_level
-
-    def log(self, log_string, unimportance: int = 1):
-        """
-        Prints to stdout if self.logging_level >= unimportance.
-
-        Args:
-            log_string:
-                The string to be printed.
-            unimportance:
-                A measure of unimportance assigned to the printing of this
-                string. Very unimportant messages require a larger logging
-                level to be printed. Defaults to 1.
-        """
-        if self.logging_level >= unimportance:
-            print(log_string)
+from islatu.debug import Debug
 
 
 class FileNotFoundError(Exception):
@@ -38,8 +21,7 @@ if __name__ == "__main__":
         "Command line interface to the Islatu library's autoprocessing " +
         "functionality."
     )
-    parser = argparse.ArgumentParser(
-        description=help_str)
+    parser = argparse.ArgumentParser(description=help_str)
 
     # The most important argument is the path to the data. If this is not
     # provided, we'll assume that we're in the data directory. Note that the
@@ -222,4 +204,5 @@ if __name__ == "__main__":
     # If execution reaches here, we found the .yaml file and we have the scan
     # numbers we'll construct the XRR curve from. This is all that we need: a
     # recipe and some data; let's go ahead and process the data on this machine.
-    i07reduce(args.scan_numbers, args.yaml_path, args.data_path)
+    i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
+              log_lvl=args.verbose)
