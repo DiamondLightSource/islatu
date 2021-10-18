@@ -42,7 +42,7 @@ class Profile(MeasurementBase):
             scans = [parser(filename, scan_axis_name, log_lvl)
                      for filename in filenames]
         else:
-            scans = [parser(filename, log_lvl)for filename in filenames]
+            scans = [parser(filename, log_lvl) for filename in filenames]
 
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the

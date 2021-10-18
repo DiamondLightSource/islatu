@@ -389,6 +389,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Prepare the data array.
     data = np.array([refl.q, refl.R, refl.R_e]).T
+    debug.log("XRR reduction completed. q-range: {}-{}Å.".format(
+        np.min(refl.q), np.max(refl.q)
+    ))
 
     if filename is None:
         filename = (processing_path + 'XRR_{}_'.format(

@@ -383,7 +383,7 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
 
     # Instantiate a Data object with q if using DCD setup, theta otherwise
     if isinstance(theta_parsed, float):
-        q_parsed = nx_file["/entry/instrument/qdcd/lsvalue"]._value
+        q_parsed = nx_file["/entry/instrument/qdcd/value"]._value
         q_vals = q_parsed
         data = Data(intensity=intensity, intensity_e=intensity_e,
                     energy=energy, q=q_vals)
