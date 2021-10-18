@@ -12,6 +12,7 @@ from re import search, split
 
 from nexusformat import nexus
 import nexusformat
+from nexusformat.nexus import nxload
 from nexusformat.nexus.tree import NeXusError
 from islatu import metadata
 from islatu.debug import Debug
@@ -230,7 +231,7 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
             A scan2D object containing all loaded detector frames, as well as
             all relevant metadata scraped from the .nxs file.
     """
-    from nexusformat.nexus import nxload
+    
 
     # Prepare the debug logger.
     debug = Debug(log_lvl)

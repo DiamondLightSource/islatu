@@ -3,12 +3,9 @@ numpy
 matplotlib
 scipy
 tqdm
-uncertainties
-nbsphinx
-jupyter-sphinx
-sphinx_rtd_theme
 coverage
 coveralls
 pillow
 pandas
 pyyaml
+nexusformat
