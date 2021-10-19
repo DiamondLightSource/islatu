@@ -44,7 +44,9 @@ if __name__ == "__main__":
 
     help_str = (
         "Use this flag if you are on site in diamond and would like your " +
-        "data to be processed on a cluster."
+        "data to be processed on a cluster. (19/10/2021) Note: this is " +
+        "currently finicky; if you *need* to get this to work email " +
+        "richard.brearton@diamond.ac.uk"
     )
     parser.add_argument("-c", "--cluster", help=help_str, action="store_true")
 
@@ -74,12 +76,12 @@ if __name__ == "__main__":
 
     help_str = (
         "Specify the directory in which you would like your processed " +
-        "reflectivity curve to be stored. Defaults to your processing path."
+        "reflectivity curve to be stored. Defaults to data_path/processing/"
     )
     parser.add_argument("-o", "--output", help=help_str)
 
     # A switch to allow verbosity toggle.
-    help_str = "Increase output verbosity."
+    help_str = "Increase output verbosity. -v = verbose, -vv = very verbose!"
     parser.add_argument("-v", "--verbose", help=help_str, action="count")
 
     # Extract the arguments from the parser.
