@@ -420,7 +420,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     # Write the data.
     np.savetxt(
         filename, data,
-        header='{}\n 1 2 3'.format(dump(vars(the_boss))))
+        header='{}\n Q(1/Å) R R_error'.format(dump(vars(the_boss))))
 
     debug.log("-" * 10)
     debug.log('Reduced Data Stored at {}'.format(filename), unimportance=0)
