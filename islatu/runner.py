@@ -384,7 +384,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                 debug.log("Rebinning data logarithmically", unimportance=2)
                 spacing = np.logspace
             debug.log(
-                "Spacing generated from " + str(refl.q.min())+ "Å to " +
+                "Spacing generated from " + str(refl.q.min()) + "Å to " +
                 str(refl.q.max()) + "Å.", unimportance=2
             )
             refl.rebin(new_q=spacing(refl.q.min(), refl.q.max(),
@@ -395,20 +395,27 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         str(refl.q.min()), str(refl.q.max())]
     the_boss.data.n_qvectors = str(len(refl.R))
 
-    # Make sure that the processing directory exists.
-    processing_path = the_boss.directory_path + 'processing/'
-    if not os.path.exists(processing_path):
-        os.makedirs(processing_path)
-
     # Prepare the data array.
     data = np.array([refl.q, refl.R, refl.R_e]).T
     debug.log("XRR reduction completed. q-range: {}Å-{}Å.".format(
         np.min(refl.q), np.max(refl.q)
     ), unimportance=2)
 
+    # Work out where to save the file.
+    dat_filename = 'XRR_{}_'.format(
+        run_numbers[0]) + yaml_pipeline_name + ".dat"
     if filename is None:
-        filename = (processing_path + 'XRR_{}_'.format(
-            run_numbers[0]) + yaml_pipeline_name + ".dat")
+        # Make sure that the processing directory exists.
+        processing_path = the_boss.directory_path + 'processing/'
+        if not os.path.exists(processing_path):
+            os.makedirs(processing_path)
+        # Now prepare the full path to the file
+        filename = (processing_path + dat_filename)
+    elif os.isdir(filename):
+        # It's possible we were given a directory in which to save the created
+        # file. In this case, use the filename variable as a directory and add
+        # our auto generated filename to it.
+        filename = os.path.join(filename, dat_filename)
 
     # Write the data.
     np.savetxt(

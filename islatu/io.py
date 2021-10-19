@@ -8,7 +8,6 @@ Parsers for inputing experimental files.
 # authors: Richard Brearton and Andrew R. McCluskey
 
 import os
-from re import search, split
 
 from nexusformat import nexus
 import nexusformat

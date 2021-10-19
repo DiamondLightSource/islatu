@@ -91,8 +91,7 @@ if __name__ == "__main__":
         args.data_path = "./"
 
     # Default to data_path/processing/.
-    if args.yaml_path is None:
-        args.processing_path = args.data_path + "processing/"
+    args.processing_path = args.data_path + "processing/"
 
     # Default to smallest possible scan number (0).
     if args.lower_bound is None:
@@ -108,6 +107,7 @@ if __name__ == "__main__":
 
     if args.verbose is None:
         args.verbose = 0
+
     # Set our logger according to requested verbosity.
     debug = Debug(args.verbose)
 
@@ -205,4 +205,4 @@ if __name__ == "__main__":
     # numbers we'll construct the XRR curve from. This is all that we need: a
     # recipe and some data; let's go ahead and process the data on this machine.
     i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
-              log_lvl=args.verbose)
+              log_lvl=args.verbose, filename=args.output)
