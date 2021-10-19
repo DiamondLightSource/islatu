@@ -411,7 +411,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             os.makedirs(processing_path)
         # Now prepare the full path to the file
         filename = (processing_path + dat_filename)
-    elif os.isdir(filename):
+    elif os.path.isdir(filename):
         # It's possible we were given a directory in which to save the created
         # file. In this case, use the filename variable as a directory and add
         # our auto generated filename to it.
