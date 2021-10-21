@@ -30,9 +30,6 @@ class Scan(MeasurementBase):
         super().__init__(data)
         self.metadata = metadata
 
-    def remove_data_point(self, idx):
-        return super().remove_data_point(idx)
-
 
 class Scan2D(Scan):
     """
@@ -186,25 +183,30 @@ class Scan2D(Scan):
                 The maximum q to be included in this scan. Defaults to inf Å.
         """
         # A place to store all the indices violating our condition on q.
-        illegal_q_indices = [
-            self.q.index(q) for q in self.q if q < q_min and q > q_max
-        ]
+        illegal_q_indices = np.where(
+            (self.q < q_min) | (self.q > q_max)
+        )[0]
+        # [0] necessary because np.where returns a tuple of arrays of length 1.
+        # This is a quirk of np.where – I don't think it's actually designed to
+        # be used like this, and they encourage np.asarray(condition).nonzero()
 
         # Now remove all data points at these qs.
-        for idx in illegal_q_indices:
-            self.remove_data_point(idx)
+        self.remove_data_points(illegal_q_indices)
 
-    def remove_data_point(self, idx):
+    def remove_data_points(self, indices):
         """
-        Convenience method for the removal of a specific data point by its 
-        index.
+        Convenience method for the removal of specific data points by their 
+        indices.
 
         Args:
             idx:
                 The index number to be removed.
         """
-        super().remove_data_point(idx)
-        del self.images[idx]
+        super().remove_data_points(indices)
+
+        # Delete in reverse order, or face the wrath of your interpreter!
+        for idx in sorted(indices, reverse=True):
+            del self.images[idx]
 
     def transmission_normalisation(self):
         """

@@ -238,53 +238,53 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
     nx_file = nxload(file_path)
 
     # ------------- BEGIN GENERIC NEXUS PARSER ----------------------------- #
-    # Split up the .nxs file.
-    file_lines = nx_file.tree.split("\n")
+    # # Split up the .nxs file.
+    # file_lines = nx_file.tree.split("\n")
 
-    # The following is a reasonably general routine for the compactification of
-    # a .nxs file onto a dictionary.
-    entry_path = []
-    raw_metadata = {}
-    for line in file_lines:
-        # Check the indentation level.
-        stripped_line = line.lstrip(" ")
-        indent_lvl = int((len(line) - len(stripped_line))/2)
+    # # The following is a reasonably general routine for the compactification of
+    # # a .nxs file onto a dictionary.
+    # entry_path = []
+    # raw_metadata = {}
+    # for line in file_lines:
+    #     # Check the indentation level.
+    #     stripped_line = line.lstrip(" ")
+    #     indent_lvl = int((len(line) - len(stripped_line))/2)
 
-        if len(stripped_line.split(" = ")) != 1:
-            # We found data/metadata.
-            split_line = stripped_line.split(" = ")
-        elif len(stripped_line.split(" -> ")) != 1:
-            # We found a pointer/link.
-            split_line = stripped_line.split(" -> ")
-            # Make sure that information is not lost by putting the pointer
-            # symbol back in.
-            split_line[1] = " -> " + split_line[1]
-        else:
-            # We found a new class. This should be obvious by its file_contents.
-            split_line = stripped_line.split(":")
+    #     if len(stripped_line.split(" = ")) != 1:
+    #         # We found data/metadata.
+    #         split_line = stripped_line.split(" = ")
+    #     elif len(stripped_line.split(" -> ")) != 1:
+    #         # We found a pointer/link.
+    #         split_line = stripped_line.split(" -> ")
+    #         # Make sure that information is not lost by putting the pointer
+    #         # symbol back in.
+    #         split_line[1] = " -> " + split_line[1]
+    #     else:
+    #         # We found a new class. This should be obvious by its file_contents.
+    #         split_line = stripped_line.split(":")
 
-        # Something went wrong if our delimiter has shown up twice. Note that
-        # this bans dumb NXClass names with colons in them, etc..
-        if len(split_line) != 2:
-            raise ValueError("Islatu cannot parse this .nxs file.")
-        file_name = split_line[0]
-        file_contents = split_line[1]
+    #     # Something went wrong if our delimiter has shown up twice. Note that
+    #     # this bans dumb NXClass names with colons in them, etc..
+    #     if len(split_line) != 2:
+    #         raise ValueError("Islatu cannot parse this .nxs file.")
+    #     file_name = split_line[0]
+    #     file_contents = split_line[1]
 
-        # Form the new path.
-        if indent_lvl > len(entry_path):
-            entry_path.append(file_name)
-        else:
-            entry_path = entry_path[:indent_lvl]
-            entry_path.append(file_name)
-        current_path = "/" + "/".join(entry_path)
+    #     # Form the new path.
+    #     if indent_lvl > len(entry_path):
+    #         entry_path.append(file_name)
+    #     else:
+    #         entry_path = entry_path[:indent_lvl]
+    #         entry_path.append(file_name)
+    #     current_path = "/" + "/".join(entry_path)
 
-        # Now update the metadata dictionary.
-        raw_metadata[current_path] = file_contents
+    #     # Now update the metadata dictionary.
+    #     raw_metadata[current_path] = file_contents
 
-        # Useful for debugging/double checking.
-        if ("max_val" in file_contents) or ("max_val" in current_path):
-            # debug.log(current_path, file_contents)
-            pass
+    #     # Useful for debugging/double checking.
+    #     if ("4048" in file_contents) or ("4048" in current_path):
+    #         debug.log(current_path + ", " + file_contents)
+    #         pass
     # ------------- END GENERIC NEXUS PARSER ----------------------------- #
 
     # Now grab the real metadata corresponding to each path we found.
@@ -309,6 +309,10 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
 
     # Scrape the essential metadata directly.
     metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
+
+    # Store the ID of the scan, in this case the scan number.
+    metadata.ID = int(nx_file._filename[-10:-4])
+
     metadata.detector_distance = nx_file[
         "/entry/instrument/diff1detdist/value"]._value
     metadata.probe_energy = nx_file["/entry/instrument/dcm1energy/value"]._value

@@ -83,14 +83,13 @@ if __name__ == "__main__":
     help_str = (
         """
         Specify a list of scans whose q values should be limited, as well as the
-        corresponding acceptable minimum and maximum q-values. Scans are zero
-        indexed. For example:
-            -L 3 0 0.4 4 0.3 0.6 6 0.8 inf
-        Would ignore any q-values higher than 0.4 in the 4th scan, would ignore
-        any q-values smaller than 0.3 or larger than 0.6 in the 5th scan, and
-        would ignore any q-values lower than 0.8 present in the 7th scan. As 
-        implied in the example, a value of 0 indicates "no lower limit" and a
-        value of inf indicates "no upper limit".
+        corresponding acceptable minimum and maximum q-values. For example:
+            -L 413243 0 0.4 413244 0.3 0.6 413248 0.8 inf
+        Would ignore any q-values higher than 0.4 in scan 413243, would
+        ignore any q-values smaller than 0.3 or larger than 0.6 in scan number
+        413244, and would ignore any q-values lower than 0.8 present in scan 
+        number 413248. As implied in the example, a value of 0 indicates 
+        "no lower limit" and a value of inf indicates "no upper limit".
         """
     )
     parser.add_argument("-Q", "--limit_q",
@@ -231,10 +230,10 @@ if __name__ == "__main__":
                 a multiple of three. Instead, {} arguments were found. Please
                 use the pattern:
                     -L N1 qmin1 qmax1 N2 qmin2 qmax2 ...
-                where N1 is the index of a scan, qmin1 is the minimum q for the
-                scan with index N1, and qmax1 is the maximum acceptable q for 
-                the scan with index N1, etc.. Please refer to the --help for 
-                more information.                  
+                where N1 is a scan number, qmin1 is the minimum q for the
+                scan with scan number N1, and qmax1 is the maximum acceptable q 
+                for the scan with scan number N1, etc.. Please refer to the 
+                --help for more information.                  
                 """.format(len(args.limit_q))
             )
         # Okay, this is presumably properly formatted. Lets turn this into a
@@ -253,7 +252,7 @@ if __name__ == "__main__":
                 # Now grab that dict we just created and give it our new scan
                 # index. Note that if i%3 != 0, then we can skip both the
                 # integer cast and the creation of a new dictionary.
-                q_subsample_dicts[-1]['scan_idx'] = args.limit_q[i]
+                q_subsample_dicts[-1]['scan_number'] = args.limit_q[i]
             elif i % 3 == 1:
                 q_subsample_dicts[-1]['q_min'] = args.limit_q[i]
             elif i % 3 == 2:

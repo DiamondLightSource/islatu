@@ -99,20 +99,22 @@ class Profile(MeasurementBase):
         # Expose the optimized fit parameters for meta-analysis.
         return optimized_params
 
-    def subsample_q(self, scan_idx, q_min=0, q_max=float('inf')):
+    def subsample_q(self, scan_number, q_min=0, q_max=float('inf')):
         """
-        For the scan at scan_idx, delete all data points for which q < q_min or
+        For the scan scan_number, delete all data points for which q < q_min or
         q > q_max.
 
         Args:
-            scan_idx:
-                The index of the scan to be subsampled.
+            scan_number:
+                The scan number of the scan to be subsampled
             q_min:
                 The smallest acceptable value of q. Defaults to 0 Å.
             q_max:
                 The largest acceptable value of q. Defaults to inf Å.
         """
-        self.scans[scan_idx].subsample_q(q_min, q_max)
+        for scan in self.scans:
+            if scan.metadata.ID == scan_number:
+                scan.subsample_q(q_min, q_max)
         self.concatenate()
 
     def footprint_correction(self, beam_width, sample_size):

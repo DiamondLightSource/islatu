@@ -1,7 +1,7 @@
 """
 This module contains both the Data class and the MeasurementBase class.
-In a reflectometry measurement, the experimental data corresponds to the 
-reflected intensity as a function of scattering vector Q. In a typical 
+In a reflectometry measurement, the experimental data corresponds to the
+reflected intensity as a function of scattering vector Q. In a typical
 diffractometer, Q is a virtual axis, calculated geometrically from various motor
 positions. The Data class takes care of these conversions, exposing q, theta,
 intensity, reflectivity, and energy.
@@ -31,7 +31,7 @@ class Data:
             intensity_e:
                 A numpy array containing the corresponding errors in intensity.
             theta:
-                A numpy array containing the probe particle's angle of 
+                A numpy array containing the probe particle's angle of
                 incidence at each intensity.
             q:
                 A numpy array containing the magnitude of the probe particle's
@@ -43,17 +43,17 @@ class Data:
         Args:
             intensity:
                 A numpy array of the intensities in this dataset.
-            intensity_e: 
+            intensity_e:
                 The errors on the intensities.
-            energy: 
+            energy:
                 The energy of the probe particle used to acquire this data.
-            theta: 
-                A numpy array containing the probe particle's angle of 
+            theta:
+                A numpy array containing the probe particle's angle of
                 incidence at each intensity. NOTE: only one of theta/q needs to
                 be provided.
             q:
                 A numpy array containing the magnitude of the probe particle's
-                scattering vector for each intensity value. NOTE: only one of 
+                scattering vector for each intensity value. NOTE: only one of
                 theta/q needs to be provided.
         """
         self.intensity = intensity
@@ -72,7 +72,7 @@ class Data:
     @property
     def R(self) -> np.array:
         """
-        Returns the intensity, normalized such that the maximum value of the 
+        Returns the intensity, normalized such that the maximum value of the
         intensity is equal to 1. To acquire
         """
         return self.intensity/np.amax(self.intensity)
@@ -112,9 +112,9 @@ class Data:
         Calculates the scattering vector Q from diffractometer theta.
 
         Args:
-            theta (:py:attr:`str`): 
+            theta (:py:attr:`str`):
                 Array of theta values to be converted.
-            energy (:py:attr:`float`): 
+            energy (:py:attr:`float`):
                 Energy of the incident probe particle.
         """
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
@@ -130,9 +130,9 @@ class Data:
         Calculates the diffractometer theta from scattering vector Q.
 
         Args:
-            theta (:py:attr:`str`): 
+            theta (:py:attr:`str`):
                 Array of theta values to be converted.
-            energy (:py:attr:`float`): 
+            energy (:py:attr:`float`):
                 Energy of the incident probe particle.
         """
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
@@ -192,18 +192,19 @@ class MeasurementBase:
     def intensity_e(self, value):
         self.data.intensity_e = value
 
-    def remove_data_point(self, idx):
+    def remove_data_points(self, indices):
         """
-        Convenience method for the removal of a specific data point by its 
+        Convenience method for the removal of a specific data point by its
         index.
 
         Args:
             idx:
                 The index number to be removed.
         """
-        if self.data._q is None:
-            del self.data._theta[idx]
-        else:
-            del self.data._q[idx]
-        del self.data.intensity[idx]
-        del self.data.intensity_e[idx]
+        if self.data._q is not None:
+            self.data._q = np.delete(self.data._q, indices)
+        if self.data._theta is not None:
+            self.data._theta = np.delete(self.data._theta, indices)
+
+        self.data.intensity = np.delete(self.data.intensity, indices)
+        self.data.intensity_e = np.delete(self.data.intensity_e, indices)
