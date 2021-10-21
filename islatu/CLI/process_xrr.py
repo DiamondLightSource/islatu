@@ -93,7 +93,7 @@ if __name__ == "__main__":
         value of inf indicates "no upper bound".
         """
     )
-    parser.add_argument("-L", "--limit_q",
+    parser.add_argument("-Q", "--limit_q",
                         help=help_str, nargs='*', type=float)
 
     help_str = (
