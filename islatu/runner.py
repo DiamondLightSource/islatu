@@ -277,16 +277,25 @@ class Foreperson:
 
 
 def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
-              title='Unknown', log_lvl=1, filename=None):
+              title='Unknown', log_lvl=1, filename=None,
+              q_subsample_dicts=None):
     """
     The runner that parses the yaml file and performs the data reduction.
 
-    run_numbers (:py:attr:`list` of :py:attr:`int`): Reflectometry scans that
-        make up the profile.
-    yaml_file (:py:attr:`str`): File path to instruction set.
-    directory (:py:attr:`str`): Outline for directory path.
-    title (:py:attr:`str`): A title for the experiment.
-    log_lvl: Degree of verbosity of logging requested.
+    run_numbers (:py:attr:`list` of :py:attr:`int`): 
+        Reflectometry scans that make up the profile.
+    yaml_file (:py:attr:`str`): 
+        File path to instruction set.
+    directory (:py:attr:`str`): 
+        Outline for directory path.
+    title (:py:attr:`str`): 
+        A title for the experiment.
+    log_lvl: 
+        Degree of verbosity of logging requested.
+    q_subsample_dicts: 
+        A list of dictionaries, which takes the form:
+            [{'scan_idx': N, 'q_min': q_min, 'q_max': q_max},...]
+        where type(N) = int, type(q_min)=float, type(q_max)=float.
     """
     # First prepare our logger.
     debug = Debug(log_lvl)
@@ -362,6 +371,10 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     debug.log("Corrected for changes in beam attenuation")
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
+    if q_subsample_dicts is not None:
+        # We'll need to subsample a subset of our scans.
+        for q_subsample_dict in q_subsample_dicts:
+            refl.subsample_q(**q_subsample_dict)
 
     debug.log("All correction steps completed for q-range: {}Å-{}Å.".format(
         np.min(refl.q), np.max(refl.q)

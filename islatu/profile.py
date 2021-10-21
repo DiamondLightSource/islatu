@@ -99,6 +99,21 @@ class Profile(MeasurementBase):
         # Expose the optimized fit parameters for meta-analysis.
         return optimized_params
 
+    def subsample_q(self, scan_idx, q_min=0, q_max=float('inf')):
+        """
+        For the scan at scan_idx, delete all data points for which q < q_min or
+        q > q_max.
+
+        Args:
+            scan_idx:
+                The index of the scan to be subsampled.
+            q_min:
+                The smallest acceptable value of q. Defaults to 0 Å.
+            q_max:
+                The largest acceptable value of q. Defaults to inf Å.
+        """
+        self.scans[scan_idx].subsample_q(q_min, q_max)
+
     def footprint_correction(self, beam_width, sample_size):
         """
         Class method for :func:`~islatu.refl_data.Scan.footprint_correction`

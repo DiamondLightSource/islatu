@@ -172,6 +172,39 @@ class Scan2D(Scan):
         self.intensity /= frac_of_beam_sampled
         self.intensity_e /= frac_of_beam_sampled
 
+    def subsample_q(self, q_min=0, q_max=float('inf')):
+        """
+        Delete data points less than q_min and more than q_max.
+
+        Args:
+            q_min:
+                The minimum q to be included in this scan. Defaults to 0 Å.
+            q_max:
+                The maximum q to be included in this scan. Defaults to inf Å.
+        """
+        # A place to store all the indices violating our condition on q.
+        illegal_q_indices = [
+            self.q.index(q) for q in self.q if q < q_min and q > q_max
+        ]
+
+        # Now remove all data points at these qs.
+        for idx in illegal_q_indices:
+            self.remove_data_point(idx)
+
+    def remove_data_point(self, idx):
+        """
+        Convenience method for the removal of a specific data point by its 
+        index.
+
+        Args:
+            idx:
+                The index number to be removed.
+        """
+        del self.q[idx]
+        del self.intensity[idx]
+        del self.intensity_e[idx]
+        del self.images[idx]
+
     def transmission_normalisation(self):
         """
         Perform the transmission correction.

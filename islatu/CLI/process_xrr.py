@@ -80,6 +80,26 @@ if __name__ == "__main__":
     )
     parser.add_argument("-o", "--output", help=help_str)
 
+    help_str = (
+        """
+        Specify a list of scans whose q values should be limited, as well as the
+        corresponding acceptable minimum and maximum q-values. Scans are zero
+        indexed. For example:
+            -L 3 0 0.4 4 0.3 0.6 6 0.8 inf
+        Would ignore any q-values higher than 0.4 in the 4th scan, would ignore
+        any q-values smaller than 0.3 or larger than 0.6 in the 5th scan, and
+        would ignore any q-values lower than 0.8 present in the 7th scan. As 
+        implied in the example, a value of 0 indicates "no lower bound" and a
+        value of inf indicates "no upper bound".
+        """
+    )
+    parser.add_argument("-L", "--limit_q",
+                        help=help_str, nargs='*', type=float)
+
+    help_str = (
+        "Specify a list of "
+    )
+
     # A switch to allow verbosity toggle.
     help_str = "Increase output verbosity. -v = verbose, -vv = very verbose!"
     parser.add_argument("-v", "--verbose", help=help_str, action="count")
@@ -202,6 +222,42 @@ if __name__ == "__main__":
                 str(args.lower_bound) +
                 " and less than or equal to " + str(args.upper_bound) + "."
             )
+
+    if args.limit_q is not None:
+        if len(args.limit_q % 3 != 0):
+            raise ValueError(
+                """
+                --limit_q must have a number of arguments passed to it that is 
+                a multiple of three. Instead, {} arguments were found. Please
+                use the pattern:
+                    -L N1 qmin1 qmax1 N2 qmin2 qmax2 ...
+                where N1 is the index of a scan, qmin1 is the minimum q for the
+                scan with index N1, and qmax1 is the maximum acceptable q for 
+                the scan with index N1, etc.. Please refer to the --help for 
+                more information.                  
+                """.format(len(args.limit_q))
+            )
+        # Okay, this is presumably properly formatted. Lets turn this into a
+        # list of dictionaries that we can pass directly to the
+        # profile.subsample_q method.
+        for i in range(len(args.limit_q)):
+            q_subsample_dicts = []
+            if i % 3 == 0:
+                # Convert every 3rd float to an int – these will be our scan
+                # indices.
+                args.limit_q[i] = int(args.limit_q[i])
+
+                # We're on a new scan index, so we'll need a new subsample dict.
+                q_subsample_dicts.append({})
+
+                # Now grab that dict we just created and give it our new scan
+                # index. Note that if i%3 != 0, then we can skip both the
+                # integer cast and the creation of a new dictionary.
+                q_subsample_dicts[-1]['scan_idx'] = args.limit_q[i]
+            elif i % 3 == 1:
+                q_subsample_dicts[-1]['q_min'] = args.limit_q[i]
+            elif i % 3 == 2:
+                q_subsample_dicts[-1]['q_max'] = args.limit_q[i]
 
     # If execution reaches here, we found the .yaml file and we have the scan
     # numbers we'll construct the XRR curve from. This is all that we need: a
