@@ -240,8 +240,8 @@ if __name__ == "__main__":
         # Okay, this is presumably properly formatted. Lets turn this into a
         # list of dictionaries that we can pass directly to the
         # profile.subsample_q method.
+        q_subsample_dicts = []
         for i in range(len(args.limit_q)):
-            q_subsample_dicts = []
             if i % 3 == 0:
                 # Convert every 3rd float to an int – these will be our scan
                 # indices.
@@ -258,9 +258,11 @@ if __name__ == "__main__":
                 q_subsample_dicts[-1]['q_min'] = args.limit_q[i]
             elif i % 3 == 2:
                 q_subsample_dicts[-1]['q_max'] = args.limit_q[i]
+        args.limit_q = q_subsample_dicts
 
     # If execution reaches here, we found the .yaml file and we have the scan
     # numbers we'll construct the XRR curve from. This is all that we need: a
     # recipe and some data; let's go ahead and process the data on this machine.
     i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
-              log_lvl=args.verbose, filename=args.output)
+              log_lvl=args.verbose, filename=args.output,
+              q_subsample_dicts=args.limit_q)
