@@ -375,6 +375,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         # We'll need to subsample a subset of our scans.
         for q_subsample_dict in q_subsample_dicts:
             refl.subsample_q(**q_subsample_dict)
+        debug.log("Limited q-range on specified scans.")
 
     debug.log("All correction steps completed for q-range: {}Å-{}Å.".format(
         np.min(refl.q), np.max(refl.q)

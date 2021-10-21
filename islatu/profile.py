@@ -113,6 +113,7 @@ class Profile(MeasurementBase):
                 The largest acceptable value of q. Defaults to inf Å.
         """
         self.scans[scan_idx].subsample_q(q_min, q_max)
+        self.concatenate()
 
     def footprint_correction(self, beam_width, sample_size):
         """
