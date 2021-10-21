@@ -230,7 +230,6 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
             A scan2D object containing all loaded detector frames, as well as
             all relevant metadata scraped from the .nxs file.
     """
-    
 
     # Prepare the debug logger.
     debug = Debug(log_lvl)
@@ -369,7 +368,9 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
 
     # Now prepare the Data object.
     # TODO: do this generally, without depending on a particular path.
-    theta_parsed = nx_file["/entry/instrument/diff1delta/value"]._value
+    # Note that diff1delta gives a **$2\theta$** value!
+    theta_parsed = np.array(
+        nx_file["/entry/instrument/diff1delta/value"])._value/2
 
     # If theta_parsed is just a float, we must be scanning something else!
     # Currently, if theta_parsed isn't isn't being scanned, we're just assuming
