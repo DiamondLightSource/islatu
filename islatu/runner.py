@@ -415,8 +415,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     ), unimportance=2)
 
     # Work out where to save the file.
+    datetime_str = datetime.datetime.now().strftime(" %a %Y-%m-%d %H:%M:%S")
     dat_filename = 'XRR_{}_'.format(
-        run_numbers[0]) + yaml_pipeline_name + ".dat"
+        run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
         # Make sure that the processing directory exists.
         processing_path = the_boss.directory_path + 'processing/'
