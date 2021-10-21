@@ -30,6 +30,9 @@ class Scan(MeasurementBase):
         super().__init__(data)
         self.metadata = metadata
 
+    def remove_data_point(self, idx):
+        return super().remove_data_point(idx)
+
 
 class Scan2D(Scan):
     """
@@ -200,9 +203,7 @@ class Scan2D(Scan):
             idx:
                 The index number to be removed.
         """
-        del self.q[idx]
-        del self.intensity[idx]
-        del self.intensity_e[idx]
+        super().remove_data_point(idx)
         del self.images[idx]
 
     def transmission_normalisation(self):

@@ -191,3 +191,19 @@ class MeasurementBase:
     @intensity_e.setter
     def intensity_e(self, value):
         self.data.intensity_e = value
+
+    def remove_data_point(self, idx):
+        """
+        Convenience method for the removal of a specific data point by its 
+        index.
+
+        Args:
+            idx:
+                The index number to be removed.
+        """
+        if self.data._q is None:
+            del self.data._theta[idx]
+        else:
+            del self.data._q[idx]
+        del self.data.intensity[idx]
+        del self.data.intensity_e[idx]
