@@ -370,7 +370,7 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
     # TODO: do this generally, without depending on a particular path.
     # Note that diff1delta gives a **$2\theta$** value!
     theta_parsed = np.array(
-        nx_file["/entry/instrument/diff1delta/value"])._value/2
+        nx_file["/entry/instrument/diff1delta/value"]._value)/2
 
     # If theta_parsed is just a float, we must be scanning something else!
     # Currently, if theta_parsed isn't isn't being scanned, we're just assuming
