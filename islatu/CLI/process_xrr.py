@@ -89,8 +89,8 @@ if __name__ == "__main__":
         Would ignore any q-values higher than 0.4 in the 4th scan, would ignore
         any q-values smaller than 0.3 or larger than 0.6 in the 5th scan, and
         would ignore any q-values lower than 0.8 present in the 7th scan. As 
-        implied in the example, a value of 0 indicates "no lower bound" and a
-        value of inf indicates "no upper bound".
+        implied in the example, a value of 0 indicates "no lower limit" and a
+        value of inf indicates "no upper limit".
         """
     )
     parser.add_argument("-Q", "--limit_q",
