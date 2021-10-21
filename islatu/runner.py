@@ -415,7 +415,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     ), unimportance=2)
 
     # Work out where to save the file.
-    datetime_str = datetime.datetime.now().strftime(" %a %Y-%m-%d %H:%M:%S")
+    datetime_str = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
     dat_filename = 'XRR_{}_'.format(
         run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:

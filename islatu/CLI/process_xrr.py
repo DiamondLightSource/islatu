@@ -224,7 +224,7 @@ if __name__ == "__main__":
             )
 
     if args.limit_q is not None:
-        if len(args.limit_q % 3 != 0):
+        if len(args.limit_q) % 3 != 0:
             raise ValueError(
                 """
                 --limit_q must have a number of arguments passed to it that is 
