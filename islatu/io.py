@@ -310,8 +310,8 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
     # Scrape the essential metadata directly.
     metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
 
-    # Store the ID of the scan, in this case the scan number.
-    metadata.ID = int(nx_file._filename[-10:-4])
+    # Store the scan's filename.
+    metadata.filename = nx_file._filename
 
     metadata.detector_distance = nx_file[
         "/entry/instrument/diff1detdist/value"]._value

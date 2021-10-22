@@ -84,16 +84,18 @@ if __name__ == "__main__":
         """
         Specify a list of scans whose q values should be limited, as well as the
         corresponding acceptable minimum and maximum q-values. For example:
-            -L 413243 0 0.4 413244 0.3 0.6 413248 0.8 inf
+            -Q 413243 0 0.4 413244 0.3 0.6 413248 0.8 inf
         Would ignore any q-values higher than 0.4 in scan 413243, would
         ignore any q-values smaller than 0.3 or larger than 0.6 in scan number
         413244, and would ignore any q-values lower than 0.8 present in scan 
         number 413248. As implied in the example, a value of 0 indicates 
-        "no lower limit" and a value of inf indicates "no upper limit".
+        "no lower limit" and a value of inf indicates "no upper limit". In 
+        general, the numbers "413243" etc. given above must be unique to the
+        name of the file from which the scan was parsed.
         """
     )
     parser.add_argument("-Q", "--limit_q",
-                        help=help_str, nargs='*', type=float)
+                        help=help_str, nargs='*', type=str)
 
     help_str = (
         "Specify a list of "
@@ -242,20 +244,22 @@ if __name__ == "__main__":
         q_subsample_dicts = []
         for i in range(len(args.limit_q)):
             if i % 3 == 0:
-                # Convert every 3rd float to an int – these will be our scan
-                # indices.
-                args.limit_q[i] = int(args.limit_q[i])
-
-                # We're on a new scan index, so we'll need a new subsample dict.
+                # We're on a new scan, so we'll need a new subsample dict.
                 q_subsample_dicts.append({})
 
                 # Now grab that dict we just created and give it our new scan
-                # index. Note that if i%3 != 0, then we can skip both the
-                # integer cast and the creation of a new dictionary.
-                q_subsample_dicts[-1]['scan_number'] = args.limit_q[i]
+                # index. Note that if i%3 != 0, then we can skip the creation
+                # of a new dictionary.
+                q_subsample_dicts[-1]['scan_ID'] = args.limit_q[i]
             elif i % 3 == 1:
+                # Convert every 2nd and 3rd value to a float – these will be
+                # our q limits.
+                args.limit_q[i] = float(args.limit_q[i])
                 q_subsample_dicts[-1]['q_min'] = args.limit_q[i]
             elif i % 3 == 2:
+                # Convert every 2nd and 3rd value to a float – these will be
+                # our q limits.
+                args.limit_q[i] = float(args.limit_q[i])
                 q_subsample_dicts[-1]['q_max'] = args.limit_q[i]
         args.limit_q = q_subsample_dicts
 

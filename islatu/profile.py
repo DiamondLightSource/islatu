@@ -99,21 +99,25 @@ class Profile(MeasurementBase):
         # Expose the optimized fit parameters for meta-analysis.
         return optimized_params
 
-    def subsample_q(self, scan_number, q_min=0, q_max=float('inf')):
+    def subsample_q(self, scan_ID, q_min=0, q_max=float('inf')):
         """
-        For the scan scan_number, delete all data points for which q < q_min or
+        For the scan scan_ID, delete all data points for which q < q_min or
         q > q_max.
 
         Args:
-            scan_number:
-                The scan number of the scan to be subsampled
+            scan_ID:
+                The scan ID of the scan to be subsampled. This must be a unique
+                substring of the filename from which the scan was taken. For 
+                example, if a scan's nexus filename is i07-413244.nxs, then
+                a valid scan_ID would be "413244", as this string will uniquely
+                identify the correct scan from within the profile.
             q_min:
                 The smallest acceptable value of q. Defaults to 0 Å.
             q_max:
                 The largest acceptable value of q. Defaults to inf Å.
         """
         for scan in self.scans:
-            if scan.metadata.ID == scan_number:
+            if scan_ID in scan.metadata.filename:
                 scan.subsample_q(q_min, q_max)
         self.concatenate()
 

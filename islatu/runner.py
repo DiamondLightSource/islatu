@@ -294,8 +294,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         Degree of verbosity of logging requested.
     q_subsample_dicts: 
         A list of dictionaries, which takes the form:
-            [{'scan_number': N, 'q_min': q_min, 'q_max': q_max},...]
-        where type(N) = int, type(q_min)=float, type(q_max)=float.
+            [{'scan_ID': ID, 'q_min': q_min, 'q_max': q_max},...]
+        where type(ID) = str, type(q_min)=float, type(q_max)=float.
     """
     # First prepare our logger.
     debug = Debug(log_lvl)
