@@ -1,6 +1,4 @@
-cython
 numpy
-matplotlib
 scipy
 tqdm
 coverage
@@ -9,3 +7,4 @@ pillow
 pandas
 pyyaml
 nexusformat
+pytest
