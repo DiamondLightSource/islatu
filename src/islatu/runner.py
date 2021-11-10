@@ -4,7 +4,7 @@ from islatu import cropping
 from islatu import image
 from islatu import io
 from islatu.io import i07_dat_to_dict_dataframe
-from islatu.profile import Profile
+from islatu.refl_profile import Profile
 from islatu import stitching
 from islatu import __version__
 from islatu.debug import Debug
