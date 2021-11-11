@@ -10,13 +10,14 @@ of all of the metadata as scraped from the parsed file.
 # Distributed under the terms of the MIT License
 # authors: Richard Brearton and Andrew R. McCluskey
 
-from islatu.detector import Detector
 from nexusformat.nexus.tree import NXgroup
+
+from islatu.detector import Detector
 
 
 class Metadata:
     # In the far future, this would be useful to bullet-proof everything:
-    # TODO: build units into the detector dataclass, and automatically noramlize
+    # build units into the detector dataclass, and automatically noramlize
     # units on initialization of a metadata instance.
     def __init__(self, detector: Detector, raw_metadata) -> None:
         self.detector = detector
