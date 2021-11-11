@@ -1,26 +1,290 @@
 """
-Parsers for inputing experimental files.
+This module contains:
+
+Parsing functions used to extract information from experimental files.
+
+Classes used to help make parsing more modular. These include the NexusBase 
+class and its children.
 """
 
 
 import os
+from typing import List
 
-from nexusformat import nexus
-import nexusformat
+import nexusformat.nexus.tree as nx
 from nexusformat.nexus import nxload
 from nexusformat.nexus.tree import NeXusError
-from islatu import metadata
-from islatu.debug import Debug
-from islatu.iterator import _get_iterator
-from numpy.lib.type_check import imag
-from islatu.scan import Scan2D
-from islatu.image import Image
-from islatu import detector
-from islatu.metadata import Metadata
-from islatu.data import Data
 import pandas as pd
 import numpy as np
 import h5py
+
+from . import detector
+from .debug import Debug
+from .iterator import _get_iterator
+from .scan import Scan2D
+from .image import Image
+from .metadata import Metadata
+from .data import Data
+from .region import Region
+
+
+class NexusBase():
+    """
+    This class contains *mostly* beamline agnostic nexus parsing convenience
+    stuff. It's worth noting that this class still makes a series of assumptions
+    about how data is laid out in a nexus file that can be broken. Instead of
+    striving for some impossible perfection, this class is practical in its
+    assumptions of how data is laid out in a .nxs file, and will raise if an
+    assumption is violated. All instrument-specific assumptions that one must
+    inevitably make to extract truly meaningful information from a nexus file
+    are made in children of this class.
+
+    Attrs:
+        file_path:
+            The local path to the file on the local filesystem.
+        nxfile:
+            The object produced by loading the file at file_path with nxload.
+    """
+
+    def __init__(self, local_nxs_path: str):
+        self.local_nxs_path = local_nxs_path
+        self.nxfile = nxload(local_nxs_path)
+
+    @property
+    def src_nxs_path(self):
+        """
+        The name of this nexus file, as it was recorded when the nexus file was
+        written.
+        """
+        return self.nxfile.file_name
+
+    @property
+    def detector(self):
+        """
+        Returns the NXdetector instance stored in this NexusFile.
+
+        Raises:
+            ValueError if more than one NXdetector is found.
+        """
+        det, = self.instrument.NXdetector
+        return det
+
+    @property
+    def instrument(self):
+        """
+        Returns the NXinstrument instanced stored in this NexusFile.
+
+        Raises:
+            ValueError if more than one NXinstrument is found.
+        """
+        instrument, = self.entry.NXinstrument
+        return instrument
+
+    @property
+    def entry(self) -> nx.NXentry:
+        """
+        Returns this nexusfile's entry.
+
+        Raises:
+            ValueError if more than one entry is found.
+        """
+        entry, = self.nxfile.NXentry
+        return entry
+
+    @property
+    def default_signal(self) -> np.ndarray:
+        """
+        The numpy array of intensities pointed to by the signal attribute in the
+        nexus file.
+        """
+        return self.default_nxdata[self.default_signal_name].nxdata
+
+    @property
+    def default_axis(self) -> np.ndarray:
+        """
+        Returns the nxdata associated with the default axis.
+        """
+        return self.default_nxdata[self.default_axis_name].nxdata
+
+    @property
+    def default_signal_name(self):
+        """
+        Returns the name of the default signal.
+        """
+        return self.default_nxdata.signal
+
+    @property
+    def default_axis_name(self) -> str:
+        """
+        Returns the name of the default axis.
+        """
+        return self.entry[self.entry.default].axes
+
+    @property
+    def default_nxdata_name(self):
+        """
+        Returns the name of the default nxdata.
+        """
+        return self.entry.default
+
+    @property
+    def default_nxdata(self) -> np.ndarray:
+        """
+        Returns the default NXdata.
+        """
+        return self.entry[self.default_nxdata_name]
+
+
+class I07Nexus(NexusBase):
+    """
+    This class extends NexusBase with methods useful for scraping information
+    from nexus files produced at the I07 beamline at Diamond.
+    """
+
+    @property
+    def local_data_path(self) -> str:
+        """
+        The local path to the data (.h5) file. Note that this isn't in the
+        NexusBase class because it need not be reasonably expected to point at a
+        .h5 file.
+
+        Raises:
+            FileNotFoundError if the data file cant be found.
+        """
+        return _try_to_find_files(self._src_data_path, self.local_nxs_path)
+
+    @property
+    def signal_regions(self) -> List[Region]:
+        """
+        Returns a list of region objects that define the location of the signal.
+        Currently there is nothing better to do than assume that this is a list
+        of length 1.
+        """
+        return Region(
+            self._get_region_bounds_keys('x_1')[0],
+            self._get_region_bounds_keys('x_2')[0],
+            self._get_region_bounds_keys('y_1')[0],
+            self._get_region_bounds_keys('y_2')[0])
+
+    @property
+    def background_regions(self) -> List[Region]:
+        """
+        Returns a list of region objects that define the location of background.
+        Currently we just ignore the zeroth region and call the rest of them
+        background regions.
+        """
+        return [Region(
+            self._get_region_bounds_keys('x_1')[i],
+            self._get_region_bounds_keys('x_2')[i],
+            self._get_region_bounds_keys('y_1')[i],
+            self._get_region_bounds_keys('y_2')[i])
+            for i in range(1, self._number_of_regions)
+        ]
+
+    @property
+    def transmission(self):
+        """
+        Proportional to the fraction of probe particles allowed by an attenuator
+        to strike the sample.
+        """
+        return float(self.instrument.dcm1energy)
+
+    @property
+    def probe_energy(self):
+        """
+        Returns the energy of the probe particle parsed from this NexusFile.
+        """
+
+        return float(self.instrument.filterset.transmission)
+
+    @property
+    def detector_distance(self):
+        """
+        Returns the distance between sample and detector.
+        """
+        return float(self.instrument.diff1detdist.value)
+
+    @property
+    def _src_data_path(self):
+        """
+        Returns the raw path to the data file. This is useless if you aren't on
+        site, but used by islatu to guess where you've stored the data file
+        locally.
+        """
+        # This is far from ideal; there currently seems to be no standard way
+        # to refer to point at information stored outside of the nexus file.
+        # If you're a human, it's easy enough to find, but with code this is
+        # a pretty rubbish task. Here I just grab the first .h5 file I find
+        # and run with it.
+        found_h5_files = []
+
+        def recurse_over_nxgroups(nx_object, found_h5_files):
+            """
+            Recursively looks for nxgroups in nx_object that, when cast to a
+            string, end in .h5.
+            """
+            for key in nx_object:
+                new_obj = nx_object[key]
+                if str(new_obj).endswith(".h5"):
+                    found_h5_files.append(str(new_obj))
+                if isinstance(new_obj, nx.NXgroup):
+                    recurse_over_nxgroups(new_obj, found_h5_files)
+
+        recurse_over_nxgroups(self.nxfile, found_h5_files)
+
+        return found_h5_files[0]
+
+    @property
+    def _region_keys(self) -> List[str]:
+        """
+        Parses all of the detector's dictionary keys and returns all keys
+        relating to regions of interest.
+        """
+        return [key for key in self.detector.keys() if key.startswith("Region")]
+
+    @property
+    def _number_of_regions(self) -> int:
+        """
+        Returns the number of regions of interest described by this nexus file.
+        This *assumes* that the region keys take the form f'region_{an_int}'.
+        """
+        return max([int(key[7]) for key in self._region_keys])
+
+    def _get_region_bounds_keys(self, kind: str) -> List[str]:
+        """
+        Returns all detector keys relating to the bounds of regions of interest.
+
+        Args:
+            kind:
+                The kind of region bounds keys we're interested in. This can
+                take the values:
+                    'x_1', 'x_2', 'y_1', 'y_2',
+                or any of the above swapping '1' with 'start' and '2' with
+                'end'.
+
+        Raises:
+            ValueError if 'kind' argument is not one of the above.
+
+        Returns:
+            A list of region bounds keys that is ordered by region number.
+        """
+        # Note that the x, y swapping is a quirk of the nexus standard, and is
+        # related to which axis on the detector varies most rapidly in memory.
+        if kind in ('x_1', 'x_start'):
+            insert = 'Y'
+        elif kind in ('x_2', 'x_end'):
+            insert = 'max_y'
+        elif kind in ('y_1', 'y_start'):
+            insert = 'X'
+        elif kind in ('y_2', 'y_end'):
+            insert = 'max_x'
+        else:
+            raise ValueError(
+                "'kind' argument must be one of 'x_1', 'x_2', 'y_1', 'y_2'; " +
+                "note that 1 can be replaced with 'start' and '2' can be " +
+                "replaced with 'end'.")
+
+        return [f"Region_{i}_{insert}" for i in range(self._number_of_regions)]
 
 
 def i07_dat_to_dict_dataframe(file_path):
@@ -211,14 +475,14 @@ def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
     """
     Parses a .nxs file, returning an instance of Scan2D. This process involves
     loading the images contained in the hdf file pointed at by the .nxs file, as
-    well as the metadata written in the .nxs file that is relevant for XRR 
+    well as the metadata written in the .nxs file that is relevant for XRR
     reduction.
 
     Args:
-        file_path (:py:attr:`str`): 
+        file_path (:py:attr:`str`):
             Path to the .nxs file.
-        progress_bar (:py:attr:`bool`, optional): 
-            True if user wants a progress bar to indicate how many images from 
+        progress_bar (:py:attr:`bool`, optional):
+            True if user wants a progress bar to indicate how many images from
             the scan have been loaded. Defaults to False.
 
     Returns:
