@@ -6,23 +6,16 @@ diffractometer, Q is a virtual axis, calculated geometrically from various motor
 positions. The Data class takes care of these conversions, exposing q, theta,
 intensity, reflectivity, and energy.
 
-The MeasurementBase class defines a simple class that has Data, including
-convenience properties to allow for the direct access of the Data and simple
-data manipulation methods.
+The MeasurementBase class defines a simple class that is Data, but that also has
+metadata.
 """
-
-# Copyright (c) 2021 Richard Brearton
-# Copyright (c) Andrew R. McCluskey
-# Distributed under the terms of the MIT License
-# authors: Richard Brearton, Andrew R. McCluskey
 
 import numpy as np
 from scipy.constants import physical_constants
 
 
 class Data:
-    def __init__(self, intensity, intensity_e, energy, theta=None, q=None):
-        """
+    """
         The base class of all Islatu objects that contain data.
 
         Attributes:
@@ -33,7 +26,7 @@ class Data:
             theta:
                 A numpy array containing the probe particle's angle of
                 incidence at each intensity.
-            q:
+            q_vectors:
                 A numpy array containing the magnitude of the probe particle's
                 scattering vector for each intensity value.
             energy:
@@ -51,26 +44,30 @@ class Data:
                 A numpy array containing the probe particle's angle of
                 incidence at each intensity. NOTE: only one of theta/q needs to
                 be provided.
-            q:
+            q_vectors:
                 A numpy array containing the magnitude of the probe particle's
                 scattering vector for each intensity value. NOTE: only one of
                 theta/q needs to be provided.
         """
+
+    def __init__(self, intensity, intensity_e, energy, theta=None,
+                 q_vectors=None):
+
         self.intensity = intensity
         self.intensity_e = intensity_e
         self.energy = energy
 
-        if (theta is None) and (q is None):
+        if (theta is None) and (q_vectors is None):
             raise ValueError(
                 "Either theta or q must be provided to create a Data instance"
             )
 
         # When using properties, it wont matter which of these ends up as None.
         self._theta = theta
-        self._q = q
+        self._q = q_vectors
 
     @property
-    def R(self) -> np.array:
+    def reflectivity(self) -> np.array:
         """
         Returns the intensity, normalized such that the maximum value of the
         intensity is equal to 1. To acquire
@@ -78,7 +75,7 @@ class Data:
         return self.intensity/np.amax(self.intensity)
 
     @property
-    def R_e(self) -> np.array:
+    def reflectivity_e(self) -> np.array:
         """
         Returns the errors on the intensity, divided by the maximum value of the
         intensity array.
@@ -86,18 +83,29 @@ class Data:
         return self.intensity_e/np.amax(self.intensity)
 
     @property
-    def q(self) -> np.array:
+    def q_vectors(self) -> np.array:
+        """
+        Returns self._q if this instance of Data was generated from q-data.
+        Otherwise, converts from self._theta to q.
+        """
         if (self._q is None) and (self._theta is not None):
             return self._theta_to_q(self._theta, self.energy)
         else:
             return self._q
 
-    @q.setter
-    def q(self, value) -> None:
+    @q_vectors.setter
+    def q_vectors(self, value) -> None:
+        """
+        Sets self._q.
+        """
         self._q = value
 
     @property
     def theta(self) -> np.array:
+        """
+        Returns self._theta if this instance of Data was generate from th-data.
+        Otherwise, converts from scattered q to theta.
+        """
         if (self._theta is None) and (self._q is not None):
             return self._q_to_theta(self._q, self.energy)
         else:
@@ -146,51 +154,21 @@ class Data:
         return theta_values
 
 
-class MeasurementBase:
-    def __init__(self, data: Data) -> None:
-        self.data = data
+class MeasurementBase(Data):
+    """
+    All measurements derive from this class.
 
-    # Define some properties to make accessing things in self.data a bit cleaner
-    # and more intuitive.
-    @property
-    def q(self) -> np.array:
-        return self.data.q
+    Attrs:
+        metadata:
+            The metadata relevant to this measurement.
+    """
 
-    @q.setter
-    def q(self, value) -> None:
-        self.data.q = value
-
-    @property
-    def theta(self) -> np.array:
-        return self.data.theta
-
-    @theta.setter
-    def theta(self, value) -> None:
-        self.data.theta = value
-
-    @property
-    def R(self):
-        return self.data.R
-
-    @property
-    def R_e(self):
-        return self.data.R_e
-
-    @property
-    def intensity(self) -> np.array:
-        return self.data.intensity
-
-    @intensity.setter
-    def intensity(self, value):
-        self.data.intensity = value
-
-    @property
-    def intensity_e(self) -> np.array:
-        return self.data.intensity_e
-
-    @intensity_e.setter
-    def intensity_e(self, value):
-        self.data.intensity_e = value
+    def __init__(self, intensity, intensity_e, energy, metadata, theta=None,
+                 q=None) -> None:
+        # Initialize the Data.
+        super().__init__(intensity, intensity_e, energy, theta, q)
+        # Store the metadata.
+        self.metadata = metadata
 
     def remove_data_points(self, indices):
         """
@@ -201,10 +179,10 @@ class MeasurementBase:
             idx:
                 The index number to be removed.
         """
-        if self.data._q is not None:
-            self.data._q = np.delete(self.data._q, indices)
-        if self.data._theta is not None:
-            self.data._theta = np.delete(self.data._theta, indices)
+        if self._q is not None:
+            self._q = np.delete(self._q, indices)
+        if self._theta is not None:
+            self._theta = np.delete(self._theta, indices)
 
-        self.data.intensity = np.delete(self.data.intensity, indices)
-        self.data.intensity_e = np.delete(self.data.intensity_e, indices)
+        self.intensity = np.delete(self.intensity, indices)
+        self.intensity_e = np.delete(self.intensity_e, indices)
