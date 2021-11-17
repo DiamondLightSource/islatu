@@ -3,7 +3,7 @@ This module contains:
 
 Parsing functions used to extract information from experimental files.
 
-Classes used to help make parsing more modular. These include the NexusBase 
+Classes used to help make parsing more modular. These include the NexusBase
 class and its children.
 """
 
@@ -13,19 +13,17 @@ from typing import List
 
 import nexusformat.nexus.tree as nx
 from nexusformat.nexus import nxload
-from nexusformat.nexus.tree import NeXusError
 import pandas as pd
 import numpy as np
 import h5py
 
-from . import detector
-from .debug import Debug
+
 from .iterator import _get_iterator
 from .scan import Scan2D
 from .image import Image
-from .metadata import Metadata
 from .data import Data
 from .region import Region
+from .debug import debug
 
 
 class NexusBase():
@@ -121,6 +119,14 @@ class NexusBase():
         return self.entry[self.entry.default].axes
 
     @property
+    def default_axis_description(self) -> str:
+        """
+        Returns 'q', 'th' or 'tth' depending on what we're measuring with our
+        default axis
+        """
+        return NotImplementedError()
+
+    @property
     def default_nxdata_name(self):
         """
         Returns the name of the default nxdata.
@@ -133,6 +139,16 @@ class NexusBase():
         Returns the default NXdata.
         """
         return self.entry[self.default_nxdata_name]
+
+    @property
+    def probe_energy(self):
+        """
+        This must be overridden.
+        """
+        raise NotImplementedError(
+            "Implementations of NexusBase must override the probe_energy " +
+            "property."
+        )
 
 
 class I07Nexus(NexusBase):
@@ -151,7 +167,46 @@ class I07Nexus(NexusBase):
         Raises:
             FileNotFoundError if the data file cant be found.
         """
-        return _try_to_find_files(self._src_data_path, self.local_nxs_path)
+        file = _try_to_find_files(
+            [self._src_data_path], [self.local_nxs_path])[0]
+        return file
+
+    @property
+    def default_axis_name(self) -> str:
+        """
+        Returns the name of the default axis.
+        """
+        return self.entry[self.entry.default].axes
+
+    @property
+    def default_axis_description(self) -> str:
+        """
+        Returns the description of our default axis, either being 'q', 'th' or
+        'tth'.
+        """
+        if self.default_axis_name == 'qdcd':
+            return 'q'
+        if self.default_axis_name == 'diff1delta':
+            return 'tth'
+
+    def get_ith_region(self, i: int):
+        """
+        Returns the ith region of interest found in the .nxs file.
+
+        Args:
+            i:
+                The region of interest number to return. This number should
+                match the ROI name as found in the .nxs file (generally not 0
+                indexed).
+
+        Returns:
+            The ith region of interest found in the .nxs file.
+        """
+        x_1 = self.detector[self._get_region_bounds_key(i, 'x_1')][0]
+        x_2 = self.detector[self._get_region_bounds_key(i, 'Width')][0] + x_1
+        y_1 = self.detector[self._get_region_bounds_key(i, 'y_1')][0]
+        y_2 = self.detector[self._get_region_bounds_key(i, 'Height')][0] + y_1
+        return Region(x_1, x_2, y_1, y_2)
 
     @property
     def signal_regions(self) -> List[Region]:
@@ -160,11 +215,7 @@ class I07Nexus(NexusBase):
         Currently there is nothing better to do than assume that this is a list
         of length 1.
         """
-        return Region(
-            self._get_region_bounds_keys('x_1')[0],
-            self._get_region_bounds_keys('x_2')[0],
-            self._get_region_bounds_keys('y_1')[0],
-            self._get_region_bounds_keys('y_2')[0])
+        return [self.get_ith_region(i=1)]
 
     @property
     def background_regions(self) -> List[Region]:
@@ -173,24 +224,19 @@ class I07Nexus(NexusBase):
         Currently we just ignore the zeroth region and call the rest of them
         background regions.
         """
-        return [Region(
-            self._get_region_bounds_keys('x_1')[i],
-            self._get_region_bounds_keys('x_2')[i],
-            self._get_region_bounds_keys('y_1')[i],
-            self._get_region_bounds_keys('y_2')[i])
-            for i in range(1, self._number_of_regions)
-        ]
+        return [self.get_ith_region(i)
+                for i in range(2, self._number_of_regions+1)]
 
     @property
-    def transmission(self):
+    def probe_energy(self):
         """
         Proportional to the fraction of probe particles allowed by an attenuator
         to strike the sample.
         """
-        return float(self.instrument.dcm1energy)
+        return float(self.instrument.dcm1energy.value)
 
     @property
-    def probe_energy(self):
+    def transmission(self):
         """
         Returns the energy of the probe particle parsed from this NexusFile.
         """
@@ -248,19 +294,25 @@ class I07Nexus(NexusBase):
         Returns the number of regions of interest described by this nexus file.
         This *assumes* that the region keys take the form f'region_{an_int}'.
         """
-        return max([int(key[7]) for key in self._region_keys])
+        split_keys = [key.split('_') for key in self._region_keys]
 
-    def _get_region_bounds_keys(self, kind: str) -> List[str]:
+        return max([int(split_key[1]) for split_key in split_keys])
+
+    def _get_region_bounds_key(self, region_no: int, kind: str) -> List[str]:
         """
-        Returns all detector keys relating to the bounds of regions of interest.
+        Returns the detector key relating to the bounds of the region of
+        interest corresponding to region_no.
 
         Args:
+            region_no:
+                An integer corresponding the the particular region of interest
+                we're interested in generating a key for.
             kind:
                 The kind of region bounds keys we're interested in. This can
                 take the values:
-                    'x_1', 'x_2', 'y_1', 'y_2',
-                or any of the above swapping '1' with 'start' and '2' with
-                'end'.
+                    'x_1', 'width', 'y_1', 'height'
+                where '1' can be replaced with 'start' and with/without caps on
+                first letter of width/height.
 
         Raises:
             ValueError if 'kind' argument is not one of the above.
@@ -271,20 +323,18 @@ class I07Nexus(NexusBase):
         # Note that the x, y swapping is a quirk of the nexus standard, and is
         # related to which axis on the detector varies most rapidly in memory.
         if kind in ('x_1', 'x_start'):
-            insert = 'Y'
-        elif kind in ('x_2', 'x_end'):
-            insert = 'max_y'
-        elif kind in ('y_1', 'y_start'):
             insert = 'X'
-        elif kind in ('y_2', 'y_end'):
-            insert = 'max_x'
+        elif kind in ('width', 'Width'):
+            insert = 'Width'
+        elif kind in ('y_1', 'y_start'):
+            insert = 'Y'
+        elif kind in ('height', 'Height'):
+            insert = 'Height'
         else:
             raise ValueError(
-                "'kind' argument must be one of 'x_1', 'x_2', 'y_1', 'y_2'; " +
-                "note that 1 can be replaced with 'start' and '2' can be " +
-                "replaced with 'end'.")
+                "Didn't recognise 'kind' argument.")
 
-        return [f"Region_{i}_{insert}" for i in range(self._number_of_regions)]
+        return f"Region_{region_no}_{insert}"
 
 
 def i07_dat_to_dict_dataframe(file_path):
@@ -292,7 +342,7 @@ def i07_dat_to_dict_dataframe(file_path):
     Parses a .dat file recorded by I07, returning a [now mostly obsolete] tuple
     containing a metadata dictionary and a pandas dataframe of the data.
 
-    Though outdated, this is still a handy way to parse the DCD normalization 
+    Though outdated, this is still a handy way to parse the DCD normalization
     .dat file.
 
     Args:
@@ -303,7 +353,7 @@ def i07_dat_to_dict_dataframe(file_path):
             - :py:attr:`dict`: The metadata from the ``.dat`` file.
             - :py:class:`pandas.DataFrame`: The data from the ``.dat`` file.
     """
-    f_open = open(file_path, "r")
+    f_open = open(file_path, "r", encoding='utf-8')
     # Neither the data nor the metadata are being read yet.
     data_reading = False
     metadata_reading = False
@@ -349,9 +399,9 @@ def i07_dat_to_dict_dataframe(file_path):
     f_open.close()
     # Sort the data_lines list of lists to transpore and make into a dict where
     # the keys are the titles.
-    for j in range(len(data_lines[0])):
+    for j, _ in enumerate(data_lines[0]):
         list_to_add = []
-        for i in range(len(data_lines)):
+        for i, _ in enumerate(data_lines):
             try:
                 list_to_add.append(float(data_lines[i][j]))
             except ValueError:
@@ -365,434 +415,75 @@ def i07_dat_to_dict_dataframe(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
-def i07_dat_parser(file_path, theta_axis_name=None):
+def load_images_from_h5(h5_file_path):
     """
-    Parsing the .dat file from I07.
-
-    Args:
-        (:py:attr:`str`): The ``.dat`` file to be read.
-
-    Returns:
-        :py:attr:`tuple`: Containing:
-            - :py:attr:`dict`: The metadata from the ``.dat`` file.
-            - :py:class:`pandas.DataFrame`: The data from the ``.dat`` file.
+    Loads images from a .h5 file.
     """
-    f_open = open(file_path, "r")
-    # Neither the data nor the metadata are being read yet.
-    data_reading = False
-    metadata_reading = False
-
-    # Create the dictionaries to be populated.
-    data_dict = {}
-    metadata_dict = {}
-    # Create the list to be filled with lists for each line
-    data_lines = []
-
-    for line in f_open:
-        # This string incidates the start of the metadata.
-        if "<MetaDataAtStart>" in line:
-            metadata_reading = True
-        # This string indicates the end of the metadata.
-        if "</MetaDataAtStart>" in line:
-            metadata_reading = False
-        # This string indicates the start of the data.
-        if " &END" in line:
-            data_reading = True
-            # Set counter to minus two, such that when is
-            # reaches the data it is 0.
-            count = -2
-        # When the metadata section is being read populate the metadata_dict
-        if metadata_reading:
-            if "=" in line:
-                metadata_in_line = []
-                for i in line.split("=")[1:]:
-                    try:
-                        j = float(i)
-                    except ValueError:
-                        j = i
-                    metadata_in_line.append(j)
-                metadata_dict[line.split("=")[0]] = metadata_in_line
-        # When the data section is being read, make the list of the zeroth line
-        # the titles and everything after is the data_lines list of lists.
-        if data_reading:
-            count += 1
-            if count == 0:
-                titles = line.split()
-            if count > 0:
-                data_lines.append(line.split())
-    f_open.close()
-    # Sort the data_lines list of lists to transpore and make into a dict where
-    # the keys are the titles.
-    for j in range(len(data_lines[0])):
-        list_to_add = []
-        for i in range(len(data_lines)):
-            try:
-                list_to_add.append(float(data_lines[i][j]))
-            except ValueError:
-                list_to_add.append(data_lines[i][j])
-        count = 0
-        if j >= len(titles):
-            data_dict[str(count)] = list_to_add
-            count += 1
-        else:
-            data_dict[titles[j]] = list_to_add
-
-    # The "data_dict" actually contains a lot of metadata, and is small.
-    # Appending this to the metadata_dict makes a lot of sense.
-    metadata_dict.update(data_dict)
-
-    # Now store this metadata in an object of type Metadata, checking to see if
-    # we need to use the updated or legacy detector object to decipher this file
-    if "diff1halpha" in metadata_dict:
-        metadata = Metadata(detector.i07_pilatus_legacy, metadata_dict)
-    elif detector.i07_excalibur.metakey_roi_1_maxval in metadata_dict:
-        metadata = Metadata(detector.i07_excalibur, metadata_dict)
-    elif detector.i07_pilatus.metakey_roi_1_maxval in metadata_dict:
-        metadata = Metadata(detector.i07_pilatus, metadata_dict)
-
-    # Now build a Data instance to hold the theta/intensity values. It is
-    # important to note that this provides the most naive estimate of intensity,
-    # simply using the maximum pixel value to represent the intensity.
-    theta = np.array(metadata.raw_metadata[theta_axis_name])
-    intensity = np.array(metadata.roi_1_maxval)
-    intensity_e = np.sqrt(metadata.roi_1_maxval)
-    energy = metadata.probe_energy
-    data = Data(intensity, intensity_e, energy, theta=theta)
-
-    # Our metadata's file information is most likely wrong (unless this code is
-    # being run on site). Try to correct these files.
-    metadata.file = _try_to_find_files(metadata.file,
-                                       additional_search_paths=[file_path])
-
-    # This .dat file will point to images. Load them, use them to populate a
-    # Scan2D object, and return the scan.
-    images = [Image.from_img_file_name(metadata.file[i])
-              for i in range(len(metadata.file))]
-    return Scan2D(data, metadata, images)
-
-
-def i07_nxs_parser(file_path, log_lvl=1, progress_bar=False):
-    """
-    Parses a .nxs file, returning an instance of Scan2D. This process involves
-    loading the images contained in the hdf file pointed at by the .nxs file, as
-    well as the metadata written in the .nxs file that is relevant for XRR
-    reduction.
-
-    Args:
-        file_path (:py:attr:`str`):
-            Path to the .nxs file.
-        progress_bar (:py:attr:`bool`, optional):
-            True if user wants a progress bar to indicate how many images from
-            the scan have been loaded. Defaults to False.
-
-    Returns:
-        :py:class:`islatu.scan.Scan2D`:
-            A scan2D object containing all loaded detector frames, as well as
-            all relevant metadata scraped from the .nxs file.
-    """
-
-    # Prepare the debug logger.
-    debug = Debug(log_lvl)
-
-    # Load the nexus file.
-    nx_file = nxload(file_path)
-
-    # ------------- BEGIN GENERIC NEXUS PARSER ----------------------------- #
-    # # Split up the .nxs file.
-    # file_lines = nx_file.tree.split("\n")
-
-    # # The following is a reasonably general routine for the compactification of
-    # # a .nxs file onto a dictionary.
-    # entry_path = []
-    # raw_metadata = {}
-    # for line in file_lines:
-    #     # Check the indentation level.
-    #     stripped_line = line.lstrip(" ")
-    #     indent_lvl = int((len(line) - len(stripped_line))/2)
-
-    #     if len(stripped_line.split(" = ")) != 1:
-    #         # We found data/metadata.
-    #         split_line = stripped_line.split(" = ")
-    #     elif len(stripped_line.split(" -> ")) != 1:
-    #         # We found a pointer/link.
-    #         split_line = stripped_line.split(" -> ")
-    #         # Make sure that information is not lost by putting the pointer
-    #         # symbol back in.
-    #         split_line[1] = " -> " + split_line[1]
-    #     else:
-    #         # We found a new class. This should be obvious by its file_contents.
-    #         split_line = stripped_line.split(":")
-
-    #     # Something went wrong if our delimiter has shown up twice. Note that
-    #     # this bans dumb NXClass names with colons in them, etc..
-    #     if len(split_line) != 2:
-    #         raise ValueError("Islatu cannot parse this .nxs file.")
-    #     file_name = split_line[0]
-    #     file_contents = split_line[1]
-
-    #     # Form the new path.
-    #     if indent_lvl > len(entry_path):
-    #         entry_path.append(file_name)
-    #     else:
-    #         entry_path = entry_path[:indent_lvl]
-    #         entry_path.append(file_name)
-    #     current_path = "/" + "/".join(entry_path)
-
-    #     # Now update the metadata dictionary.
-    #     raw_metadata[current_path] = file_contents
-
-    #     # Useful for debugging/double checking.
-    #     if ("4048" in file_contents) or ("4048" in current_path):
-    #         debug.log(current_path + ", " + file_contents)
-    #         pass
-    # ------------- END GENERIC NEXUS PARSER ----------------------------- #
-
-    # Now grab the real metadata corresponding to each path we found.
-    # for path in raw_metadata:
-    #     new_path = path.lstrip("/root")
-    #     if new_path == "":
-    #         continue
-    #     try:
-    #         contents = nx_file[new_path]._value
-    #     except:
-    #         continue
-    #     debug.log(new_path + " || " + str(contents))
-
-    # The raw_metada dictionary is now populated.
-    # Key pieces of metadata:
-    # detector_distance = /entry/instrument/diff1detdist/value
-    # probe_energy = /entry/instrument/dcm1energy/value
-    # file = /entry/excroi_data/data
-    # transmission = /entry/instrument/filterset/transmission
-    # roi_1_maxval = /entry/instrument/excroi/Region_1.max_val
-    # roi_2_maxval = /entry/instrument/excroi/Region_2.max_val
-
-    # Scrape the essential metadata directly.
-    metadata = Metadata(detector.i07_excalibur_nxs, nx_file)
-
-    # Store the scan's filename.
-    metadata.filename = nx_file._filename
-
-    metadata.detector_distance = nx_file[
-        "/entry/instrument/diff1detdist/value"]._value
-    metadata.probe_energy = nx_file["/entry/instrument/dcm1energy/value"]._value
-    metadata.file = [nx_file["/entry/excroi_data/data"]._filename]
-    try:
-        metadata.x_end = [
-            nx_file["/entry/instrument/excroi/Region_1.max_x"]]
-    except NeXusError:
-        metadata.x_end = [
-            nx_file["/entry/instrument/excroi/Region_1_max_x"]]
-
-    # Locate the excalibur regions of interest for autoprocessing.
-    metadata.roi_1_y1 = int(
-        nx_file["/entry/instrument/excroi/Region_1_X"]._value[0])
-    metadata.roi_1_x1 = int(
-        nx_file["/entry/instrument/excroi/Region_1_Y"]._value[0])
-    metadata.roi_1_y2 = int(
-        nx_file["/entry/instrument/excroi/Region_1_Width"]._value[0] +
-        metadata.roi_1_y1)
-    metadata.roi_1_x2 = int(
-        nx_file["/entry/instrument/excroi/Region_1_Height"]._value[0] +
-        metadata.roi_1_x1)
-
-    metadata.roi_2_y1 = int(
-        nx_file["/entry/instrument/excroi/Region_2_X"]._value[0])
-    metadata.roi_2_x1 = int(
-        nx_file["/entry/instrument/excroi/Region_2_Y"]._value[0])
-    metadata.roi_2_y2 = int(
-        nx_file["/entry/instrument/excroi/Region_2_Width"]._value[0] +
-        metadata.roi_2_y1)
-    metadata.roi_2_x2 = int(
-        nx_file["/entry/instrument/excroi/Region_2_Height"]._value[0] +
-        metadata.roi_2_x1)
-
-    # TODO: This is a hack that relies on detector geometry. Future proof this.
-    if metadata.roi_1_y1 > metadata.roi_1_x1:
-        metadata.roi_1_y1, metadata.roi_1_x1 = metadata.roi_1_x1, \
-            metadata.roi_1_y1
-        metadata.roi_1_y2, metadata.roi_1_x2 = metadata.roi_1_x2, \
-            metadata.roi_1_y2
-        metadata.roi_2_y1, metadata.roi_2_x1 = metadata.roi_2_x1, \
-            metadata.roi_2_y1
-        metadata.roi_2_y2, metadata.roi_2_x2 = metadata.roi_2_x2, \
-            metadata.roi_2_y2
-
-    metadata.transmission = nx_file["/entry/instrument/filterset/transmission"]
-    try:
-        metadata.roi_1_maxval = nx_file[
-            "/entry/instrument/excroi/Region_1.max_val"]
-        metadata.roi_2_maxval = nx_file[
-            "/entry/instrument/excroi/Region_2.max_val"]
-    except NeXusError:
-        metadata.roi_1_maxval = nx_file[
-            "/entry/instrument/excroi/Region_1_max_val"]
-        metadata.roi_2_maxval = nx_file[
-            "/entry/instrument/excroi/Region_2_max_val"]
-
-    # Now prepare the Data object.
-    # TODO: do this generally, without depending on a particular path.
-    # Note that diff1delta gives a **$2\theta$** value!
-    theta_parsed = np.array(
-        nx_file["/entry/instrument/diff1delta/value"]._value)/2
-
-    # If theta_parsed is just a float, we must be scanning something else!
-    # Currently, if theta_parsed isn't isn't being scanned, we're just assuming
-    # that qdcd is the scannable of interest.
-    # TODO: Generally locate the independent variable in a nexus file.
-
-    intensity = np.array(metadata.roi_1_maxval)
-    intensity_e = np.sqrt(intensity)
-
-    energy = metadata.probe_energy
-
-    # Instantiate a Data object with q if using DCD setup, theta otherwise
-    if isinstance(theta_parsed, float):
-        q_parsed = nx_file["/entry/instrument/qdcd/value"]._value
-        q_vals = q_parsed
-        data = Data(intensity=intensity, intensity_e=intensity_e,
-                    energy=energy, q=q_vals)
-    else:
-        theta = theta_parsed
-        data = Data(intensity=intensity, intensity_e=intensity_e,
-                    energy=energy, theta=theta)
-
-    # Our metadata's file information is wrong (unless this code is
-    # being run on site). Try to correct these files.
-    metadata.file = _try_to_find_files(metadata.file,
-                                       additional_search_paths=[file_path])
-
-    # This .dat file will point to images. Load them, use them to populate a
-    # Scan2D object, and return the scan.
-
-    # Now load the images from the file:
     internal_data_path = 'data'
-
-    debug.log("Loading images from file " + metadata.file[0], unimportance=0)
-    with h5py.File(metadata.file[0], "r") as file_handle:
+    images = []
+    debug.log("Loading images from file " + h5_file_path, unimportance=0)
+    with h5py.File(h5_file_path, "r") as file_handle:
         dataset = file_handle[internal_data_path][()]
-        # images = [Image(dataset[i]) for i in range(dataset.shape[0])]
-        images = []
 
+        num_images = dataset.shape[0]
         # Prepare to show a progress bar for image loading.
-        iterator = _get_iterator(dataset, progress_bar)
-        debug.log("Loading " + str(dataset.shape[0]) + " images.",
-                  unimportance=2)
-        for i in iterator:
-            if not progress_bar:
-                debug.log("Currently loaded " + str(i+1) +
-                          " images.",  end="\r")
+        debug.log(f"Loading {num_images} images.", unimportance=2)
+        for i in range(num_images):
+            debug.log("Currently loaded " + str(i+1) +
+                      " images.",  end="\r")
             images.append(Image(dataset[i]))
         # This line is necessary to prevent overwriting due to end="\r".
         debug.log("")
+        debug.log(f"Loaded all {num_images} images.", unimportance=2)
 
-        debug.log("Loaded all " + str(dataset.shape[0]) + " images.",
-                  unimportance=2)
-
-    return Scan2D(data, metadata, images)
+    return images
 
 
-def rigaku_data_parser(file_path):
+def i07_nxs_parser(file_path: str):
     """
-    Parses the .dat and .ras files from a Rigaku smartlab diffractometer.
+    Parses a .nxs file acquired from the I07 beamline at diamond, returning an
+    instance of Scan2D. This process involves loading the images contained in
+    the .h5 file pointed at by the .nxs file, as well as retrieving the metadata
+    from the .nxs file that is relevant for XRR reduction.
 
     Args:
-        (:py:attr:`str`): The ``.dat`` file to be read.
+        file_path:
+            Path to the .nxs file.
 
     Returns:
-        :py:attr:`tuple`: Containing:
-            - :py:attr:`dict`: The metadata from the ``.dat`` file.
-            - :py:class:`pandas.DataFrame`: The data from the ``.dat`` file.
+        An initialized Scan2D object containing all loaded detector frames, as
+        well as the relevant metadata from the .nxs file.
     """
-    # work out what type of file we have, currently supporting .ras and .dat
-    ras_ending = ".ras"
-    dat_ending = ".dat"
+    # Use the magical parser class that does everything for us.
+    i07_nxs = I07Nexus(file_path)
 
-    # if file_path argument wasn't a string, error naturally thrown here
-    if file_path.endswith(ras_ending):
-        file_ending = ras_ending
-    elif file_path.endswith(dat_ending):
-        file_ending = dat_ending
-    else:
-        raise IOError("Only .ras and .dat rigaku files are currently " +
-                      "supported.")
+    # Load the images.
+    images = load_images_from_h5(i07_nxs.local_data_path)
 
-    # prepare dictionaries to populate with data/metadata
-    data_dict = {}
-    metadata_dict = {}
+    # The dependent variable.
+    rough_intensity = i07_nxs.default_signal
+    rough_intensity_e = np.sqrt(rough_intensity)
 
-    # prepare to store angles and intensities - the Q conversion will come later
-    angles = []
-    intensities = []
-    attenuations = []
+    # The independent variable.
+    axis = i07_nxs.default_axis
 
-    with open(file_path) as open_file:
-        # this flag is ignored for .dat files. For .ras, we start with metadata
-        reading_metadata = True
+    # We have to load the Data according to what our independent variable is.
+    if i07_nxs.default_axis_description == 'q':
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                    q_vectors=axis)
+    elif i07_nxs.default_axis_description == 'th':
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                    theta=axis)
+    elif i07_nxs.default_axis_description == 'tth':
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                    theta=axis/2)
 
-        for line in open_file:
-            # clean the line independent of file type
-            line = line.strip()
-
-            # dat files are very simple, just iterate through the file grabbing
-            # 2theta and intensities
-            if file_ending == dat_ending:
-                split_line = line.split('\t')
-
-                angle = float(split_line[0])
-                intensity = float(split_line[1])
-
-                angles.append(angle)
-                intensities.append(intensity)
-            elif file_ending == ras_ending:
-                # ras files contain much more metadata. First grab this all
-                if reading_metadata:
-                    # intensity list is about to start, switch metadata flag
-                    if "RAS_INT_START" in line:
-                        reading_metadata = False
-                    # skips the preamble and the useless _END flag
-                    if line.strip().endswith("_START"):
-                        continue
-                    if line.strip().endswith("_END"):
-                        continue
-                    # metadata is given in the format <TITLE "DATA">
-
-                    split_line = line.split(" ")
-
-                    # strip quotation marks from DATA
-                    split_line[1].strip('"')
-
-                    # add title + data as key value pair to metadata dict
-                    metadata_dict[split_line[0]] = split_line[1]
-                # we're reading intensity/angle/attenuation now
-                else:
-                    # throw away the meaningless *RAS_END messages etc.
-                    if "*" in line:
-                        continue
-
-                    # now it's safe to acces split_line[i] for i > 0
-                    split_line = line.split(" ")
-                    angle = float(split_line[0])
-                    intensity = float(split_line[1])
-                    attenuation = float(split_line[2])
-
-                    # store the stuff
-                    angles.append(angle)
-                    intensities.append(intensity)
-                    attenuations.append(attenuation)
-
-    # populate the data dict (TODO: calculate Q-vectors from angles and include)
-    data_dict["Angles"] = angles
-    data_dict["Intensities"] = intensities
-
-    # if this was from a .ras, then we also have attenuation information
-    if file_ending == ras_ending:
-        data_dict["Attenuation"] = attenuations
-
-    return metadata_dict, pd.DataFrame(data_dict)
+    # Returns the Scan2D object
+    return Scan2D(data, i07_nxs, images)
 
 
-def _try_to_find_files(filenames, additional_search_paths, log_lvl=1):
+def _try_to_find_files(filenames: List[str],
+                       additional_search_paths: List[str]):
     """
     Check that data files exist if the file parsed by parser pointed to a
     separate file containing intensity information. If the intensity data
@@ -804,7 +495,6 @@ def _try_to_find_files(filenames, additional_search_paths, log_lvl=1):
         :py:attr:`list` of :py:attr:`str`:
             List of the corrected, actual paths to the files.
     """
-    debug = Debug(log_lvl)
     found_files = []
 
     # If we had only one file, make a list out of it.
@@ -812,19 +502,17 @@ def _try_to_find_files(filenames, additional_search_paths, log_lvl=1):
         filenames = [filenames]
 
     cwd = os.getcwd()
-    local_start_directories = [
+    start_dirs = [
         cwd,  # maybe file is stored near the current working dir
         # To search additional directories, add them in here manually.
     ]
-    local_start_directories.extend(additional_search_paths)
+    start_dirs.extend(additional_search_paths)
 
-    # Better to be consistent.
-    for i in range(len(local_start_directories)):
-        local_start_directories[i] = local_start_directories[i].replace(
-            '\\', '/')
+    local_start_directories = [x.replace('\\', '/') for x in start_dirs]
+    num_start_directories = len(local_start_directories)
 
     # Now extend the additional search paths.
-    for i in range(len(local_start_directories)):
+    for i in range(num_start_directories):
         search_path = local_start_directories[i]
         split_srch_path = search_path.split('/')
         for j in range(len(split_srch_path)):
