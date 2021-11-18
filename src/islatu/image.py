@@ -20,9 +20,9 @@ class Image:
     This class stores information about the detector images.
 
     Attributes:
-        file_path (:py:attr:`str`): 
+        file_path (:py:attr:`str`):
             File path for the image.
-        array (:py:attr:`array_like`): 
+        array (:py:attr:`array_like`):
             The image described as an array.
         array_original (:py:attr:`array_like`):
             The original value of the image array when it was loaded from disk.
@@ -40,8 +40,6 @@ class Image:
         file_path (:py:attr:`str`): The file path for the image.
         data (:py:class:`pandas.DataFrame`, optional): Experimental data about
             the measurement. Defaults to :py:attr:`None`.
-        metadata (:py:attr:`dict`, optional): Metadata regarding the
-            measurement. Defaults to :py:attr:`None`.
         transpose (:py:attr:`bool`, optional): Should the data be rotated by
             90 degrees? Defaults to :py:attr:`False`.
         pixel_min (:py:attr:`int`): The minimum pixel value possible, all
