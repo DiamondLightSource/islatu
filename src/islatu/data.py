@@ -159,8 +159,8 @@ class Data:
         index.
 
         Args:
-            idx:
-                The index number to be removed.
+            indices:
+                The indices to be removed.
         """
         if self._q is not None:
             self._q = np.delete(self._q, indices)
