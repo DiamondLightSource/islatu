@@ -6,9 +6,10 @@ import pytest
 from pytest_lazyfixture import lazy_fixture as lazy
 import numpy as np
 
-from islatu.data import Data
+from islatu.data import Data, MeasurementBase
+from islatu.io import I07Nexus
 
-# Fairly obvious disable for testing.
+# Fairly obvious disable for testing: we also need to test protected attrs.
 # pylint: disable=protected-access
 
 
@@ -117,17 +118,49 @@ def test_conversion_to_th(generic_data_01: Data):
     assert generic_data_01.theta[1] == pytest.approx(0.4525, rel=1e-3)
 
 
-def test_measurement_base_metadata(generic_measurement_base_01):
+def test_measurement_base_metadata_type(measurement_base_01):
     """
-    Make sure that we can access the metadata.
+    Make sure that our measurement base type is indeed I07Nexus. If it is, then
+    the following tests just quickly make sure that its values have remained
+    intact.
     """
-    assert generic_measurement_base_01.metadata.local_
+    assert isinstance(measurement_base_01.metadata, I07Nexus)
 
 
-def test_measurement_base_underlying_data(generic_measurement_base_01,
-                                          generic_data_01):
+def test_measurement_base_metadata_path(measurement_base_01,
+                                        path_to_i07_nxs_01):
+    """
+    Make sure that we can access the metadata, and that its local_path is good.
+    """
+    assert measurement_base_01.metadata.local_path == path_to_i07_nxs_01
+
+
+def test_measurement_base_metadata_energy(measurement_base_01):
+    """
+    Check that the metadata has the correct energy. The I07Nexus class
+    """
+    assert measurement_base_01.metadata.probe_energy == 12.5
+
+
+def test_measurement_base_underlying_data(measurement_base_01: MeasurementBase,
+                                          generic_data_01: Data):
     """
     Make sure that the instance of MeasurementBase has the same values of
     q, theta, intensity etc. as the instance of Data from which it was
     constructed.
     """
+    # Note that, while there are multiple assertions here, they're really all
+    # testing the same thing: pretty trivial attribute access, and equivalence
+    # of parent and child for the subset of child that should be the same as
+    # parent.
+    assert (measurement_base_01._q == generic_data_01._q).all()
+    assert measurement_base_01._theta == generic_data_01._theta
+    assert (measurement_base_01.q_vectors == generic_data_01.q_vectors).all()
+    assert (measurement_base_01.intensity == generic_data_01.intensity).all()
+    assert (measurement_base_01.intensity_e ==
+            generic_data_01.intensity_e).all()
+    assert measurement_base_01.energy == generic_data_01.energy
+    assert (measurement_base_01.reflectivity ==
+            generic_data_01.reflectivity).all()
+    assert (measurement_base_01.reflectivity_e ==
+            generic_data_01.reflectivity_e).all()
