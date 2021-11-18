@@ -153,23 +153,6 @@ class Data:
 
         return theta_values
 
-
-class MeasurementBase(Data):
-    """
-    All measurements derive from this class.
-
-    Attrs:
-        metadata:
-            The metadata relevant to this measurement.
-    """
-
-    def __init__(self, intensity, intensity_e, energy, metadata, theta=None,
-                 q=None) -> None:
-        # Initialize the Data.
-        super().__init__(intensity, intensity_e, energy, theta, q)
-        # Store the metadata.
-        self.metadata = metadata
-
     def remove_data_points(self, indices):
         """
         Convenience method for the removal of a specific data point by its
@@ -186,3 +169,20 @@ class MeasurementBase(Data):
 
         self.intensity = np.delete(self.intensity, indices)
         self.intensity_e = np.delete(self.intensity_e, indices)
+
+
+class MeasurementBase(Data):
+    """
+    All measurements derive from this class.
+
+    Attrs:
+        metadata:
+            The metadata relevant to this measurement.
+    """
+
+    def __init__(self, intensity, intensity_e, energy, metadata, theta=None,
+                 q=None) -> None:
+        # Initialize the Data.
+        super().__init__(intensity, intensity_e, energy, theta, q)
+        # Store the metadata.
+        self.metadata = metadata

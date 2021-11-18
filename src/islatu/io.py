@@ -10,6 +10,8 @@ class and its children.
 
 import os
 from typing import List
+from abc import abstractmethod
+
 
 import nexusformat.nexus.tree as nx
 from nexusformat.nexus import nxload
@@ -24,9 +26,10 @@ from .image import Image
 from .data import Data
 from .region import Region
 from .debug import debug
+from .metadata import Metadata
 
 
-class NexusBase():
+class NexusBase(Metadata):
     """
     This class contains *mostly* beamline agnostic nexus parsing convenience
     stuff. It's worth noting that this class still makes a series of assumptions
@@ -44,12 +47,12 @@ class NexusBase():
             The object produced by loading the file at file_path with nxload.
     """
 
-    def __init__(self, local_nxs_path: str):
-        self.local_nxs_path = local_nxs_path
-        self.nxfile = nxload(local_nxs_path)
+    def __init__(self, local_path: str):
+        super().__init__(local_path)
+        self.nxfile = nxload(local_path)
 
     @property
-    def src_nxs_path(self):
+    def src_path(self):
         """
         The name of this nexus file, as it was recorded when the nexus file was
         written.
@@ -119,14 +122,6 @@ class NexusBase():
         return self.entry[self.entry.default].axes
 
     @property
-    def default_axis_description(self) -> str:
-        """
-        Returns 'q', 'th' or 'tth' depending on what we're measuring with our
-        default axis
-        """
-        return NotImplementedError()
-
-    @property
     def default_nxdata_name(self):
         """
         Returns the name of the default nxdata.
@@ -140,15 +135,11 @@ class NexusBase():
         """
         return self.entry[self.default_nxdata_name]
 
+    # A hack to tell pylint that this class is still meant to be abstract.
     @property
-    def probe_energy(self):
-        """
-        This must be overridden.
-        """
-        raise NotImplementedError(
-            "Implementations of NexusBase must override the probe_energy " +
-            "property."
-        )
+    @abstractmethod
+    def default_axis_type(self) -> str:
+        return super().default_axis_type()
 
 
 class I07Nexus(NexusBase):
@@ -168,7 +159,7 @@ class I07Nexus(NexusBase):
             FileNotFoundError if the data file cant be found.
         """
         file = _try_to_find_files(
-            [self._src_data_path], [self.local_nxs_path])[0]
+            [self._src_data_path], [self.local_path])[0]
         return file
 
     @property
@@ -179,10 +170,9 @@ class I07Nexus(NexusBase):
         return self.entry[self.entry.default].axes
 
     @property
-    def default_axis_description(self) -> str:
+    def default_axis_type(self) -> str:
         """
-        Returns the description of our default axis, either being 'q', 'th' or
-        'tth'.
+        Returns the type of our default axis, either being 'q', 'th' or 'tth'.
         """
         if self.default_axis_name == 'qdcd':
             return 'q'
@@ -230,17 +220,16 @@ class I07Nexus(NexusBase):
     @property
     def probe_energy(self):
         """
-        Proportional to the fraction of probe particles allowed by an attenuator
-        to strike the sample.
+        Returns the energy of the probe particle parsed from this NexusFile.
         """
         return float(self.instrument.dcm1energy.value)
 
     @property
     def transmission(self):
         """
-        Returns the energy of the probe particle parsed from this NexusFile.
+        Proportional to the fraction of probe particles allowed by an attenuator
+        to strike the sample.
         """
-
         return float(self.instrument.filterset.transmission)
 
     @property
@@ -468,13 +457,13 @@ def i07_nxs_parser(file_path: str):
     axis = i07_nxs.default_axis
 
     # We have to load the Data according to what our independent variable is.
-    if i07_nxs.default_axis_description == 'q':
+    if i07_nxs.default_axis_type == 'q':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
                     q_vectors=axis)
-    elif i07_nxs.default_axis_description == 'th':
+    elif i07_nxs.default_axis_type == 'th':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
                     theta=axis)
-    elif i07_nxs.default_axis_description == 'tth':
+    elif i07_nxs.default_axis_type == 'tth':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
                     theta=axis/2)
 

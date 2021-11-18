@@ -33,11 +33,11 @@ class TestNexusBaseAttrTypes:
     to the structure of the nexus file are broken).
     """
 
-    def test_local_nxs_path(self, nexus_base):
+    def test_local_path(self, nexus_base):
         """
-        Make sure that we can access the local_nxs_path.
+        Make sure that we can access the local_path.
         """
-        assert isinstance(nexus_base.local_nxs_path, str)
+        assert isinstance(nexus_base.local_path, str)
 
     def test_nxfile(self, nexus_base):
         """
@@ -45,13 +45,13 @@ class TestNexusBaseAttrTypes:
         """
         assert isinstance(nexus_base.nxfile, nx.NXroot)
 
-    def test_src_nexus_path(self, nexus_base):
+    def test_src_path(self, nexus_base):
         """
-        Makes sure that our src_nexus_path can be acquired. Also make sure that
+        Makes sure that our src_path can be acquired. Also make sure that
         it isn't an empty string.
         """
-        assert isinstance(nexus_base.src_nxs_path, str)
-        assert len(nexus_base.src_nxs_path) != 0
+        assert isinstance(nexus_base.src_path, str)
+        assert len(nexus_base.src_path) != 0
 
     def test_entry(self, nexus_base):
         """
@@ -96,12 +96,12 @@ class TestNexusBaseAttrTypes:
         (lazy('i07_nexus_object_01'), lazy('path_to_i07_nxs_01'))
     ]
 )
-def test_local_nxs_path(nexus_base, path):
+def test_local_path(nexus_base, path):
     """
-    Make sure that the local_nxs_paths of our nexus_base objects are
+    Make sure that the local_paths of our nexus_base objects are
     correct.
     """
-    assert nexus_base.local_nxs_path == path
+    assert nexus_base.local_path == path
 
 
 @pytest.mark.parametrize(
@@ -113,14 +113,14 @@ def test_local_nxs_path(nexus_base, path):
          '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
     ]
 )
-def test_src_nxs_path(nexus_base, path):
+def test_src_path(nexus_base, path):
     """
     Checks that the parsed nxs path is correct. Worth noting that, when
     extending this test for more .nxs files, it's important to manually
-    scrape the src_nxs_path by parsing nxfile.tree, unless you already know
+    scrape the src_path by parsing nxfile.tree, unless you already know
     what value this will take (because, e.g., you just downloaded the file).
     """
-    assert nexus_base.src_nxs_path == path
+    assert nexus_base.src_path == path
 
 
 @pytest.mark.parametrize(
@@ -282,12 +282,12 @@ def test_detector_distance(i07_nexus: I07Nexus, detector_distance):
     'i07_nexus, description',
     [(lazy('i07_nexus_object_01'), 'q')]
 )
-def test_default_axis_description(i07_nexus: I07Nexus, description):
+def test_default_axis_type(i07_nexus: I07Nexus, description):
     """
     Make sure that we are correctly identifying the kind of axis data
     stored in the nexus file.
     """
-    assert i07_nexus.default_axis_description == description
+    assert i07_nexus.default_axis_type == description
 
 
 @pytest.mark.parametrize(
