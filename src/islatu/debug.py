@@ -1,4 +1,20 @@
+"""
+Islatu's simple Debug class.
+"""
+
+DEFAULT_LOG_LEVEL = 1
+
+
 class Debug:
+    """
+    A simple logger.
+
+    Attrs:
+        logging_level:
+            Current logging level. Higher means more unimportant messages will
+            be shown.
+    """
+
     def __init__(self, logging_level):
         self.logging_level = logging_level
 
@@ -16,3 +32,6 @@ class Debug:
         """
         if self.logging_level >= unimportance:
             print(log_string, **kwargs)
+
+
+debug = Debug(DEFAULT_LOG_LEVEL)
