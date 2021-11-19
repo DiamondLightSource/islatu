@@ -7,11 +7,15 @@ This module contains fixture definitions used when testing the islatu module.
 # redefined-outer-name only needs to be disabled once.
 # pylint: disable=redefined-outer-name
 
+# We need to test protected members too.
+# pylint: disable=protected-access
+
 import os
 import pytest
 import numpy as np
 
-from islatu.io import I07Nexus, i07_nxs_parser
+from islatu.io import I07Nexus, i07_nxs_parser, i07_dat_to_dict_dataframe
+from islatu.corrections import get_interpolator
 from islatu.data import Data, MeasurementBase
 from islatu.region import Region
 
@@ -32,6 +36,42 @@ def path_to_i07_nxs_01():
         "the pytest command is run from within the base islatu directory" +
         ", or from within the tests directory."
     )
+
+
+@pytest.fixture
+def path_to_dcd_normalisation_01():
+    """
+    Returns the path to the qdcd normalisation file corresponding to i07_nxs_01.
+    """
+    path_from_tests_dir = os.path.join("resources", "404863.dat")
+    if os.path.isdir('resources'):
+        return path_from_tests_dir
+    if os.path.isdir('tests') and os.path.isdir('src'):
+        return os.path.join("tests", path_from_tests_dir)
+
+    raise FileNotFoundError(
+        "Couldn't locate the tests/resources directory. Make sure that " +
+        "the pytest command is run from within the base islatu directory" +
+        ", or from within the tests directory."
+    )
+
+
+@pytest.fixture
+def parsed_dcd_normalisation_01(path_to_dcd_normalisation_01):
+    """
+    Returns the ([metadata] dict, [data] dataframe) relating to the first
+    dcd normalisation file.
+    """
+    return i07_dat_to_dict_dataframe(path_to_dcd_normalisation_01)
+
+
+@pytest.fixture
+def dcd_norm_01_splev(path_to_dcd_normalisation_01):
+    """
+    Returns the scipy splev corresponding to the first dcd normalisation file.
+    """
+    return get_interpolator(path_to_dcd_normalisation_01,
+                            i07_dat_to_dict_dataframe)
 
 
 @pytest.fixture
@@ -137,3 +177,11 @@ def measurement_base_01(path_to_i07_nxs_01, generic_data_01: Data):
     return MeasurementBase(generic_data_01.intensity,
                            generic_data_01.intensity_e, generic_data_01.energy,
                            i07_nxs_metadata, q=generic_data_01._q)
+
+
+@pytest.fixture
+def region_01():
+    """
+    Returns a fairly generic instance of islatu.region's Region class.
+    """
+    return Region(x_start=1056, x_end=1124, y_start=150, y_end=250)
