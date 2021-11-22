@@ -303,7 +303,7 @@ def test_ith_region_nxs_01(i07_nexus_object_01: I07Nexus,
     """
     Make sure that we can extract the ith region from i07_nexus_object_01.
     """
-    assert i07_nexus_object_01.get_ith_region(i) == ith_region
+    assert i07_nexus_object_01._get_ith_region(i) == ith_region
 
 
 def test_detector_name(i07_nexus_object_01: I07Nexus):

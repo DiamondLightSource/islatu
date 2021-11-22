@@ -190,7 +190,7 @@ class I07Nexus(NexusBase):
         if self.default_axis_name == 'diff1delta':
             return 'tth'
 
-    def get_ith_region(self, i: int):
+    def _get_ith_region(self, i: int):
         """
         Returns the ith region of interest found in the .nxs file.
 
@@ -216,7 +216,7 @@ class I07Nexus(NexusBase):
         Currently there is nothing better to do than assume that this is a list
         of length 1.
         """
-        return [self.get_ith_region(i=1)]
+        return [self._get_ith_region(i=1)]
 
     @property
     def background_regions(self) -> List[Region]:
@@ -225,7 +225,7 @@ class I07Nexus(NexusBase):
         Currently we just ignore the zeroth region and call the rest of them
         background regions.
         """
-        return [self.get_ith_region(i)
+        return [self._get_ith_region(i)
                 for i in range(2, self._number_of_regions+1)]
 
     @property
