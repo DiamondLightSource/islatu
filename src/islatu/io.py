@@ -147,6 +147,7 @@ class I07Nexus(NexusBase):
     This class extends NexusBase with methods useful for scraping information
     from nexus files produced at the I07 beamline at Diamond.
     """
+    excalibur_detector = "Excalibur"
 
     @property
     def local_data_path(self) -> str:
@@ -161,6 +162,16 @@ class I07Nexus(NexusBase):
         file = _try_to_find_files(
             [self._src_data_path], [self.local_path])[0]
         return file
+
+    @property
+    def detector_name(self) -> str:
+        """
+        Returns the name of the detector that we're using.
+        """
+        if "excroi" in self.entry:
+            return I07Nexus.excalibur_detector
+        # Couldn't recognise the detector.
+        raise NotImplementedError()
 
     @property
     def default_axis_name(self) -> str:
@@ -404,9 +415,15 @@ def i07_dat_to_dict_dataframe(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
-def load_images_from_h5(h5_file_path):
+def load_images_from_h5(h5_file_path, transpose=False):
     """
     Loads images from a .h5 file.
+
+    Args:
+        h5_file_path:
+            Path to the h5 file from which we're loading images.
+        transpose:
+            Should we take the transpose of these images? Defaults to True.
     """
     internal_data_path = 'data'
     images = []
@@ -418,9 +435,8 @@ def load_images_from_h5(h5_file_path):
         # Prepare to show a progress bar for image loading.
         debug.log(f"Loading {num_images} images.", unimportance=2)
         for i in range(num_images):
-            debug.log("Currently loaded " + str(i+1) +
-                      " images.",  end="\r")
-            images.append(Image(dataset[i]))
+            debug.log("Currently loaded " + str(i+1) + " images.",  end="\r")
+            images.append(Image(dataset[i], transpose=transpose))
         # This line is necessary to prevent overwriting due to end="\r".
         debug.log("")
         debug.log(f"Loaded all {num_images} images.", unimportance=2)
@@ -446,8 +462,10 @@ def i07_nxs_parser(file_path: str):
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
 
-    # Load the images.
-    images = load_images_from_h5(i07_nxs.local_data_path)
+    # Load the images, taking a transpose if necessary (because which axis is
+    # x and which is why is determined by fast vs slow detector axes in memory).
+    if i07_nxs.detector_name == I07Nexus.excalibur_detector:
+        images = load_images_from_h5(i07_nxs.local_data_path, transpose=True)
 
     # The dependent variable.
     rough_intensity = i07_nxs.default_signal
