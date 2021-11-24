@@ -10,21 +10,47 @@ class Region:
     """
 
     def __init__(self, x_start, x_end, y_start, y_end):
-        self.x_start = x_start
-        self.x_end = x_end
-        self.y_start = y_start
-        self.y_end = y_end
+
+        # Make sure that x_end > x_start, etc.
+        if x_end < x_start:
+            x_start, x_end = x_end, x_start
+        if y_end < y_start:
+            y_start, y_end = y_end, y_start
+
+        # These may be recorded as types other than int, but we really want
+        # these to be integers so they can be used to index objects.
+        self.x_start = int(x_start)
+        self.x_end = int(x_end)
+        self.y_start = int(y_start)
+        self.y_end = int(y_end)
 
     @property
     def x_length(self):
         """
         Returns the length of the region in the x-direction.
         """
-        return self.x_start - self.x_end
+        return self.x_end - self.x_start
 
     @property
     def y_length(self):
         """
         Returns the length of the region in the y-direction.
         """
-        return self.y_start - self.y_end
+        return self.y_end - self.y_start
+
+    @property
+    def num_pixels(self):
+        """
+        returns the number of pixels in the region.
+        """
+        return self.x_length * self.y_length
+
+    def __eq__(self, other):
+        """
+        Allows for equality checks to be made between instances of Region.
+        """
+        if not isinstance(other, Region):
+            return False
+
+        return self.x_start == other.x_start and self.x_end == other.x_end \
+            and self.y_start == other.y_start and self.y_end == other.y_end
