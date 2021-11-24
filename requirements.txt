@@ -1,9 +1,6 @@
 numpy
 scipy
-tqdm
 coverage
-coveralls
-pillow
 pandas
 pyyaml
 nexusformat
