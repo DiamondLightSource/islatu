@@ -8,6 +8,7 @@ import numpy as np
 
 from islatu.data import Data, MeasurementBase
 from islatu.io import I07Nexus
+from islatu.scan import Scan2D
 
 # Fairly obvious disable for testing: we also need to test protected attrs.
 # pylint: disable=protected-access
@@ -116,6 +117,95 @@ def test_conversion_to_th(generic_data_01: Data):
     # Online calculator derped for these numbers so rel is small. These things
     # are dumb and throw away significant figures just for kicks.
     assert generic_data_01.theta[1] == pytest.approx(0.4525, rel=1e-3)
+
+
+@pytest.mark.parametrize(
+    'data',
+    [lazy('generic_data_01'), lazy('generic_data_02'),
+     lazy('scan2d_from_nxs_01')]
+)
+def test_remove_data_points_01(data: Data):
+    """
+    First data point removal test.
+    """
+    # Make a deep copy of data. Worth noting that this copy won't quite be
+    # precise if our generic_data was defined using q values, hence the need for
+    # pytest.approx later.
+    data_copy = Data(np.copy(data.intensity),
+                     np.copy(data.intensity_e),
+                     data.energy, np.copy(data.theta))
+
+    # If our data is a Scan2D, we need to construct it slightly differently.
+    if isinstance(data, Scan2D):
+        data_copy = Scan2D(data_copy, data.metadata,
+                           list(np.copy(data.images)))
+    data.remove_data_points([1])
+
+    assert len(data.intensity) + 1 == len(data_copy.intensity)
+    assert len(data.intensity_e) + 1 == len(data_copy.intensity_e)
+    assert len(data.theta) + 1 == len(data_copy.theta)
+    assert len(data.q_vectors) + 1 == len(data_copy.q_vectors)
+    assert len(data.reflectivity) + 1 == len(data_copy.reflectivity)
+    assert len(data.reflectivity_e) + 1 == len(data_copy.reflectivity_e)
+    assert data.intensity[1] == data_copy.intensity[2]
+    assert data.intensity_e[1] == data_copy.intensity_e[2]
+    assert data.theta[1] == pytest.approx(data_copy.theta[2], rel=1e-3)
+    assert data.q_vectors[1] == pytest.approx(data_copy.q_vectors[2], rel=1e-3)
+    assert data.reflectivity[1] == data_copy.reflectivity[2]
+    assert data.reflectivity_e[1] == data_copy.reflectivity_e[2]
+
+    if isinstance(data, Scan2D):
+        assert len(data.images) + 1 == len(data_copy.images)
+        assert data.images[1] == data_copy.images[2]
+
+
+@pytest.mark.parametrize(
+    'data',
+    [lazy('generic_data_01'), lazy('generic_data_02'),
+     lazy('scan2d_from_nxs_01')]
+)
+def test_remove_data_points_02(data: Data):
+    """
+    Second data point removal test. Most of these tests are fairly trivial, but
+    the point is more to make sure that we're indeed remembering to remove
+    a data point from every single array. Sure, it would be great to split
+    these into their own tests, but... cba. These could also have been wrapped
+    into fancy tests where I calculate with code which indices in the new
+    data object correspond to which indices in the original data_copy. But, that
+    leaves room for error, which defeats the point of testing.
+    """
+    # Make a deep copy of data.
+    data_copy = Data(np.copy(data.intensity),
+                     np.copy(data.intensity_e),
+                     data.energy, np.copy(data.theta))
+    # If our data is a Scan2D, we need to construct it slightly differently.
+    if isinstance(data, Scan2D):
+        data_copy = Scan2D(data_copy, data.metadata,
+                           list(np.copy(data.images)))
+    data.remove_data_points([1, 2, 4])
+
+    assert len(data.intensity) + 3 == len(data_copy.intensity)
+    assert len(data.intensity_e) + 3 == len(data_copy.intensity_e)
+    assert len(data.theta) + 3 == len(data_copy.theta)
+    assert len(data.q_vectors) + 3 == len(data_copy.q_vectors)
+    assert len(data.reflectivity) + 3 == len(data_copy.reflectivity)
+    assert len(data.reflectivity_e) + 3 == len(data_copy.reflectivity_e)
+    assert data.intensity[1] == data_copy.intensity[3]
+    assert data.intensity_e[1] == data_copy.intensity_e[3]
+    assert data.theta[1] == pytest.approx(data_copy.theta[3], rel=1e-3)
+    assert data.q_vectors[1] == pytest.approx(data_copy.q_vectors[3], rel=1e-3)
+    assert data.reflectivity[1] == data_copy.reflectivity[3]
+    assert data.reflectivity_e[1] == data_copy.reflectivity_e[3]
+    assert data.intensity[2] == data_copy.intensity[5]
+    assert data.intensity_e[2] == data_copy.intensity_e[5]
+    assert data.theta[2] == pytest.approx(data_copy.theta[5], rel=1e-3)
+    assert data.q_vectors[2] == pytest.approx(data_copy.q_vectors[5], rel=1e-3)
+    assert data.reflectivity[2] == data_copy.reflectivity[5]
+    assert data.reflectivity_e[2] == data_copy.reflectivity_e[5]
+    if isinstance(data, Scan2D):
+        assert len(data.images) + 3 == len(data_copy.images)
+        assert data.images[1] == data_copy.images[3]
+        assert data.images[2] == data_copy.images[5]
 
 
 def test_measurement_base_metadata_type(measurement_base_01):

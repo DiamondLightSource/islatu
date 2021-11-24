@@ -18,6 +18,7 @@ from islatu.io import I07Nexus, i07_nxs_parser, i07_dat_to_dict_dataframe
 from islatu.corrections import get_interpolator
 from islatu.data import Data, MeasurementBase
 from islatu.region import Region
+from islatu.refl_profile import Profile
 
 
 @pytest.fixture
@@ -26,6 +27,24 @@ def path_to_i07_nxs_01():
     Returns the path to an i07 nexus file. If it can't be found, raises.
     """
     path_from_tests_dir = os.path.join("resources", "i07-404876.nxs")
+    if os.path.isdir('resources'):
+        return path_from_tests_dir
+    if os.path.isdir('tests') and os.path.isdir('src'):
+        return os.path.join("tests", path_from_tests_dir)
+
+    raise FileNotFoundError(
+        "Couldn't locate the tests/resources directory. Make sure that " +
+        "the pytest command is run from within the base islatu directory" +
+        ", or from within the tests directory."
+    )
+
+
+@pytest.fixture
+def path_to_i07_nxs_02():
+    """
+    Returns the path to a second i07 nexus file. If it cant be found, raises.
+    """
+    path_from_tests_dir = os.path.join("resources", "i07-404877.nxs")
     if os.path.isdir('resources'):
         return path_from_tests_dir
     if os.path.isdir('tests') and os.path.isdir('src'):
@@ -127,12 +146,36 @@ def bkg_regions_01():
 
 
 @pytest.fixture
+def custom_bkg_region_01():
+    """
+    Returns a decent background regions, specifically chosen for scan_01.
+    """
+    return Region(1340, 1420, 220, 300)
+
+
+@pytest.fixture
 def scan2d_from_nxs_01(path_to_i07_nxs_01):
     """
     Uses the i07_nxs_parser to produce an instance of Scan2D from the given
     path.
     """
     return i07_nxs_parser(path_to_i07_nxs_01)
+
+
+@pytest.fixture
+def scan2d_from_nxs_01_copy(path_to_i07_nxs_01):
+    """
+    An exact copy of the above Scan2D instance. Useful to have in some tests.
+    """
+    return i07_nxs_parser(path_to_i07_nxs_01)
+
+
+@pytest.fixture
+def scan_02(path_to_i07_nxs_02):
+    """
+    Returns another scan at higher q.
+    """
+    return i07_nxs_parser(path_to_i07_nxs_02)
 
 
 @pytest.fixture
@@ -185,3 +228,20 @@ def region_01():
     Returns a fairly generic instance of islatu.region's Region class.
     """
     return Region(x_start=1056, x_end=1124, y_start=150, y_end=250)
+
+
+@pytest.fixture
+def profile_01(path_to_i07_nxs_01):
+    """
+    Returns an instance of the Profile class that containts just scan_01.
+    """
+    return Profile.fromfilenames([path_to_i07_nxs_01], i07_nxs_parser)
+
+
+@pytest.fixture
+def profile_0102(path_to_i07_nxs_01, path_to_i07_nxs_02):
+    """
+    Returns an instance of the Profile class that contains scan_01 and scan_02.
+    """
+    return Profile.fromfilenames([path_to_i07_nxs_01, path_to_i07_nxs_02],
+                                 i07_nxs_parser)
