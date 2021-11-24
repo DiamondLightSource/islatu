@@ -4,9 +4,6 @@ These functions facilitate this, including the footprint and
 DCD q-variance corrections.
 """
 
-# Copyright (c) Andrew R. McCluskey
-# Distributed under the terms of the MIT License
-# author: Andrew R. McCluskey (andrew.mccluskey@diamond.ac.uk)
 
 import numpy as np
 from scipy.stats import norm
@@ -19,23 +16,18 @@ def footprint_correction(beam_width, sample_size, theta):
     scattering geometry, where the beam is Gaussian in shape.
 
     Args:
-        beam_width (:py:attr:`float`): 
+        beam_width (:py:attr:`float`):
             Width of incident beam, in metres.
-        sample_size (:py:attr:`float`): 
+        sample_size (:py:attr:`float`):
             Width of sample in the dimension of the beam, in metres.
-        theta (:py:attr:`float`): 
+        theta (:py:attr:`float`):
             Incident angle, in degrees.
 
     Returns:
-        (:py:attr:`float`): 
-            Correction factor.
+        Array of correction factors.
     """
-    # Deal with [the trivial point] theta being exactly 0.
-    for i in range(len(theta)):
-        if theta[i] == 0:
-            # The footprint correction for theta=0 is infinite, so just choose
-            # a small value. Theta=0 data is trivial anyway.
-            theta[i] = 1 * 10**(-3)
+    # Deal with the [trivial] theta=0 case.
+    theta = np.array([10**(-3) if t == 0 else t for t in theta])
 
     beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
     projected_beam_sd = beam_sd / np.sin(np.radians(theta))
