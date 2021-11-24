@@ -20,7 +20,6 @@ import numpy as np
 import h5py
 
 
-from .iterator import _get_iterator
 from .scan import Scan2D
 from .image import Image
 from .data import Data
@@ -528,8 +527,7 @@ def _try_to_find_files(filenames: List[str],
             local_start_directories.append(extra_path)
 
     # This line allows for a loading bar to show as we check the file.
-    iterator = _get_iterator(filenames, False)
-    for i in iterator:
+    for i, _ in enumerate(filenames):
         # Better to be safe... Note: windows is happy with / even though it
         # defaults to \
         filenames[i] = str(filenames[i]).replace('\\', '/')
