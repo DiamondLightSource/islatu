@@ -22,57 +22,43 @@ from islatu.refl_profile import Profile
 
 
 @pytest.fixture
-def path_to_i07_nxs_01():
+def path_to_resources():
+    """
+    Returns the path to the resources folder.
+    """
+    if os.path.isdir("resources"):
+        return "resources" + os.sep
+    if os.path.isdir("tests") and os.path.isdir("src"):
+        return "tests" + os.sep + "resources" + os.sep
+    raise FileNotFoundError(
+        "Couldn't locate the tests/resources directory. Make sure that " +
+        "the pytest command is run from within the base islatu directory" +
+        ", or from within the tests directory."
+    )
+
+
+@pytest.fixture
+def path_to_i07_nxs_01(path_to_resources):
     """
     Returns the path to an i07 nexus file. If it can't be found, raises.
     """
-    path_from_tests_dir = os.path.join("resources", "i07-404876.nxs")
-    if os.path.isdir('resources'):
-        return path_from_tests_dir
-    if os.path.isdir('tests') and os.path.isdir('src'):
-        return os.path.join("tests", path_from_tests_dir)
-
-    raise FileNotFoundError(
-        "Couldn't locate the tests/resources directory. Make sure that " +
-        "the pytest command is run from within the base islatu directory" +
-        ", or from within the tests directory."
-    )
+    return os.path.join(path_to_resources, "i07-404876.nxs")
 
 
 @pytest.fixture
-def path_to_i07_nxs_02():
+def path_to_i07_nxs_02(path_to_resources):
     """
     Returns the path to a second i07 nexus file. If it cant be found, raises.
     """
-    path_from_tests_dir = os.path.join("resources", "i07-404877.nxs")
-    if os.path.isdir('resources'):
-        return path_from_tests_dir
-    if os.path.isdir('tests') and os.path.isdir('src'):
-        return os.path.join("tests", path_from_tests_dir)
-
-    raise FileNotFoundError(
-        "Couldn't locate the tests/resources directory. Make sure that " +
-        "the pytest command is run from within the base islatu directory" +
-        ", or from within the tests directory."
-    )
+    return os.path.join(path_to_resources, "i07-404877.nxs")
 
 
 @pytest.fixture
-def path_to_dcd_normalisation_01():
+def path_to_dcd_normalisation_01(path_to_resources):
     """
     Returns the path to the qdcd normalisation file corresponding to i07_nxs_01.
     """
-    path_from_tests_dir = os.path.join("resources", "404863.dat")
-    if os.path.isdir('resources'):
-        return path_from_tests_dir
-    if os.path.isdir('tests') and os.path.isdir('src'):
-        return os.path.join("tests", path_from_tests_dir)
-
-    raise FileNotFoundError(
-        "Couldn't locate the tests/resources directory. Make sure that " +
-        "the pytest command is run from within the base islatu directory" +
-        ", or from within the tests directory."
-    )
+    return os.path.join(path_to_resources, "404863.dat")
 
 
 @pytest.fixture
@@ -94,22 +80,11 @@ def dcd_norm_01_splev(path_to_dcd_normalisation_01):
 
 
 @pytest.fixture
-def path_to_i07_h5_01():
+def path_to_i07_h5_01(path_to_resources):
     """
     Returns the path to an i07 h5 file. If it can't be found, raises.
     """
-    path_from_tests_dir = os.path.join(
-        "resources", "excaliburScan404876_000001.h5")
-    if os.path.isdir('resources'):
-        return path_from_tests_dir
-    if os.path.isdir('tests') and os.path.isdir('src'):
-        return os.path.join("tests", path_from_tests_dir)
-
-    raise FileNotFoundError(
-        "Couldn't locate the tests/resources directory. Make sure that " +
-        "the pytest command is run from within the base islatu directory" +
-        ", or from within the tests directory."
-    )
+    return os.path.join(path_to_resources, "excaliburScan404876_000001.h5")
 
 
 @pytest.fixture
@@ -245,3 +220,24 @@ def profile_0102(path_to_i07_nxs_01, path_to_i07_nxs_02):
     """
     return Profile.fromfilenames([path_to_i07_nxs_01, path_to_i07_nxs_02],
                                  i07_nxs_parser)
+
+
+@pytest.fixture
+def old_dcd_data(path_to_resources):
+    """
+    Returns a np.ndarray of the data as processed by islatu prior to a
+    substantial refactor. This old DCD data was confirmed to be correctly
+    reduced by beamline staff.
+    """
+    return np.loadtxt(os.path.join(
+        path_to_resources, "XRR_404875_dcd_template2021-11-01_15h35m02s.dat"))
+
+
+@pytest.fixture
+def process_xrr_path(path_to_resources):
+    """
+    Uses relative pathfinding to return a valid path to process_xrr.py
+    """
+    return os.path.join(
+        path_to_resources, '../../CLI/process_xrr.py'
+    )
