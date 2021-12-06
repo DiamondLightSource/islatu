@@ -51,17 +51,18 @@ def roi_subtraction(image, list_of_regions: List[Region]):
         image:
             The islatu.image.Image object from which we should subtract
             background from.
-        list_of_rois:
-            A list of dictionaries taking the form:
-                [{'y_start': y1, 'y_end': y2, 'x_start': x1, 'x_end': x2}, ... ]
-            where each dictionary specifies the coordinates of the corners of a
-            rectangle containing a fair Poissonian measurement of the background
-            level.
+        list_of_regions:
+            A list of instances of the Regions class corresponding to background
+            regions.
     """
     # We're going to need to count all intensity in all the background, as well
     # as the number of pixels used in our measurement of the background.
     sum_of_bkg_areas = 0
     total_num_pixels = 0
+
+    # Make sure we've been given multiple regions. If not, np: make a list.
+    if isinstance(list_of_regions, Region):
+        list_of_regions = [list_of_regions]
 
     # Add up all the intensity in all the pixels.
     for region in list_of_regions:
@@ -170,7 +171,7 @@ def fit_gaussian_1d(image: Image, params_0=None, bounds=None, axis=0):
     fit_info = FitInfo(fit_popt_pcov[0], fit_popt_pcov[1], univariate_normal)
 
     # Determine uncertainty from covarience matrix.
-    # Note: the stddev of the fit Gaussian can be accessed via popt[1]
+    # Note: the stddev of the fit Gaussian can be accessed via popt[1].
     p_sigma = np.sqrt(np.diag(fit_info.pcov))
 
     return BkgSubInfo(fit_info.popt[2], p_sigma[2], fit_gaussian_1d, fit_info)
