@@ -1,80 +1,101 @@
+"""
+This module contains functions whose purpose is simply to use the islatu
+library to process data acquired from a specific instrument.
+"""
+
+from dataclasses import dataclass
+from typing import List
+from os import path
+import os
+from datetime import datetime
+from ast import literal_eval as make_tuple
+
+
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+from yaml import load, dump
+import numpy as np
+
+import islatu
 from islatu import background
 from islatu import corrections
 from islatu import cropping
-from islatu import image
 from islatu import io
+from islatu.region import Region
 from islatu.io import i07_dat_to_dict_dataframe
 from islatu.refl_profile import Profile
-from islatu import stitching
-from islatu import __version__
-from islatu.debug import Debug
-from yaml import load, dump
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
-import datetime
-import os
-from os import path
-from ast import literal_eval as make_tuple
-import numpy as np
-
-function_map = {'gaussian_1d': background.fit_gaussian_1d,
-                'roi_subtraction': None,
-                'area': None,
-                'i07': io.i07_nxs_parser,
-                'crop': cropping.crop_2d,
-                'crop_peak': cropping.crop_around_peak_2d,
-                }
+from islatu.debug import debug
 
 
+# This could be done by reflection, but it feels slightly less arcane to use
+# this kind of function map. It also gives these scripts a little more
+# flexibility.
+function_map = {
+    'roi_subtraction': background.roi_subtraction,
+    'i07': io.i07_nxs_parser,
+    'crop': cropping.crop_to_region
+}
+
+
+@dataclass
 class Creator:
-    def __init__(self, name='Unknown', affiliation='Unknown'):
-        self.name = name
-        self.affiliation = affiliation
-        self.time = datetime.datetime.now()
+    """
+    Simple dataclass to store information relating to the person that created
+    this dataset.
+    """
+    name: str = 'Unknown'
+    affiliation: str = 'Unknown'
+    time: datetime = datetime.now()
 
 
+@dataclass
 class Origin:
-    def __init__(self, contact='My Local Contact', facility='Diamond Light Source', id=None,
-                 title=None, directory_path=None):
-        self.contact = contact
-        self.facility = facility
-        self.id = id
-        self.date = str(datetime.datetime.now())
-        self.year = None
-        self.title = title
-        self.directory_path = directory_path
+    """
+    Simple dataclass to store information relating to the experiment.
+    """
+    contact: str = 'My local contact'
+    facility: str = 'Diamond Light Source'
+    id: str = None
+    title: str = None
+    directory_path: str = None
+    date: str = str(datetime.now())
+    year: str = None
 
 
+@dataclass
 class Measurement:
-    def __init__(self, scheme='q-dispersive',
-                 q_range=[str(-np.inf), str(np.inf)],
-                 theta_axis_name='dcdtheta', q_axis_name='qdcd',
-                 transpose=False, qz_dimension=1, qxy_dimension=0,
-                 pixel_max=1e6, hot_pixel_max=1e5):
-        self.scheme = scheme
-        self.q_range = q_range
-        self.theta_axis_name = theta_axis_name
-        self.q_axis_name = q_axis_name
-        self.transpose = transpose
-        self.qz_dimension = qz_dimension
-        self.qxy_dimension = qxy_dimension
-        self.pixel_max = pixel_max
-        self.hot_pixel_max = hot_pixel_max
+    """
+    This dataclass stores measurement-specific metadata.
+    """
+    scheme: str = 'q-dispersive'
+    q_range: List[str] = (str(-np.inf), str(np.inf))
+    theta_axis_name: str = 'dcdtheta'
+    q_axis_name: str = 'qdcd'
+    transpose: bool = False
+    qz_dimension: int = 1
+    qxy_dimension: int = 0
 
 
+@dataclass
 class Experiment:
-    def __init__(self, instrument='i07', probe='xray', energy=12.5,
-                 measurement=Measurement(), sample=None):
-        self.instrument = instrument
-        self.probe = probe
-        self.energy = energy
-        self.measurement = measurement
-        self.sample = sample
+    """
+    This dataclass stores more instrument-specific metadata.
+    """
+    instrument: str = 'i07'
+    probe: str = 'x-ray'
+    energy: float = 12.5
+    measurement: Measurement = Measurement()
+    sample: str = None
 
 
 class DataSource:
+    """
+    This class stores information relating both to the experiment, and to the
+    data processor.
+    """
+
     def __init__(self, title, origin=Origin(), experiment=Experiment(),
                  links=None):
         self.origin = origin
@@ -83,30 +104,44 @@ class DataSource:
         self.links = links
 
 
+@dataclass
 class Software:
-    def __init__(self, name='islatu', link='https://islatu.readthedocs.io',
-                 version=__version__):
-        self.name = name
-        self.link = link
-        self.version = version
+    """
+    This dataclass stores information relating to the software used to carry
+    out the any reduction/processing steps (in this case, islatu of course).
+    """
+    name: str = 'islatu'
+    link: str = 'https://islatu.readthedocs.io'
+    version: str = islatu.__version__
 
 
+@dataclass
 class DataState:
-    def __init__(self):
-        self.background = None
-        self.resolution = None
-        self.dcd = None
-        self.transmission = None
-        self.intensity = None
-        self.rebinned = None
+    """
+    This class stores more reduction specific parameters.
+    """
+
+    background = None
+    resolution = None
+    dcd = None
+    transmission = None
+    intensity = None
+    rebinned = None
 
 
 class Reduction:
-    def __init__(self, software=Software(), input_files=[],
+    """
+    This class contains all of the information pertaining to data reduction
+    carried out on this reflectometry data.
+    """
+
+    def __init__(self, software=Software(), input_files=None,
                  data_state=DataState(), parser=io.i07_nxs_parser,
-                 crop_function=cropping.crop_around_peak_2d, crop_kwargs=None,
+                 crop_function=cropping.crop_to_region, crop_kwargs=None,
                  bkg_function=background.fit_gaussian_1d, bkg_kwargs=None,
                  dcd_normalisation=None, sample_size=None, beam_width=None):
+        if input_files is None:
+            input_files = []
         self.software = software
         self.input_files = input_files
         self.data_state = data_state
@@ -117,15 +152,20 @@ class Reduction:
         self.bkg_kwargs = bkg_kwargs
         self.dcd_normalisation = dcd_normalisation
         self.sample_size = sample_size
-        self.beam_width = None
+        self.beam_width = beam_width
 
 
 class Data:
-    def __init__(self,
-                 columns=['Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation',
-                          'sigma Qz / Aa^-1, standard deviation'],
-                 n_qvectors=50, q_min=None, q_max=None, q_step=None,
-                 q_shape='log'):
+    """
+    This class stores information pertaining to the data collected in the
+    experiment.
+    """
+
+    def __init__(self, columns=None, n_qvectors=50, q_min=None, q_max=None,
+                 q_step=None, q_shape='linear'):
+        if columns is None:
+            columns = ['Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation',
+                       'sigma Qz / Aa^-1, standard deviation']
         self.column_1 = columns[0]
         self.column_2 = columns[1]
         self.column_3 = columns[2]
@@ -143,12 +183,18 @@ class Data:
 
 
 class Foreperson:
+    """
+    This class brings together all of the above classes and dataclasses into
+    one big ball of yaml-able information.
+    """
+
     def __init__(self, run_numbers, yaml_file, directory, title):
         self.creator = Creator()
         self.data_source = DataSource(title)
         self.reduction = Reduction()
         self.data = Data()
-        y_file = open(yaml_file, 'r')
+        self.yaml_file = yaml_file
+        y_file = open(yaml_file, 'r', encoding='utf-8')
         recipe = load(y_file, Loader=Loader)
         y_file.close()
 
@@ -169,12 +215,16 @@ class Foreperson:
             self.directory_path + 'i07-' + str(r) + '.nxs' for r in run_numbers]
 
     def setup(self, recipe):
+        """
+        This is a McClusky special. I inherited it, and it works.
+        Don't ask questions.
+        """
         keys = recipe.keys()
         # Populate information from the visit section
         if 'visit' in keys:
             self.data_source.origin.id = recipe['visit']['visit id']
             if 'date' in recipe['visit'].keys():
-                self.data_source.origin.date = datetime.datetime.strptime(
+                self.data_source.origin.date = datetime.strptime(
                     str(recipe['visit']['date']), '%Y-%m-%d')
                 self.data_source.origin.year = self.data_source.origin.date.year
             if 'local contact' in recipe['visit'].keys():
@@ -186,8 +236,8 @@ class Foreperson:
                 self.creator.affiliation = recipe['visit']['user affiliation']
         else:
             raise ValueError(
-                "No visit given in {}. "
-                "You must at least give a visit id".format(yaml_file))
+                f"No visit given in {self.yaml_file}. " +
+                "You must at least give a visit id")
         # Populate informatio from the information section
         if 'instrument' in keys:
             self.data_source.experiment.instrument = recipe['instrument']
@@ -222,7 +272,7 @@ class Foreperson:
                     pass
             else:
                 raise ValueError("No sample size given in setup of {}.".format(
-                    yaml_file))
+                    self.yaml_file))
             if 'beam width' in recipe['setup'].keys():
                 self.reduction.beam_width = make_tuple(recipe[
                     'setup']['beam width'])
@@ -232,8 +282,9 @@ class Foreperson:
                 except TypeError:
                     pass
             else:
-                raise ValueError("No beam width given in setup of {}.".format(
-                    yaml_file))
+                raise ValueError(
+                    f"No beam width given in setup of {self.yaml_file}"
+                )
             if 'theta axis' in recipe['setup'].keys():
                 self.data_source.experiment.measurement.theta_axis_name = (
                     recipe['setup']['theta axis'])
@@ -253,7 +304,7 @@ class Foreperson:
                 self.data_source.experiment.measurement.hot_pixel_max = recipe[
                     'setup']['hot pixel max']
         else:
-            raise ValueError("No setup given in {}.".format(yaml_file))
+            raise ValueError(f"No setup given in {self.yaml_file}.")
         if 'output_columns' in keys:
             if recipe['output columns'] == 3:
                 self.data = Data(
@@ -270,35 +321,45 @@ class Foreperson:
                 if 'shape' in recipe['rebin'].keys():
                     self.data.q_shape = recipe['rebin']['shape']
             else:
-                raise ValueError("Please define parameters of "
-                                 "rebin in {}.".format(yaml_file))
+                raise ValueError("Please define parameters of " +
+                                 f"rebin in {self.yaml_file}.")
         else:
             self.data.rebin = False
 
 
+def log_processing_stage(processing_stage):
+    """
+        Simple function to make logging slightly neater.
+        """
+    debug.log("-" * 10)
+    debug.log(processing_stage, unimportance=0)
+    debug.log("-" * 10)
+
+
 def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
-              title='Unknown', log_lvl=1, filename=None,
+              title='Unknown', filename=None,
               q_subsample_dicts=None):
     """
     The runner that parses the yaml file and performs the data reduction.
 
-    run_numbers (:py:attr:`list` of :py:attr:`int`): 
+    run_numbers (:py:attr:`list` of :py:attr:`int`):
         Reflectometry scans that make up the profile.
-    yaml_file (:py:attr:`str`): 
-        File path to instruction set.
-    directory (:py:attr:`str`): 
+    yaml_file (:py:attr:`str`):
+        File path to yaml config file
+    directory (:py:attr:`str`):
         Outline for directory path.
-    title (:py:attr:`str`): 
+    title (:py:attr:`str`):
         A title for the experiment.
-    log_lvl: 
-        Degree of verbosity of logging requested.
-    q_subsample_dicts: 
+    filename:
+        Either a full path to the .dat file that will be produced by this
+        function, or a directory. If a directory is given, then the filename
+        will be automatically generated and the file will be placed in the
+        specified directory.
+    q_subsample_dicts:
         A list of dictionaries, which takes the form:
             [{'scan_ID': ID, 'q_min': q_min, 'q_max': q_max},...]
         where type(ID) = str, type(q_min)=float, type(q_max)=float.
     """
-    # First prepare our logger.
-    debug = Debug(log_lvl)
 
     # Make sure the directory is properly formatted.
     if not str(directory).endswith("/"):
@@ -310,113 +371,107 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     files_to_reduce = the_boss.reduction.input_files
 
-    debug.log("-" * 10)
-    debug.log('File Parsing', unimportance=0)
-    debug.log("-" * 10)
-    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,
-                                 log_lvl=log_lvl)
+    log_processing_stage("File parsing")
+    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
-    debug.log("-" * 10)
-    debug.log('Cropping', unimportance=0)
-    debug.log("-" * 10)
-    # Check to see if we should default to the ROI cropping regions
-    if ((the_boss.reduction.crop_function is cropping.crop_2d) and
+    log_processing_stage("Cropping")
+    # Currently, only crop_to_region is implemented.
+    if the_boss.reduction.crop_function is not cropping.crop_to_region and \
+            the_boss.reduction.crop_function is not None:
+        raise NotImplementedError(
+            "The only implemented cropping function is crop_to_region.")
+
+    # Check to see if we were given an explicit cropping region. If not, use
+    # the first (and likely only) signal region.
+    if (the_boss.reduction.crop_function is cropping.crop_to_region and
             the_boss.reduction.crop_kwargs is None):
+        roi = refl.scans[0].metadata.signal_regions[0]
+        the_boss.reduction.crop_kwargs = {'region': roi}
+        debug.log(f"Crop ROI '{str(roi)}' generated from the .nxs file.")
+    else:
         the_boss.reduction.crop_kwargs = {
-            'x_start': refl.scans[0].metadata.roi_1_x1,
-            'x_end': refl.scans[0].metadata.roi_1_x2,
-            'y_start': refl.scans[0].metadata.roi_1_y1,
-            'y_end': refl.scans[0].metadata.roi_1_y2
+            'region': Region(**the_boss.reduction.crop_kwargs)
         }
-        debug.log(
-            "Crop region of interest (ROI) generated from excalibur's ROI.",
-            unimportance=2)
-        debug.log("Generated cropping kwargs:" +
-                  str(the_boss.reduction.crop_kwargs), unimportance=2)
     refl.crop(the_boss.reduction.crop_function,
-              the_boss.reduction.crop_kwargs)
+              **the_boss.reduction.crop_kwargs)
 
-    debug.log("-" * 10)
-    debug.log('Subtracting Background', unimportance=0)
-    debug.log("-" * 10)
+    log_processing_stage("Subtracting background")
     # Before subtracting background, make sure that, by default, we're at least
     # trying to subtract background from roi_2.
-    if ((the_boss.reduction.bkg_function is None) and
-            (the_boss.reduction.bkg_kwargs is None)):
-        bkg_sub_kwargs = {
-            'x_start': refl.scans[0].metadata.roi_2_x1,
-            'x_end': refl.scans[0].metadata.roi_2_x2,
-            'y_start': refl.scans[0].metadata.roi_2_y1,
-            'y_end': refl.scans[0].metadata.roi_2_y2
-        }
-        the_boss.reduction.bkg_kwargs = bkg_sub_kwargs
-
+    if the_boss.reduction.bkg_function is background.roi_subtraction:
+        # Make sure we have the desired background regions.
+        if the_boss.reduction.bkg_kwargs is None:
+            the_boss.reduction.bkg_kwargs = {
+                'list_of_regions': refl.scans[0].metadata.background_regions}
+        else:
+            the_boss.reduction.bkg_kwargs = {
+                'list_of_regions': Region(**the_boss.reduction.bkg_kwargs)
+            }
+    else:
+        raise NotImplementedError(
+            "Tried to subtract background using not implemented method."
+        )
     refl.bkg_sub(the_boss.reduction.bkg_function,
-                 the_boss.reduction.bkg_kwargs)
+                 **the_boss.reduction.bkg_kwargs)
     the_boss.reduction.data_state.background = 'corrected'
 
-    debug.log("-" * 10)
-    debug.log('Performing Data Corrections', unimportance=0)
-    debug.log("-" * 10)
+    log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
+        log_processing_stage("DCD normalisation")
         itp = corrections.get_interpolator(
             the_boss.reduction.dcd_normalisation, i07_dat_to_dict_dataframe)
         refl.qdcd_normalisation(itp)
         the_boss.reduction.data_state.dcd = 'normalised'
-        debug.log("Carried out DCD intensity normalization")
+
+    log_processing_stage("Footprint correction.")
     refl.footprint_correction(
         the_boss.reduction.beam_width, the_boss.reduction.sample_size)
-    debug.log("Carried out footprint correction")
+    log_processing_stage("Transmission normalisation.")
     refl.transmission_normalisation()
-    debug.log("Corrected for changes in beam attenuation")
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
+
     if q_subsample_dicts is not None:
+        log_processing_stage(
+            "Doctoring data.\nSorry, I mean: Bounding q-vectors.")
         # We'll need to subsample a subset of our scans.
         for q_subsample_dict in q_subsample_dicts:
             refl.subsample_q(**q_subsample_dict)
         debug.log("Limited q-range on specified scans.")
 
-    debug.log("All correction steps completed for q-range: {}Å-{}Å.".format(
-        np.min(refl.q), np.max(refl.q)
-    ), unimportance=2)
-
+    # Rebin the data, if the user requested this.
     if the_boss.data.rebin:
-        debug.log("-" * 10)
-        debug.log('Rebinning the data.', unimportance=0)
-        debug.log("-" * 10)
+        log_processing_stage("Rebinning the data.")
         if the_boss.data.q_min is None:
             debug.log("Linearly rebinning data into " +
                       str(the_boss.data.n_qvectors) + " uniformly spaced " +
                       "points in q-space.", unimportance=2)
             refl.rebin(number_of_q_vectors=the_boss.data.n_qvectors)
         else:
-            if the_boss.data.q_space == 'linear':
+            if the_boss.data.q_shape == 'linear':
                 debug.log("Rebinning data linearly.", unimportance=2)
                 spacing = np.linspace
-            elif the_boss.data.q_space == 'log':
+            elif the_boss.data.q_shape == 'log':
                 debug.log("Rebinning data logarithmically", unimportance=2)
                 spacing = np.logspace
             debug.log(
-                "Spacing generated from " + str(refl.q.min()) + "Å to " +
-                str(refl.q.max()) + "Å.", unimportance=2
+                f"Spacing generated from {refl.q_vectors.min()}Å to " +
+                f"{refl.q_vectors.max()}Å.", unimportance=2
             )
-            refl.rebin(new_q=spacing(refl.q.min(), refl.q.max(),
+            refl.rebin(new_q=spacing(refl.q_vectors.min(), refl.q_vectors.max(),
                                      the_boss.data.q_step))
         the_boss.reduction.data_state.rebinned = the_boss.data.q_shape
 
     the_boss.data_source.experiment.measurement.q_range = [
-        str(refl.q.min()), str(refl.q.max())]
-    the_boss.data.n_qvectors = str(len(refl.R))
+        str(refl.q_vectors.min()), str(refl.q_vectors.max())]
+    the_boss.data.n_qvectors = str(len(refl.reflectivity))
 
     # Prepare the data array.
-    data = np.array([refl.q, refl.R, refl.R_e]).T
-    debug.log("XRR reduction completed. q-range: {}Å-{}Å.".format(
-        np.min(refl.q), np.max(refl.q)
-    ), unimportance=2)
+    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
+    debug.log("XRR reduction completed.", unimportance=2)
 
     # Work out where to save the file.
-    datetime_str = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
+    datetime_str = datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
     dat_filename = 'XRR_{}_'.format(
         run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
@@ -434,9 +489,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Write the data.
     np.savetxt(
-        filename, data,
-        header='{}\n Q(1/Å) R R_error'.format(dump(vars(the_boss))))
+        filename, data, header=f"{dump(vars(the_boss))}\n Q(1/Å) R R_error"
+    )
 
     debug.log("-" * 10)
-    debug.log('Reduced Data Stored at {}'.format(filename), unimportance=0)
+    debug.log(f"Reduced data stored at {filename}", unimportance=0)
     debug.log("-" * 10)
