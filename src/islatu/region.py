@@ -54,3 +54,7 @@ class Region:
 
         return self.x_start == other.x_start and self.x_end == other.x_end \
             and self.y_start == other.y_start and self.y_end == other.y_end
+
+    def __str__(self):
+        return f"x_start: {self.x_start}, x_end: {self.x_end}, " + \
+            f"y_start: {self.y_start}, y_end: {self.y_end}."
