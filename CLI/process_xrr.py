@@ -1,27 +1,20 @@
 #!/usr/bin/env python3
 
+
 "Command line interface for the Islatu library."
 
 import argparse
 import os
-from islatu.runner import i07reduce
-from islatu.debug import Debug
-
-
-class FileNotFoundError(Exception):
-    """
-    A simple exception to throw when we can't find a file.
-    """
 
 
 if __name__ == "__main__":
     # First deal with the parsing of the command line arguments using the
     # argparse library.
-    help_str = (
+    HELP_STR = (
         "Command line interface to the Islatu library's autoprocessing " +
         "functionality."
     )
-    parser = argparse.ArgumentParser(description=help_str)
+    parser = argparse.ArgumentParser(description=HELP_STR)
 
     # The most important argument is the path to the data. If this is not
     # provided, we'll assume that we're in the data directory. Note that the
@@ -29,84 +22,90 @@ if __name__ == "__main__":
     # behaviour implemented here is too complex in some cases to be replaced by
     # simple hardcoded values. Instead, default values are calculated after
     # parse_args is called.
-    help_str = (
+    HELP_STR = (
         "Path to the directory in which the data is stored. If this " +
         "is not specified, your current directory will be used."
     )
-    parser.add_argument("-d", "--data_path", help=help_str)
+    parser.add_argument("-d", "--data_path", help=HELP_STR)
 
-    help_str = (
+    HELP_STR = (
         "Path to the .yaml recipe file. " +
         "If this is not specified, this module will search your data " +
         "directory, and data_path/processing/, for a .yaml file."
     )
-    parser.add_argument("-y", "--yaml_path", help=help_str)
+    parser.add_argument("-y", "--yaml_path", help=HELP_STR)
 
-    help_str = (
+    HELP_STR = (
         "Use this flag if you are on site in diamond and would like your " +
         "data to be processed on a cluster. (19/10/2021) Note: this is " +
         "currently finicky; if you *need* to get this to work email " +
         "richard.brearton@diamond.ac.uk"
     )
-    parser.add_argument("-c", "--cluster", help=help_str, action="store_true")
+    parser.add_argument("-c", "--cluster", help=HELP_STR, action="store_true")
 
-    help_str = (
+    HELP_STR = (
         "Specify the first scan number to process. If this is not specified, " +
         "no lower bound on scan number will be placed on scans found in the " +
         "data directory. If neither lower nor upper bounds are placed, all  " +
         "scans found in the data directory will be used to construct a profile."
     )
-    parser.add_argument("-l", "--lower_bound", help=help_str, type=int)
+    parser.add_argument("-l", "--lower_bound", help=HELP_STR, type=int)
 
-    help_str = (
+    HELP_STR = (
         "Specify the final scan number to process. If this is not specified, " +
         "no upper bound will be placed on scan number for scans found in the " +
         "data directory."
     )
-    parser.add_argument("-u", "--upper_bound", help=help_str, type=int)
+    parser.add_argument("-u", "--upper_bound", help=HELP_STR, type=int)
 
-    help_str = (
+    HELP_STR = (
         "Directly specify the scan numbers to be used to construct the " +
         "profile. Simply sequentially list the scan numbers. Example usage: " +
         "python3 process_xrr.py --scan_numbers 401320 401321 401324 401326 " +
         "-d data/ -o processed_curves/. This argument overwrites -l and -u."
     )
     parser.add_argument("-N", "--scan_numbers",
-                        help=help_str, nargs='*', type=int)
+                        help=HELP_STR, nargs='*', type=int)
 
-    help_str = (
+    HELP_STR = (
         "Specify the directory in which you would like your processed " +
         "reflectivity curve to be stored. Defaults to data_path/processing/"
     )
-    parser.add_argument("-o", "--output", help=help_str)
+    parser.add_argument("-o", "--output", help=HELP_STR)
 
-    help_str = (
+    HELP_STR = (
         """
         Specify a list of scans whose q values should be limited, as well as the
         corresponding acceptable minimum and maximum q-values. For example:
             -Q 413243 0 0.4 413244 0.3 0.6 413248 0.8 inf
         Would ignore any q-values higher than 0.4 in scan 413243, would
         ignore any q-values smaller than 0.3 or larger than 0.6 in scan number
-        413244, and would ignore any q-values lower than 0.8 present in scan 
-        number 413248. As implied in the example, a value of 0 indicates 
-        "no lower limit" and a value of inf indicates "no upper limit". In 
+        413244, and would ignore any q-values lower than 0.8 present in scan
+        number 413248. As implied in the example, a value of 0 indicates
+        "no lower limit" and a value of inf indicates "no upper limit". In
         general, the numbers "413243" etc. given above must be unique to the
         name of the file from which the scan was parsed.
         """
     )
     parser.add_argument("-Q", "--limit_q",
-                        help=help_str, nargs='*', type=str)
+                        help=HELP_STR, nargs='*', type=str)
 
-    help_str = (
+    HELP_STR = (
         "Specify a list of "
     )
 
     # A switch to allow verbosity toggle.
-    help_str = "Increase output verbosity. -v = verbose, -vv = very verbose!"
-    parser.add_argument("-v", "--verbose", help=help_str, action="count")
+    HELP_STR = "Increase output verbosity. -v = verbose, -vv = very verbose!"
+    parser.add_argument("-v", "--verbose", help=HELP_STR, action="count")
 
     # Extract the arguments from the parser.
     args = parser.parse_args()
+
+    # Now we can import islatu. We need to do this after parsing args so that
+    # the -h/--help option doesn't get slowed down by bad load times in hdf5/
+    # nexusformat libs.
+    from islatu.runner import i07reduce
+    from islatu.debug import debug
 
     # Now we need to generate default values of inputs, where required.
     # Default to local dir.
@@ -131,26 +130,16 @@ if __name__ == "__main__":
     if args.verbose is None:
         args.verbose = 0
 
-    # Set our logger according to requested verbosity.
-    debug = Debug(args.verbose)
+    # Set islatu's logger to requested verbosity.
+    debug.logging_lvl = args.verbose
 
     # Now it's time to prepare to do some XRR reduction. If the user is in
     # diamond and wants to use a cluster, then we should go ahead and do that.
     if args.cluster:
-        # We'll need a list of scans if this is being run on site.
-        if args.scan_numbers is None:
-            args.scan_numbers = list(
-                range(args.lower_bound, args.upper_bound+1))
-
-        # We'll need to load the cluster submitter script.
-        from os import chdir
-        submitter_module_path = "/dls/i07/scripts/staffScripts/autoProcessing/"
-        chdir(submitter_module_path)
-        from dls_resubmitter_core import DlsResubmitterCore
-
-        # Now that everything is ready, submit the job.
-        DlsResubmitterCore().activemq_data_processing(args.data_path,
-                                                      args.scan_numbers)
+        raise NotImplementedError(
+            "Islatu currently only runs locally. If cluster submission is " +
+            "necessary, please contact richard.brearton@diamond.ac.uk"
+        )
 
     # If execution reaches here, we're processing the scan locally. First look
     # for the .yaml file if we weren't explicitly told where it is.
@@ -227,22 +216,22 @@ if __name__ == "__main__":
     if args.limit_q is not None:
         if len(args.limit_q) % 3 != 0:
             raise ValueError(
-                """
-                --limit_q must have a number of arguments passed to it that is 
-                a multiple of three. Instead, {} arguments were found. Please
-                use the pattern:
+                f"""
+                --limit_q must have a number of arguments passed to it that is
+                a multiple of three. Instead, {len(args.limit_q)} arguments were
+                found. Please use the pattern:
                     -L N1 qmin1 qmax1 N2 qmin2 qmax2 ...
                 where N1 is a scan number, qmin1 is the minimum q for the
-                scan with scan number N1, and qmax1 is the maximum acceptable q 
-                for the scan with scan number N1, etc.. Please refer to the 
-                --help for more information.                  
-                """.format(len(args.limit_q))
+                scan with scan number N1, and qmax1 is the maximum acceptable q
+                for the scan with scan number N1, etc.. Please refer to the
+                --help for more information.
+                """
             )
         # Okay, this is presumably properly formatted. Lets turn this into a
         # list of dictionaries that we can pass directly to the
         # profile.subsample_q method.
         q_subsample_dicts = []
-        for i in range(len(args.limit_q)):
+        for i, _ in enumerate(args.limit_q):
             if i % 3 == 0:
                 # We're on a new scan, so we'll need a new subsample dict.
                 q_subsample_dicts.append({})
@@ -267,5 +256,4 @@ if __name__ == "__main__":
     # numbers we'll construct the XRR curve from. This is all that we need: a
     # recipe and some data; let's go ahead and process the data on this machine.
     i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
-              log_lvl=args.verbose, filename=args.output,
-              q_subsample_dicts=args.limit_q)
+              filename=args.output, q_subsample_dicts=args.limit_q)
