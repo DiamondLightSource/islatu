@@ -14,6 +14,7 @@ These webpages include `API-level documentation`_ and information about some `wo
 Contributors
 ------------
 
+- `Richard Brearton`_
 - `Andrew R. McCluskey`_
 
 Acknowledgements
@@ -25,6 +26,7 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
 .. _API-level documentation: ./modules.html
 .. _workflows: ./workflows.html
 .. _Andrew R. McCluskey: https://www.armccluskey.com
+.. _Richard Brearton: https://scholar.google.com/citations?user=fD9zp0YAAAAJ&hl=en
 
 .. toctree::
    :hidden:
@@ -32,7 +34,6 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
 
    installation
    workflows
-   i07yaml
    modules
 
 Searching
