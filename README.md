@@ -4,12 +4,21 @@
 [![Build Status](https://travis-ci.org/arm61/islatu.svg?branch=master)](https://travis-ci.org/arm61/islatu)
 [![Coverage Status](https://coveralls.io/repos/github/arm61/islatu/badge.svg?branch=master)](https://coveralls.io/github/arm61/islatu?branch=master)
 
-X-ray reflectometry reduction from Diamond Light Source 
+X-ray reflectometry reduction from Diamond Light Source
 
-### Install 
+### Install
 
 ```
-python setup.py build 
-python setup.py install 
+python setup.py build
+python setup.py install
 pytest
+```
+
+### Documentation
+
+To generate documentation, make sure you have sphinx installed on your system.
+Go to the docs directory and run
+
+```
+make html
 ```
