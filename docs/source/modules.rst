@@ -7,7 +7,12 @@ API
    background
    corrections
    cropping
+   data
+   debug
    image
    io
-   refl_data
+   metadata
+   refl_profile
+   region
+   scan
    stitching
