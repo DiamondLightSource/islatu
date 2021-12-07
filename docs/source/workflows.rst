@@ -1,12 +1,9 @@
 Reduction workflows
 ===================
 
-Some typical data reduction workflows, that :py:mod:`islatu` can handle are shown here: 
+A typical data reduction workflow handled by :py:mod:`islatu` is shown here: 
 
 .. toctree::
    :maxdepth: 1
 
-   liquid_surface
-   vertical_geometry
-
-.. _Liquid surface: ./liquid_surface.html
+   i07_reflectivity
