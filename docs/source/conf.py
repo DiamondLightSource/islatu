@@ -47,7 +47,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.imgmath',
     'nbsphinx',
-    'jupyter_sphinx.execute'
+    'jupyter_sphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -193,12 +193,13 @@ todo_include_todos = True
 #html_logo = "logo/islatu_logo.png"
 #html_theme_options = {"logo_only": True}
 
+
 def setup(app):
     app.add_css_file('custom.css')
+
 
 # Looks for objects in external projects
 intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-    'uncertainties': ('https://uncertainties-python-package.readthedocs.io/en/latest/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None)
 }
