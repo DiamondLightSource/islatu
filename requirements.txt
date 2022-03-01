@@ -8,3 +8,5 @@ pytest
 pytest-lazy-fixture
 nbsphinx
 jupyter-sphinx
+jupyterlab
+ipywidgets
