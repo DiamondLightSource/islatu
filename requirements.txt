@@ -3,6 +3,7 @@ scipy
 coverage
 pandas
 pyyaml
+nbsphinx
 nexusformat
 pytest
 pytest-lazy-fixture
