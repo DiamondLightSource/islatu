@@ -12,3 +12,4 @@ jupyter-sphinx
 jupyterlab
 ipywidgets
 coverage==6.3.2
+pytest-cov
