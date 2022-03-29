@@ -12,7 +12,7 @@ with io.open(join(THIS_DIRECTORY, 'README.md')) as f:
 
 setup(
     name='islatu',
-    version='0.0.1',
+    version='1.0.0',
     license='Closed source idk',
     description='An example package. Generated with cookiecutter-pylibrary.',
     author='Richard Brearton',
