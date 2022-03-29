@@ -1,10 +1,13 @@
 # islatu
 
-[![Documentation Status](https://readthedocs.org/projects/islatu/badge/?version=latest)](https://islatu.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/arm61/islatu.svg?branch=master)](https://travis-ci.org/arm61/islatu)
-[![Coverage Status](https://coveralls.io/repos/github/arm61/islatu/badge.svg?branch=master)](https://coveralls.io/github/arm61/islatu?branch=master)
-
 X-ray reflectometry reduction from Diamond Light Source
+
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/RBrearton/islatu.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/RBrearton/islatu/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/RBrearton/islatu.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/RBrearton/islatu/context:python)
+[![codecov](https://codecov.io/gh/RBrearton/islatu/branch/master/graph/badge.svg?token=FGIV0MVHS8)](https://codecov.io/gh/RBrearton/islatu)
+[![Actions Status](https://github.com/RBrearton/islatu/workflows/pytest/badge.svg)](https://github.com/pytest/islatu/actions)
+[![Actions Status](https://github.com/RBrearton/islatu/workflows/Pylint/badge.svg)](https://github.com/pytest/islatu/actions)
+[![Documentation Status](https://readthedocs.org/projects/local-stats/badge/?version=latest)](https://local-stats.readthedocs.io/en/latest/?badge=latest)
 
 ### Install
 
