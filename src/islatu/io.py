@@ -7,6 +7,9 @@ Classes used to help make parsing more modular. These include the NexusBase
 class and its children.
 """
 
+# We've gotta access the _value attribute on some NXobjects.
+# pylint: disable=protected-access
+
 
 import json
 import os
@@ -223,8 +226,13 @@ class I07Nexus(NexusBase):
         if self.detector_name == I07Nexus.excalibur_detector_2021:
             return [self._get_ith_region(i=1)]
         if self.detector_name == I07Nexus.excalibur_04_2022:
-            json_str = self.instrument["ex_rois/excalibur_ROIs"]._value.decode(
-                "utf-8")
+            # Make sure our code executes for bytes and strings.
+            try:
+                json_str = self.instrument[
+                    "ex_rois/excalibur_ROIs"]._value.decode("utf-8")
+            except AttributeError:
+                json_str = self.instrument[
+                    "ex_rois/excalibur_ROIs"]._value
             # This is badly formatted and cant be loaded by the json lib. We
             # need to make a series of modifications.
             json_str = json_str.replace('u', '')
@@ -251,8 +259,13 @@ class I07Nexus(NexusBase):
             return [self._get_ith_region(i)
                     for i in range(2, self._number_of_regions+1)]
         if self.detector_name == I07Nexus.excalibur_04_2022:
-            json_str = self.instrument["ex_rois/excalibur_ROIs"]._value.decode(
-                "utf-8")
+            # Make sure our code executes for bytes and strings.
+            try:
+                json_str = self.instrument[
+                    "ex_rois/excalibur_ROIs"]._value.decode("utf-8")
+            except AttributeError:
+                json_str = self.instrument[
+                    "ex_rois/excalibur_ROIs"]._value
             # This is badly formatted and cant be loaded by the json lib. We
             # need to make a series of modifications.
             json_str = json_str.replace('u', '')
