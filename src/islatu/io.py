@@ -8,6 +8,7 @@ class and its children.
 """
 
 
+import json
 import os
 from typing import List
 from abc import abstractmethod
@@ -146,7 +147,8 @@ class I07Nexus(NexusBase):
     This class extends NexusBase with methods useful for scraping information
     from nexus files produced at the I07 beamline at Diamond.
     """
-    excalibur_detector = "Excalibur"
+    excalibur_detector_2021 = "excroi"
+    excalibur_04_2022 = "exr"
 
     @property
     def local_data_path(self) -> str:
@@ -165,10 +167,13 @@ class I07Nexus(NexusBase):
     @property
     def detector_name(self) -> str:
         """
-        Returns the name of the detector that we're using.
+        Returns the name of the detector that we're using. Because life sucks,
+        this is a function of time.
         """
         if "excroi" in self.entry:
-            return I07Nexus.excalibur_detector
+            return I07Nexus.excalibur_detector_2021
+        if "exr" in self.entry:
+            return I07Nexus.excalibur_04_2022
         # Couldn't recognise the detector.
         raise NotImplementedError()
 
@@ -215,7 +220,25 @@ class I07Nexus(NexusBase):
         Currently there is nothing better to do than assume that this is a list
         of length 1.
         """
-        return [self._get_ith_region(i=1)]
+        if self.detector_name == I07Nexus.excalibur_detector_2021:
+            return [self._get_ith_region(i=1)]
+        if self.detector_name == I07Nexus.excalibur_04_2022:
+            json_str = self.instrument["ex_rois/excalibur_ROIs"]._value.decode(
+                "utf-8")
+            # This is badly formatted and cant be loaded by the json lib. We
+            # need to make a series of modifications.
+            json_str = json_str.replace('u', '')
+            json_str = json_str.replace("'", '"')
+            json_str = json_str.replace('x', '"x"')
+            json_str = json_str.replace('y', '"y"')
+            json_str = json_str.replace('width', '"width"')
+            json_str = json_str.replace('height', '"height"')
+            json_str = json_str.replace('angle', '"angle"')
+
+            roi_dict = json.loads(json_str)
+            return [Region.from_dict(roi_dict['Region_1'])]
+
+        raise NotImplementedError()
 
     @property
     def background_regions(self) -> List[Region]:
@@ -224,8 +247,27 @@ class I07Nexus(NexusBase):
         Currently we just ignore the zeroth region and call the rest of them
         background regions.
         """
-        return [self._get_ith_region(i)
-                for i in range(2, self._number_of_regions+1)]
+        if self.detector_name == I07Nexus.excalibur_detector_2021:
+            return [self._get_ith_region(i)
+                    for i in range(2, self._number_of_regions+1)]
+        if self.detector_name == I07Nexus.excalibur_04_2022:
+            json_str = self.instrument["ex_rois/excalibur_ROIs"]._value.decode(
+                "utf-8")
+            # This is badly formatted and cant be loaded by the json lib. We
+            # need to make a series of modifications.
+            json_str = json_str.replace('u', '')
+            json_str = json_str.replace("'", '"')
+            json_str = json_str.replace('x', '"x"')
+            json_str = json_str.replace('y', '"y"')
+            json_str = json_str.replace('width', '"width"')
+            json_str = json_str.replace('height', '"height"')
+            json_str = json_str.replace('angle', '"angle"')
+
+            roi_dict = json.loads(json_str)
+            bkg_roi_list = list(roi_dict.values())[1:]
+            return [Region.from_dict(x) for x in bkg_roi_list]
+
+        raise NotImplementedError()
 
     @property
     def probe_energy(self):
@@ -463,7 +505,9 @@ def i07_nxs_parser(file_path: str):
 
     # Load the images, taking a transpose if necessary (because which axis is
     # x and which is why is determined by fast vs slow detector axes in memory).
-    if i07_nxs.detector_name == I07Nexus.excalibur_detector:
+    if i07_nxs.detector_name in [
+            I07Nexus.excalibur_detector_2021,
+            I07Nexus.excalibur_04_2022]:
         images = load_images_from_h5(i07_nxs.local_data_path, transpose=True)
 
     # The dependent variable.

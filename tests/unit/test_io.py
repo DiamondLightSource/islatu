@@ -310,11 +310,12 @@ def test_detector_name(i07_nexus_object_01: I07Nexus):
     """
     Make sure that we can properly extract the name of the detector.
     """
-    assert i07_nexus_object_01.detector_name == I07Nexus.excalibur_detector
+    assert i07_nexus_object_01.detector_name == I07Nexus.excalibur_detector_2021
 
 
 def test_excalibur_name():
     """
     Make sure that we're spelling the detector name properly!
     """
-    assert I07Nexus.excalibur_detector == "Excalibur"
+    assert I07Nexus.excalibur_detector_2021 == "excroi"
+    assert I07Nexus.excalibur_04_2022 == "exr"
