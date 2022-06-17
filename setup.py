@@ -10,11 +10,28 @@ THIS_DIRECTORY = abspath(dirname(__file__))
 with io.open(join(THIS_DIRECTORY, 'README.md')) as f:
     LONG_DESCRIPTION = f.read()
 
+REQUIREMENTS = [
+    "wheel",
+    "numpy",
+    "scipy",
+    "coverage",
+    "pandas",
+    "pyyaml",
+    "nexusformat",
+    "pytest",
+    "pytest-lazy-fixture",
+    "nbsphinx",
+    "jupyter-sphinx",
+    "jupyterlab",
+    "ipywidgets",
+    "pytest-cov",
+]
+
 setup(
     name='islatu',
     version='1.0.0',
     license='MIT',
-    description='An example package. Generated with cookiecutter-pylibrary.',
+    description='A package for the reduction of reflectometry data.',
     author='Richard Brearton',
     author_email='richardbrearton@gmail.com',
     long_description=LONG_DESCRIPTION,
@@ -38,19 +55,10 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: CPython',
-        # uncomment if you test on these interpreters:
-        # 'Programming Language :: Python :: Implementation :: PyPy',
-        # 'Programming Language :: Python :: Implementation :: IronPython',
-        # 'Programming Language :: Python :: Implementation :: Jython',
-        # 'Programming Language :: Python :: Implementation :: Stackless',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Scientific/Engineering :: Physics'
     ],
-    setup_requires=[
-        'cython', 'numpy', 'scipy', 'uncertainties', 'pillow', 'pandas'
-    ],
-    install_requires=[
-        'cython', 'numpy', 'scipy', 'uncertainties', 'pillow', 'pandas'
-    ],
+    setup_requires=REQUIREMENTS,
+    install_requires=REQUIREMENTS
 )
