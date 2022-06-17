@@ -540,6 +540,9 @@ def i07_nxs_parser(file_path: str):
     elif i07_nxs.default_axis_type == 'tth':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
                     theta=axis/2)
+    else:
+        raise NotImplementedError(
+            f"{i07_nxs.default_axis_type} is not a supported axis type.")
 
     # Returns the Scan2D object
     return Scan2D(data, i07_nxs, images)
