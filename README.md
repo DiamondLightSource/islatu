@@ -8,11 +8,28 @@ X-ray reflectometry reduction from Diamond Light Source
 
 ### Install
 
+This package can be easily installed using `pip install islatu`.
+
+### Installation from source
+
+To install in a fresh environment, first ensure that pip is available. For
+example, using conda:
+
 ```
-python setup.py build
-python setup.py install
-pytest
+conda create --name islatu
+conda activate islatu
+conda install pip
 ```
+
+Assuming that pip is available, installation of the library from source can be
+done by cloning this repository. Navigate to its directory and use pip to
+install this package and its dependencies as follows:
+
+```
+python -m pip install . -r requirements.txt
+```
+
+Make sure that your installation is functioning by running `pytest`.
 
 ### Documentation
 
