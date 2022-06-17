@@ -1,4 +1,4 @@
-MAJOR = 0
-MINOR = 1
-MICRO = 0
+MAJOR = 1
+MINOR = 0
+MICRO = 3
 __version__ = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
