@@ -13,11 +13,11 @@ These webpages include `API-level documentation`_ and information about some `wo
 
 Contributing
 ------------
-As with any coding project, there are many ways to contribue. To report a bug or suggest a feature, `open an issue on the github repository<https://github.com/RBrearton/islatu/issues>`_. If you would like to contribute code, we would recommend that you first `raise an issue<https://github.com/RBrearton/islatu/issues>`_ before diving into writing code, so we can let you know if we are working on something similar already. To e.g. fix typos in documentation or in the code, or for other minor changes, feel free to make pull requests directly.
+As with any coding project, there are many ways to contribue. To report a bug or suggest a feature, `open an issue on the github repository`_. If you would like to contribute code, we would recommend that you first `raise an issue`_ before diving into writing code, so we can let you know if we are working on something similar already. To e.g. fix typos in documentation or in the code, or for other minor changes, feel free to make pull requests directly.
 
 Contact us
 ----------
-If you need to contact the developers about anything, please either `raise an issue on the github repository<https://github.com/RBrearton/islatu/issues>`_ if appropriate, or send an email to richard.brearton@diamond.ac.uk.
+If you need to contact the developers about anything, please either `raise an issue on the github repository`_ if appropriate, or send an email to richard.brearton@diamond.ac.uk.
 
 Contributors
 ------------
@@ -31,6 +31,9 @@ Acknowledgements
 We acknowledge the support of the Ada Lovelace Centre – a joint initiative between the Science and Technology Facilities Council (as part of UK Research and Innovation), Diamond Light Source, and the UK Atomic Energy Authority, in the development of this software.
 
 .. _Diamond Light Source: https://www.diamond.ac.uk
+.. _open an issue on the github repository: https://github.com/RBrearton/islatu/issues
+.. _raise an issue: https://github.com/RBrearton/islatu/issues
+.. _raise an issue on the github repository: https://github.com/RBrearton/islatu/issues
 .. _API-level documentation: ./modules.html
 .. _workflows: ./workflows.html
 .. _command line interface: ./process_xrr.ipynb
