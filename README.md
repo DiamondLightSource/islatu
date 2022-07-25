@@ -33,7 +33,11 @@ Make sure that your installation is functioning by running `pytest`.
 
 ### Documentation
 
-To generate documentation, make sure you have sphinx installed on your system.
+The documentation for this package can be found at https://islatu.readthedocs.io/en/latest/
+
+An example of a typical data reduction workflow can be found at https://islatu.readthedocs.io/en/latest/i07_reflectivity.html
+
+To build the documentation, make sure you have sphinx installed on your system.
 Go to the docs directory and run
 
 ```
