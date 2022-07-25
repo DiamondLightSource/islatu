@@ -9,7 +9,11 @@ X-ray reflectometry reduction in Python
 :py:mod:`islatu` is an open-source pacakge for the reduction of x-ray reflectometry datasets.
 Currently, :py:mod:`islatu` is developed at and supports data from `Diamond Light Source`_, however we are happy to work with others to enable data from other sources (including neutron sources).
 
-These webpages include `API-level documentation`_ and information about some `workflows`_ that can be used for data reduction.
+These webpages include `API-level documentation`_ and information about some `workflows`_ that can be used for data reduction. There is also documentation on a `command line interface`_ that can be used to process reflectivity data without any python programming.
+
+Contact us
+----------
+If you notice any problems with either the documentation or the code itself, please either [raise an issue on the github repository](https://github.com/RBrearton/islatu/issues) or send an email to richard.brearton@diamond.ac.uk.
 
 Contributors
 ------------
@@ -25,6 +29,7 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
 .. _Diamond Light Source: https://www.diamond.ac.uk
 .. _API-level documentation: ./modules.html
 .. _workflows: ./workflows.html
+.. _command line interface: ./process_xrr.ipynb
 .. _Andrew R. McCluskey: https://www.armccluskey.com
 .. _Richard Brearton: https://scholar.google.com/citations?user=fD9zp0YAAAAJ&hl=en
 
@@ -34,6 +39,7 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
 
    installation
    workflows
+   process_xrr
    modules
 
 Searching
