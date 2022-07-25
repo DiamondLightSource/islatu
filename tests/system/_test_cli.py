@@ -35,6 +35,9 @@ def test_process_xrr_02(process_xrr_path, path_to_resources, tmp_path,
     )
 
     # Make sure no errors were thrown during reduction.
+    # This will only print if the assertion fails.
+    print(proc.stdout)
+    print(proc.stderr)
     assert proc.stdout.split('\n')[204].strip().startswith(
         "Reduced data stored at "
     )
@@ -55,11 +58,12 @@ def test_process_xrr_03(process_xrr_path, path_to_resources, tmp_path,
     yaml_path = path_to_resources + os.sep + "dcd.yaml"
     proc = subprocess.run(
         [process_xrr_path, '-d', path_to_resources, '-y', yaml_path,
-         '-o', tmp_path],
-        capture_output=True, text=True
-    )
+         '-o', tmp_path], capture_output=True, text=True)
 
     # Make sure no errors were thrown during reduction.
+    # This will only print if the assertion fails.
+    print(proc.stdout)
+    print(proc.stderr)
     assert proc.stdout.split('\n')[204].strip().startswith(
         "Reduced data stored at "
     )
