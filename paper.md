@@ -10,10 +10,10 @@ authors:
     orcid: 0000-0002-8204-3674
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
   - name: Andrew McCluskey
-    orcid:
+    orcid: 0000-0003-3381-5911
     affiliation: 3
   - name: Tim Snow
-    orcid:
+    orcid: 0000-0001-7146-6885
     affiliation: "1, 4"
 affiliations:
   - name: Diamond Light Source Ltd, Diamond House, Harwell Campus, Didcot, Oxfordshire, OX11 0DE, United Kingdom
