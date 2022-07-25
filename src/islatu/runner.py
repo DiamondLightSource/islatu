@@ -362,12 +362,12 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     """
 
     # Make sure the directory is properly formatted.
-    if not str(directory).endswith("/"):
-        directory = directory + "/"
+    if not str(directory).endswith(os.sep):
+        directory = directory + os.sep
     the_boss = Foreperson(run_numbers, yaml_file, directory, title)
 
     # Necessary to distnguish the same data processed by different pipelines.
-    yaml_pipeline_name = yaml_file.split("/")[-1][:-5]
+    yaml_pipeline_name = yaml_file.split(os.sep)[-1][:-5]
 
     files_to_reduce = the_boss.reduction.input_files
 
@@ -476,7 +476,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
         # Make sure that the processing directory exists.
-        processing_path = the_boss.directory_path + 'processing/'
+        processing_path = path.join(the_boss.directory_path, 'processing')
         if not os.path.exists(processing_path):
             os.makedirs(processing_path)
         # Now prepare the full path to the file
