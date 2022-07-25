@@ -110,10 +110,10 @@ if __name__ == "__main__":
     # Now we need to generate default values of inputs, where required.
     # Default to local dir.
     if args.data_path is None:
-        args.data_path = "./"
+        args.data_path = os.getcwd()
 
     # Default to data_path/processing/.
-    args.processing_path = args.data_path + "processing/"
+    args.processing_path = os.path.join(args.data_path, "processing")
 
     # Default to smallest possible scan number (0).
     if args.lower_bound is None:
@@ -148,9 +148,18 @@ if __name__ == "__main__":
                   "' and '" + args.processing_path + "'.")
 
         # Search in both the processing directory and the data directory.
-        files = [
-            args.processing_path + x for x in os.listdir(args.processing_path)]
+        files = []
+
+        # Only check in the processing directory if it actually exists.
+        if os.path.exists(args.processing_path):
+            files.extend([args.processing_path + x
+                          for x in os.listdir(args.processing_path)])
+
+        # The data_path should definitely exist. If it doesn't, we shouldn't be
+        # unhappy about an error being raised at this point.
         files.extend(os.listdir(args.data_path))
+
+        # Work out which of these files are .yaml files.
         yaml_files = [x for x in files if x.endswith(".yaml")]
         debug.log(".yaml files found: " + str(yaml_files))
 
