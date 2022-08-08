@@ -92,11 +92,11 @@ As there are many instruments worldwide being used to record reflectometry data,
 other packages exist that reduce reflectivity profiles. However, these packages
 tend to be specific to a technique or instrument and are often closed source.
 For example, the reduction of neutron reflectivity data is possible with
-`Mantid` [arnold2014mantid], but it is an enormous piece of software designed to
+`Mantid` [@arnold2014mantid], but it is an enormous piece of software designed to
 work specifically with neutron and muon-based techniques. In the x-ray world,
 manufacturers of laboratory x-ray sources typically develop their own
 closed-source solutions, such as Bruker's DIFFRAC.XRR package and Rigaku's
-x-ray reflectivity software [yasaka2010x].
+x-ray reflectivity software [@yasaka2010x].
 
 `islatu` was designed for use with two-dimensional detectors, but support for
 point detectors is complete and all reduction steps can be carried out with
