@@ -31,7 +31,7 @@ bibliography: paper.bib
 # Summary
 
 The interaction between light and matter provides a sensitive probe of the
-electronic structure of materials, on lengthscales determined by the difference
+electronic structure of materials, on length scales determined by the difference
 between the incident and outgoing wavevector of the light. Reflectometry
 techniques involve scattering off the surface of a material, placing a detector
 at a point such that any light reaching the detector must scatter through a
@@ -73,9 +73,9 @@ The final purpose of `islatu` is to simplify the handling of errors.
 In `islatu`, statistical errors are automatically calculated and efficiently
 propagated from the raw data to the reduced dataset using optimized
 `numpy` [@harris2020array] routines. Despite their fundamental simplicity,
-the propagation of uncertainties is error-prone. The assurance provided by
+the propagation of uncertainties is error prone. The assurance provided by
 unit tested error propagation gives scientists more time to focus on data
-analysis and less time spent worrying about re-implemening standard routines.
+analysis and less time spent worrying about re-implementing standard routines.
 
 # Overview
 
@@ -111,7 +111,7 @@ minimized). The other reduction methods can be used in entirely analogous ways,
 taking arguments where necessary, and using metadata scraped from the raw data
 files wherever possible.
 
-As well as the abovedescribed Python API, `islatu` also features a command-line
+As well as the above-described Python API, `islatu` also features a command-line
 interface. This application is used at the I07 beamline at Diamond
 [@nicklin2016diamond]
 to process reflectivity data immediately after acquisition. The command-line
