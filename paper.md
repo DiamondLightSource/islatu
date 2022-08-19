@@ -46,7 +46,14 @@ is small, as is the case in reflectivity experiments. Then, in addition to
 corrections that must be applied in any scattering experiment, the finite
 size of the sample will affect the intensity of the
 reflected beam, and it is often necessary to also correct for manual changes
-to the beam's attenuation.
+to the beam's attenuation. For the above reasons, all reflectivity experiments
+need at least some form of data reduction, with the exact requirements being
+experiment specific and often numerous. `islatu` provides a simple, performant
+and rigorously tested library and command-line interface for carrying out these
+correction steps, which aims to substantially simplify the process of converting
+instrument data to a reflectivity curve. This curve can then be analysed using
+one of the many widely available reflectivity fitting tools [@bjorck2007genx]
+[@nelson2019refnx] [@nelson2006co].
 
 # Statement of need
 
@@ -69,13 +76,21 @@ reduction as automatic as possible. For example, at large-scale facilities, to
 make the most of valuable beamtime, it is imperative that feedback on scans is
 given to users as quickly as possible after a scan has been performed.
 
-The final purpose of `islatu` is to simplify the handling of errors.
+The final purpose of `islatu` is to simplify the handling of uncertainties.
 In `islatu`, statistical errors are automatically calculated and efficiently
 propagated from the raw data to the reduced dataset using optimized
 `numpy` [@harris2020array] routines. Despite their fundamental simplicity,
 the propagation of uncertainties is error prone. The assurance provided by
 unit tested error propagation gives scientists more time to focus on data
 analysis and less time spent worrying about re-implementing standard routines.
+
+Conversion of raw instrument data to a meaningful reflectivity curve is not
+desirable, but an absolute requirement.
+Cutting corners or making mistakes at this stage in the data analysis process
+would result in physically incorrect values of roughnesses and thicknesses being
+derived from measurements.
+`islatu` needed to be written to address the demand for a lightweight,
+rigorously tested package that can carry out the above-described functions.
 
 # Overview
 
@@ -96,7 +111,12 @@ For example, the reduction of neutron reflectivity data is possible with
 work specifically with neutron and muon-based techniques. In the x-ray world,
 manufacturers of laboratory x-ray sources typically develop their own
 closed-source solutions, such as Bruker's DIFFRAC.XRR package and Rigaku's
-x-ray reflectivity software [@yasaka2010x].
+x-ray reflectivity software [@yasaka2010x]. Open source alternatives to
+`islatu` do exist, but tend to not share `islatu`'s focus of being highly
+scriptable (either on the command line or through python).
+`Reductus` [@maranville2018reductus], for example, is an excellent web-based
+reflectometry reduction tool, but its focus is on reducing neutron data via
+a graphical user interface.
 
 `islatu` was designed for use with two-dimensional detectors, but support for
 point detectors is complete and all reduction steps can be carried out with
@@ -120,6 +140,16 @@ number of mathematical operations required to propagate the errors is
 minimized). The other reduction methods can be used in entirely analogous ways,
 taking arguments where necessary, and using metadata scraped from the raw data
 files wherever possible.
+
+An example of `islatu` being used to carry out corrections on a profile can be
+found in \autoref{fig:corrections}.
+
+<center>
+  ![Visualization of the results of the reflectivity reduction process.
+  (a) The reflectivity profile associated with the raw data.
+  (b) The same data as in (a), after all relevant corrections have been applied.
+  \label{fig:corrections}](figures/corrections.png){ width=98% }
+</center>
 
 As well as the above-described Python API, `islatu` also features a command-line
 interface. This application is used at the I07 beamline at Diamond
