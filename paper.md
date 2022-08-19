@@ -52,8 +52,8 @@ experiment specific and often numerous. `islatu` provides a simple, performant
 and rigorously tested library and command-line interface for carrying out these
 correction steps, which aims to substantially simplify the process of converting
 instrument data to a reflectivity curve. This curve can then be analysed using
-one of the many widely available reflectivity fitting tools [@bjorck2007genx]
-[@nelson2019refnx] [@nelson2006co].
+one of the many widely available reflectivity fitting tools, such as
+[@bjorck2007genx], [@nelson2019refnx] and [@nelson2006co].
 
 # Statement of need
 
