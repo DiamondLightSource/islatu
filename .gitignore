@@ -1,0 +1,9 @@
+.eggs
+build
+CLI
+docs
+src
+tests
+dist
+*.dat
+.DS_Store
