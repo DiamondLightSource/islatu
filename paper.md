@@ -142,7 +142,12 @@ taking arguments where necessary, and using metadata scraped from the raw data
 files wherever possible.
 
 An example of `islatu` being used to carry out corrections on a profile can be
-found in \autoref{fig:corrections}.
+found in \autoref{fig:corrections}. In \autoref{fig:corrections}(a), the raw
+instrument data can be seen (the only analysis that was carried out prior to
+plotting was that $|\vec{Q}|$ was calculated for each image in the profile).
+The result of using `islatu` to apply corrections to the profile shown in
+\autoref{fig:corrections}(a) can be seen in \autoref{fig:corrections}(b) - this
+could now be analysed using a piece of fitting software.
 
 <center>
   ![Visualization of the results of the reflectivity reduction process.
