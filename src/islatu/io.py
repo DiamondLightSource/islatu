@@ -322,7 +322,8 @@ class I07Nexus(NexusBase):
             for key in nx_object:
                 new_obj = nx_object[key]
                 if key == "data":
-                    found_h5_files.append(new_obj.tree[8:-9])
+                    if new_obj.tree[8:-9].endswith(".h5"):
+                        found_h5_files.append(new_obj.tree[8:-9])
                 if str(new_obj).endswith(".h5"):
                     found_h5_files.append(str(new_obj))
                 if str(new_obj).endswith(".h5['/data']"):
