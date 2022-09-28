@@ -266,11 +266,6 @@ class I07Nexus(NexusBase):
             # need to make a series of modifications.
             json_str = json_str.replace('u', '')
             json_str = json_str.replace("'", '"')
-            json_str = json_str.replace('x', '"x"')
-            json_str = json_str.replace('y', '"y"')
-            json_str = json_str.replace('width', '"width"')
-            json_str = json_str.replace('height', '"height"')
-            json_str = json_str.replace('angle', '"angle"')
 
             roi_dict = json.loads(json_str)
             bkg_roi_list = list(roi_dict.values())[1:]
