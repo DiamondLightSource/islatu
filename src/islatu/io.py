@@ -233,15 +233,11 @@ class I07Nexus(NexusBase):
             except AttributeError:
                 json_str = self.instrument[
                     "ex_rois/excalibur_ROIs"]._value
+
             # This is badly formatted and cant be loaded by the json lib. We
             # need to make a series of modifications.
             json_str = json_str.replace('u', '')
             json_str = json_str.replace("'", '"')
-            json_str = json_str.replace('x', '"x"')
-            json_str = json_str.replace('y', '"y"')
-            json_str = json_str.replace('width', '"width"')
-            json_str = json_str.replace('height', '"height"')
-            json_str = json_str.replace('angle', '"angle"')
 
             roi_dict = json.loads(json_str)
             return [Region.from_dict(roi_dict['Region_1'])]
@@ -325,8 +321,12 @@ class I07Nexus(NexusBase):
             """
             for key in nx_object:
                 new_obj = nx_object[key]
+                if key == "data":
+                    found_h5_files.append(new_obj.tree[8:-9])
                 if str(new_obj).endswith(".h5"):
                     found_h5_files.append(str(new_obj))
+                if str(new_obj).endswith(".h5['/data']"):
+                    found_h5_files.append(str(new_obj)[:-9])
                 if isinstance(new_obj, nx.NXgroup):
                     recurse_over_nxgroups(new_obj, found_h5_files)
 
