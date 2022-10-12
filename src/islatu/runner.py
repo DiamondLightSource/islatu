@@ -34,7 +34,7 @@ from islatu.debug import debug
 # flexibility.
 function_map = {
     'roi_subtraction': background.roi_subtraction,
-    'None': None,
+    'None': lambda: None,
     'i07': io.i07_nxs_parser,
     'crop': cropping.crop_to_region
 }
@@ -408,12 +408,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             the_boss.reduction.bkg_kwargs = {
                 'list_of_regions': Region(**the_boss.reduction.bkg_kwargs)
             }
-    elif the_boss.reduction.bkg_function is None:
-        pass
     else:
-        raise NotImplementedError(
-            "Tried to subtract background using not implemented method."
-        )
+        print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
     refl.bkg_sub(the_boss.reduction.bkg_function,
                  **the_boss.reduction.bkg_kwargs)
     the_boss.reduction.data_state.background = 'corrected'
