@@ -34,7 +34,7 @@ from islatu.debug import debug
 # flexibility.
 function_map = {
     'roi_subtraction': background.roi_subtraction,
-    'None': lambda: None,
+    'None': None,
     'i07': io.i07_nxs_parser,
     'crop': cropping.crop_to_region
 }
@@ -410,9 +410,10 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             }
     else:
         print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
-    refl.bkg_sub(the_boss.reduction.bkg_function,
-                 **the_boss.reduction.bkg_kwargs)
-    the_boss.reduction.data_state.background = 'corrected'
+    if the_boss.reduction.bkg_function is not None:
+        refl.bkg_sub(the_boss.reduction.bkg_function,
+                     **the_boss.reduction.bkg_kwargs)
+        the_boss.reduction.data_state.background = 'corrected'
 
     log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
