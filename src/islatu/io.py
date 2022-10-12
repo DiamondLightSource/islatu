@@ -196,6 +196,10 @@ class I07Nexus(NexusBase):
             return 'q'
         if self.default_axis_name == 'diff1delta':
             return 'tth'
+        # It's also possible that self.default_axis_name isn't recorded in some
+        # nexus files. Just in case, let's check the length of diff1delta.
+        if isinstance(self.instrument["diff1delta"].value.nxdata, np.ndarray):
+            return 'tth'
 
     def _get_ith_region(self, i: int):
         """
