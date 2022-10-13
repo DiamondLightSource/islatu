@@ -375,6 +375,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     log_processing_stage("File parsing")
     refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
+    # Set the energy correctly.
+    the_boss.data_source.experiment.energy = refl.energy
+
     log_processing_stage("Cropping")
     # Currently, only crop_to_region is implemented.
     if the_boss.reduction.crop_function is not cropping.crop_to_region and \
