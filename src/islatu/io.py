@@ -194,6 +194,8 @@ class I07Nexus(NexusBase):
         """
         if self.default_axis_name == 'qdcd':
             return 'q'
+        if self.default_axis_name == 'diff1chi':
+            return 'th'  
         if self.default_axis_name == 'diff1delta':
             return 'tth'
         # It's also possible that self.default_axis_name isn't recorded in some
