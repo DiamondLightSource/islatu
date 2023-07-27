@@ -274,7 +274,7 @@ class I07Nexus(NexusBase):
             json_str = json_str.replace("'", '"')
 
             roi_dict = json.loads(json_str)
-            bkg_roi_list = list(roi_dict.values())[1:]
+            bkg_roi_list = list(roi_dict.values())[1:2]
             return [Region.from_dict(x) for x in bkg_roi_list]
 
         raise NotImplementedError()
