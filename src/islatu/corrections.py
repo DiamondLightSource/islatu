@@ -59,7 +59,7 @@ def get_interpolator(
             - :py:attr:`array_like`: B-spline coefficients.
             - :py:attr:`int`: Degree of spline.
     """
-    normalisation_data = parser(file_path)[1]
+    normalisation_data = parser(file_path)[1].sort_values(by='qdcd_')
     return splrep(
         normalisation_data[q_axis_name],
         normalisation_data[intensity_axis_name])
