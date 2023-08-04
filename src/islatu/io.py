@@ -302,7 +302,7 @@ class I07Nexus(NexusBase):
         return float(self.instrument.diff1detdist.value)
 
     @property
-    def nxfile=_src_data_path(self):
+    def _src_data_path(self):
         """
         Returns the raw path to the data file. This is useless if you aren't on
         site, but used by islatu to guess where you've stored the data file
