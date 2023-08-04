@@ -292,7 +292,13 @@ class I07Nexus(NexusBase):
         Proportional to the fraction of probe particles allowed by an attenuator
         to strike the sample.
         """
-        return float(self.instrument.filterset.transmission)
+        if 'filterset' in self.instrument:
+            return float(self.instrument.filterset.transmission)
+        elif 'fatt_filters' in self.instrument:
+            return float(self.instrument.fatt_filters.filter_transmissions[0])
+        else:
+            debug.log(f"\n No transmission value found in expected location, set transmission to 1 \n")
+            return float(1)
 
     @property
     def detector_distance(self):
@@ -314,7 +320,6 @@ class I07Nexus(NexusBase):
         # a pretty rubbish task. Here I just grab the first .h5 file I find
         # and run with it.
         found_h5_files = []
-        print(self.nxfile.tree)
 
         def recurse_over_nxgroups(nx_object, found_h5_files):
             """
