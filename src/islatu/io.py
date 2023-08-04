@@ -302,7 +302,7 @@ class I07Nexus(NexusBase):
         return float(self.instrument.diff1detdist.value)
 
     @property
-    def _src_data_path(self):
+    def nxfile=_src_data_path(self):
         """
         Returns the raw path to the data file. This is useless if you aren't on
         site, but used by islatu to guess where you've stored the data file
@@ -314,6 +314,7 @@ class I07Nexus(NexusBase):
         # a pretty rubbish task. Here I just grab the first .h5 file I find
         # and run with it.
         found_h5_files = []
+        print(self.nxfile.tree)
 
         def recurse_over_nxgroups(nx_object, found_h5_files):
             """
