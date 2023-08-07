@@ -401,7 +401,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     #DEBUGGING - save data at difference stages
     data = np.array([refl.reflectivity]).T
-    np.savetxt('/home/rpy65944/Documents/debugdata_crop.dat', data, header=f"R")
+    np.savetxt('/home/rpy65944/Documents/debugdata_crop.dat', data, header="R")
 
     log_processing_stage("Subtracting background")
     # Before subtracting background, make sure that, by default, we're at least
@@ -424,7 +424,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     #DEBUGGING - save data at difference stages
     data = np.array([refl.reflectivity]).T
-    np.savetxt('/home/rpy65944/Documents/debugdata_bkg.dat', data, header=f"R")
+    np.savetxt('/home/rpy65944/Documents/debugdata_bkg.dat', data, header="R")
 
     log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
@@ -436,7 +436,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     
     #DEBUGGING - save data at difference stages
     data = np.array([refl.reflectivity]).T
-    np.savetxt('/home/rpy65944/Documents/debugdata_corr.dat', data, header=f"R")
+    np.savetxt('/home/rpy65944/Documents/debugdata_corr.dat', data, header="R")
 
     log_processing_stage("Footprint correction.")
     refl.footprint_correction(
@@ -444,7 +444,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     
     #DEBUGGING - save data at difference stages
     data = np.array([refl.reflectivity]).T
-    np.savetxt('/home/rpy65944/Documents/debugdata_foot.dat', data, header=f"R")
+    np.savetxt('/home/rpy65944/Documents/debugdata_foot.dat', data, header="R")
 
 
     log_processing_stage("Transmission normalisation.")
@@ -453,7 +453,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     refl.concatenate()
     #DEBUGGING - save data at difference stages
     data = np.array([refl.reflectivity]).T
-    np.savetxt('/home/rpy65944/Documents/debugdata_trans.dat', data, header=f"R")
+    np.savetxt('/home/rpy65944/Documents/debugdata_trans.dat', data, header="R")
 
     if q_subsample_dicts is not None:
         log_processing_stage(
