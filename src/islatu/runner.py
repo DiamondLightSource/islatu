@@ -425,6 +425,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     #DEBUGGING - save data at difference stages
     data = np.array([refl.reflectivity]).T
     np.savetxt('/home/rpy65944/Documents/debugdata_bkg.dat', data, header="R")
+    log_processing_stage("SAVED DEBUGDATA_BKG.DAT")
 
     log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
