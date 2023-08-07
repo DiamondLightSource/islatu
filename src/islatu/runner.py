@@ -400,10 +400,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
               **the_boss.reduction.crop_kwargs)
 
     #DEBUGGING - save data at difference stages
-    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
-    np.savetxt(
-        '/home/rpy65944/Documents/debugdata_crop.dat', data, header=f"Q(1/Å) R R_error"
-    )
+    data = np.array([refl.reflectivity]).T
+    np.savetxt('/home/rpy65944/Documents/debugdata_crop.dat', data, header=f"R")
 
     log_processing_stage("Subtracting background")
     # Before subtracting background, make sure that, by default, we're at least
@@ -425,10 +423,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         the_boss.reduction.data_state.background = 'corrected'
 
     #DEBUGGING - save data at difference stages
-    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
-    np.savetxt(
-        '/home/rpy65944/Documents/debugdata_bkg.dat', data, header=f"Q(1/Å) R R_error"
-    )
+    data = np.array([refl.reflectivity]).T
+    np.savetxt('/home/rpy65944/Documents/debugdata_bkg.dat', data, header=f"R")
 
     log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
@@ -439,20 +435,16 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         the_boss.reduction.data_state.dcd = 'normalised'
     
     #DEBUGGING - save data at difference stages
-    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
-    np.savetxt(
-        '/home/rpy65944/Documents/debugdata_corrs.dat', data, header=f"Q(1/Å) R R_error"
-    )
+    data = np.array([refl.reflectivity]).T
+    np.savetxt('/home/rpy65944/Documents/debugdata_corr.dat', data, header=f"R")
 
     log_processing_stage("Footprint correction.")
     refl.footprint_correction(
         the_boss.reduction.beam_width, the_boss.reduction.sample_size)
     
     #DEBUGGING - save data at difference stages
-    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
-    np.savetxt(
-        '/home/rpy65944/Documents/debugdata_foot.dat', data, header=f"Q(1/Å) R R_error"
-    )
+    data = np.array([refl.reflectivity]).T
+    np.savetxt('/home/rpy65944/Documents/debugdata_foot.dat', data, header=f"R")
 
 
     log_processing_stage("Transmission normalisation.")
@@ -460,10 +452,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
     #DEBUGGING - save data at difference stages
-    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
-    np.savetxt(
-        '/home/rpy65944/Documents/debugdata_trans.dat', data, header=f"Q(1/Å) R R_error"
-    )
+    data = np.array([refl.reflectivity]).T
+    np.savetxt('/home/rpy65944/Documents/debugdata_trans.dat', data, header=f"R")
 
     if q_subsample_dicts is not None:
         log_processing_stage(
