@@ -294,8 +294,8 @@ class I07Nexus(NexusBase):
         """
         if 'filterset' in self.instrument:
             return float(self.instrument.filterset.transmission)
-        elif 'fatt_filters' in self.instrument:
-            return float(self.instrument.fatt_filters.filter_transmissions[0])
+        elif 'fatt' in self.instrument:
+            return float(self.instrument.fatt.transmission)
         else:
             debug.log(f"\n No transmission value found in expected location, set transmission to 1 \n")
             return float(1)
