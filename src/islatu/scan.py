@@ -57,8 +57,12 @@ class Scan(MeasurementBase):
         """
         Perform the transmission correction.
         """
-        self.intensity /= float(self.metadata.transmission)
-        self.intensity_e /= float(self.metadata.transmission)
+        if len(self.metadata.transmission)==1:
+            self.intensity /= float(self.metadata.transmission)
+            self.intensity_e /= float(self.metadata.transmission)
+        else:
+            self.intensity /= self.metadata.transmission
+            self.intensity_e /= self.metadata.transmission
 
     def qdcd_normalisation(self, itp):
         """
