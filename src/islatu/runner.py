@@ -490,7 +490,9 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     the_boss.data_source.experiment.measurement.q_range = [
         str(refl.q_vectors.min()), str(refl.q_vectors.max())]
     the_boss.data.n_qvectors = str(len(refl.reflectivity))
-
+    #DEBUGGING - save data at difference stages
+    data = np.array([refl.reflectivity]).T
+    np.savetxt('/home/rpy65944/Documents/debugdata_bin.dat', data, header="R")
 
 
     # Prepare the data array.
