@@ -17,11 +17,11 @@ As with any coding project, there are many ways to contribue. To report a bug or
 
 Contact us
 ----------
-If you need to contact the developers about anything, please either `raise an issue on the github repository`_ if appropriate, or send an email to richard.brearton@diamond.ac.uk.
+If you need to contact the developers about anything, please either `raise an issue on the github repository`_ if appropriate, or send an email to philip.mousley@diamond.ac.uk.
 
 Contributors
 ------------
-
+- `Philip Mousley`
 - `Richard Brearton`_
 - `Andrew R. McCluskey`_
 
