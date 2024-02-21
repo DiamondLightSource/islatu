@@ -311,7 +311,7 @@ class Foreperson:
                 self.data = Data(
                     columns=[
                         'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'])
-            if recipe['output columns'] == 34:
+            if recipe['output columns'] == 4:
                 self.data = Data(columns='both')
         if 'rebin' in keys:
             if 'n qvectors' in recipe['rebin'].keys():
