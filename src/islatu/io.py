@@ -152,6 +152,7 @@ class I07Nexus(NexusBase):
     """
     excalibur_detector_2021 = "excroi"
     excalibur_04_2022 = "exr"
+    pilatus_02_2024 = "PILATUS"
 
     @property
     def local_data_path(self) -> str:
@@ -164,7 +165,7 @@ class I07Nexus(NexusBase):
             FileNotFoundError if the data file cant be found.
         """
         file = _try_to_find_files(
-            [self._src_data_path], [self.local_path])[0]
+            [self._src_data_path[0]], [self.local_path])[0]
         return file
 
     @property
@@ -177,6 +178,8 @@ class I07Nexus(NexusBase):
             return I07Nexus.excalibur_detector_2021
         if "exr" in self.entry:
             return I07Nexus.excalibur_04_2022
+        if "PILATUS" in self.entry:
+            return I07Nexus.pilatus_02_2024
         # Couldn't recognise the detector.
         raise NotImplementedError()
 
@@ -198,10 +201,16 @@ class I07Nexus(NexusBase):
             return 'th'  
         if self.default_axis_name == 'diff1delta':
             return 'tth'
+
+        
         # It's also possible that self.default_axis_name isn't recorded in some
         # nexus files. Just in case, let's check the length of diff1delta.
         if isinstance(self.instrument["diff1delta"].value.nxdata, np.ndarray):
             return 'tth'
+        
+        #add in option for EH2 scanning alpha
+        if self.default_axis_name == 'diff2alpha_value_set':
+            return 'th'
 
     def _get_ith_region(self, i: int):
         """
@@ -247,6 +256,17 @@ class I07Nexus(NexusBase):
 
             roi_dict = json.loads(json_str)
             return [Region.from_dict(roi_dict['Region_1'])]
+        #add in similar option for pilatus option
+        if self.detector_name== I07Nexus.pilatus_02_2024:
+            try: 
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value.decode("utf-8")
+            except AttributeError:
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value
+            json_str = json_str.replace('u', '')
+            json_str = json_str.replace("'", '"')
+
+            roi_dict = json.loads(json_str)
+            return [Region.from_dict(roi_dict['Region_1'])]
 
         raise NotImplementedError()
 
@@ -276,7 +296,18 @@ class I07Nexus(NexusBase):
             roi_dict = json.loads(json_str)
             bkg_roi_list = list(roi_dict.values())[1:2]
             return [Region.from_dict(x) for x in bkg_roi_list]
-
+        #add in similar option for pilatus option
+        if self.detector_name== I07Nexus.pilatus_02_2024:
+            try: 
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value.decode("utf-8")
+            except AttributeError:
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value
+            json_str = json_str.replace('u', '')
+            json_str = json_str.replace("'", '"')
+            
+            roi_dict = json.loads(json_str)
+            bkg_roi_list = list(roi_dict.values())[1:2]
+            return [Region.from_dict(x) for x in bkg_roi_list]
         raise NotImplementedError()
 
     @property
@@ -295,7 +326,7 @@ class I07Nexus(NexusBase):
         if 'filterset' in self.instrument:
             return float(self.instrument.filterset.transmission)
         elif 'fatt' in self.instrument:
-            return np.array(self.instrument.fatt.transmission)
+            return np.array([self.instrument.fatt.transmission])
         else:
             debug.log(f"\n No transmission value found in expected location, set transmission to 1 \n")
             return float(1)
@@ -320,8 +351,9 @@ class I07Nexus(NexusBase):
         # a pretty rubbish task. Here I just grab the first .h5 file I find
         # and run with it.
         found_h5_files = []
+        datanxfilepaths=[]
 
-        def recurse_over_nxgroups(nx_object, found_h5_files):
+        def recurse_over_nxgroups(nx_object, found_h5_files,datanxfilepaths):
             """
             Recursively looks for nxgroups in nx_object that, when cast to a
             string, end in .h5.
@@ -329,18 +361,21 @@ class I07Nexus(NexusBase):
             for key in nx_object:
                 new_obj = nx_object[key]
                 if key == "data":
-                    if new_obj.tree[8:-9].endswith(".h5"):
-                        found_h5_files.append(new_obj.tree[8:-9])
+                    if isinstance(new_obj,nx.NXlink):
+                        found_h5_files.append(new_obj.nxfilename)
+                        datanxfilepaths.append(new_obj.nxfilepath)
+                    # if new_obj.tree[8:-9].endswith(".h5"):
+                    #     found_h5_files.append(new_obj.tree[8:-9])
                 if str(new_obj).endswith(".h5"):
                     found_h5_files.append(str(new_obj))
                 if str(new_obj).endswith(".h5['/data']"):
                     found_h5_files.append(str(new_obj)[:-9])
                 if isinstance(new_obj, nx.NXgroup):
-                    recurse_over_nxgroups(new_obj, found_h5_files)
+                    recurse_over_nxgroups(new_obj, found_h5_files,datanxfilepaths)
 
-        recurse_over_nxgroups(self.nxfile, found_h5_files)
+        recurse_over_nxgroups(self.nxfile, found_h5_files,datanxfilepaths)
 
-        return found_h5_files[0]
+        return np.array([found_h5_files[0],datanxfilepaths[0]])
 
     @property
     def _region_keys(self) -> List[str]:
@@ -477,7 +512,7 @@ def i07_dat_to_dict_dataframe(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
-def load_images_from_h5(h5_file_path, transpose=False):
+def load_images_from_h5(h5_file_path,datanxfilepath,transpose=False):
     """
     Loads images from a .h5 file.
 
@@ -487,7 +522,7 @@ def load_images_from_h5(h5_file_path, transpose=False):
         transpose:
             Should we take the transpose of these images? Defaults to True.
     """
-    internal_data_path = 'data'
+    internal_data_path = datanxfilepath#'data'
     images = []
     debug.log("Loading images from file " + h5_file_path, unimportance=0)
     with h5py.File(h5_file_path, "r") as file_handle:
@@ -528,8 +563,9 @@ def i07_nxs_parser(file_path: str):
     # x and which is why is determined by fast vs slow detector axes in memory).
     if i07_nxs.detector_name in [
             I07Nexus.excalibur_detector_2021,
-            I07Nexus.excalibur_04_2022]:
-        images = load_images_from_h5(i07_nxs.local_data_path, transpose=True)
+            I07Nexus.excalibur_04_2022,
+            I07Nexus.pilatus_02_2024]:
+        images = load_images_from_h5(i07_nxs.local_data_path,i07_nxs._src_data_path[1], transpose=True)
 
     # The dependent variable.
     rough_intensity = i07_nxs.default_signal

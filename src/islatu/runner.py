@@ -373,6 +373,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     files_to_reduce = the_boss.reduction.input_files
 
     log_processing_stage("File parsing")
+    #return the_boss,files_to_reduce
     refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
     # Set the energy correctly.
@@ -417,7 +418,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
     if the_boss.reduction.bkg_function is not None:
         refl.bkg_sub(the_boss.reduction.bkg_function,
-                     **the_boss.reduction.bkg_kwargs)
+                      **the_boss.reduction.bkg_kwargs)
         the_boss.reduction.data_state.background = 'corrected'
 
 
@@ -473,7 +474,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                 f"{refl.q_vectors.max()}Å.", unimportance=2
             )
             refl.rebin(new_q=spacing(refl.q_vectors.min(), refl.q_vectors.max(),
-                                     the_boss.data.q_step))
+                                      the_boss.data.q_step))
         the_boss.reduction.data_state.rebinned = the_boss.data.q_shape
 
     the_boss.data_source.experiment.measurement.q_range = [
