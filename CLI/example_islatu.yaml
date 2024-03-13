@@ -1,9 +1,9 @@
 instrument: 'i07'
 visit:
-  local contact: "Richard Brearton"
-  user: 'Richard Brearton'
-  user affiliation: 'Diamond Light Source, University of Oxford'
-  visit id: 'si28707-1/'
+  local contact: "Firstname Lastname"
+  user: 'Firstname Lastname'
+  user affiliation: 'InstitutionName'
+  visit id: 'experimentID'
   date: 2021-08-06
 setup:
   # ====(sample_length, sample_width) in m
@@ -14,7 +14,7 @@ setup:
   # ====Beam FWHM in m
   beam width: 100e-6
 
-  #==== /path/to/normalization/file
+  #==== /path/to/normalization/file  comment this line out if not using dcd normalisation
   #=== Outside of diamond, this might look like, for example:
   # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
   dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
@@ -49,9 +49,8 @@ background:
 # Uncomment kwargs to background to manually set the background region.
 # kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
 
-#set what columns you want in the output
+#set what columns you want in the output, currently only working option is 3
 # 3 =  'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'
-# 4 = 'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation', 'sigma Qz / Aa^-1, standard deviation'
 output_columns: 3
 rebin:
   # Number of bins to place q-vectors into. These bins are linearly spaced in q
