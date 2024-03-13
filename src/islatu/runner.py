@@ -506,7 +506,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Write the data.
     np.savetxt(
-        filename, data, header=f"{dump(vars(the_boss))}\n Q(1/Å) R R_error"
+        filename, data, header=f"{dump(vars(the_boss))}\n Q(1/Å)\tR\tR_error"
     )
 
     debug.log("-" * 10)
