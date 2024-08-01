@@ -214,6 +214,10 @@ class I07Nexus(NexusBase):
         #add in option for EH2 scanning alpha
         if self.default_axis_name == 'diff2alpha_value_set':
             return 'th'
+        
+        #add in option for EH1 scanning chi
+        if self.default_axis_name == 'diff1chi_value_set':
+            return 'th'
 
     def _get_ith_region(self, i: int):
         """
