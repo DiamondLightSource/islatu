@@ -288,7 +288,8 @@ class I07Nexus(NexusBase):
         if self.detector_name == I07Nexus.excalibur_detector_2021:
             return [self._get_ith_region(i)
                     for i in range(2, self._number_of_regions+1)]
-        if self.detector_name == I07Nexus.excalibur_04_2022:
+        excaliburlist=[I07Nexus.excalibur_04_2022,I07Nexus.excalibur_08_2024]
+        if self.detector_name in excaliburlist:
             # Make sure our code executes for bytes and strings.
             try:
                 json_str = self.instrument[
