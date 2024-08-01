@@ -153,6 +153,7 @@ class I07Nexus(NexusBase):
     excalibur_detector_2021 = "excroi"
     excalibur_04_2022 = "exr"
     pilatus_02_2024 = "PILATUS"
+    excalibur_08_2024= "EXCALIBUR"
 
     @property
     def local_data_path(self) -> str:
@@ -180,6 +181,8 @@ class I07Nexus(NexusBase):
             return I07Nexus.excalibur_04_2022
         if "PILATUS" in self.entry:
             return I07Nexus.pilatus_02_2024
+        if "EXCALIBUR" in self.entry:
+            return I07Nexus.excalibur_08_2024
         # Couldn't recognise the detector.
         raise NotImplementedError()
 
@@ -240,7 +243,8 @@ class I07Nexus(NexusBase):
         """
         if self.detector_name == I07Nexus.excalibur_detector_2021:
             return [self._get_ith_region(i=1)]
-        if self.detector_name == I07Nexus.excalibur_04_2022:
+        excaliburlist=[I07Nexus.excalibur_04_2022,I07Nexus.excalibur_08_2024]
+        if self.detector_name is in excaliburlist:
             # Make sure our code executes for bytes and strings.
             try:
                 json_str = self.instrument[
@@ -564,7 +568,8 @@ def i07_nxs_parser(file_path: str):
     if i07_nxs.detector_name in [
             I07Nexus.excalibur_detector_2021,
             I07Nexus.excalibur_04_2022,
-            I07Nexus.pilatus_02_2024]:
+            I07Nexus.pilatus_02_2024,
+            I07Nexus.excalibur_08_2024]:
         images = load_images_from_h5(i07_nxs.local_data_path,i07_nxs._src_data_path[1], transpose=True)
 
     # The dependent variable.
