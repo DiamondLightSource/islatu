@@ -140,7 +140,7 @@ class Reduction:
                  data_state=DataState(), parser=io.i07_nxs_parser,
                  crop_function=cropping.crop_to_region, crop_kwargs=None,
                  bkg_function=background.fit_gaussian_1d, bkg_kwargs=None,
-                 dcd_normalisation=None, sample_size=None, beam_width=None):
+                 dcd_normalisation=None, sample_size=None, beam_width=None,overwrite_transmission=None):
         if input_files is None:
             input_files = []
         self.software = software
@@ -154,6 +154,7 @@ class Reduction:
         self.dcd_normalisation = dcd_normalisation
         self.sample_size = sample_size
         self.beam_width = beam_width
+        self.overwrite_transmission=overwrite_transmission
 
 
 class Data:
@@ -256,7 +257,7 @@ class Foreperson:
             if 'kwargs' in recipe['background']:
                 self.reduction.bkg_kwargs = recipe['background']['kwargs']
         if 'transmission' in keys:
-            self.transmission.values=recipe['transmission']['values']
+            self.reduction.overwrite_transmission=recipe['transmission']['values']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -442,8 +443,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
 
     log_processing_stage("Transmission normalisation.")
-    if the_boss.transmission.values is not None:
-        overwrite_transmissions=the_boss.transmission.values
+    if the_boss.reduction.overwrite_transmission is not None:
+        overwrite_transmissions=the_boss.reduction.overwrite_transmission
     else:
         overwrite_transmissions=None
 
