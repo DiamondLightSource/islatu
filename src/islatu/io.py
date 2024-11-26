@@ -333,7 +333,7 @@ class I07Nexus(NexusBase):
         to strike the sample.
         """
         if 'filterset' in self.instrument:
-            return float(self.instrument.filterset.transmission)
+            return np.array([self.instrument.filterset.transmission])
         elif 'fatt' in self.instrument:
             return np.array([self.instrument.fatt.transmission])
         else:
