@@ -255,7 +255,8 @@ class Foreperson:
                 recipe['background']['method']]
             if 'kwargs' in recipe['background']:
                 self.reduction.bkg_kwargs = recipe['background']['kwargs']
-
+        if 'transmission' in keys:
+            self.transmission.values=recipe['transmission']['values']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -441,7 +442,12 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
 
     log_processing_stage("Transmission normalisation.")
-    refl.transmission_normalisation()
+    if the_boss.transmission.values is not None:
+        overwrite_transmissions=the_boss.transmission.values
+    else:
+        overwrite_transmissions=None
+
+    refl.transmission_normalisation(overwrite_transmissions)
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
 

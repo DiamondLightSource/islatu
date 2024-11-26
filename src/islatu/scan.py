@@ -53,10 +53,12 @@ class Scan(MeasurementBase):
         # Now remove all data points at these qs.
         self.remove_data_points(illegal_q_indices)
 
-    def transmission_normalisation(self):
+    def transmission_normalisation(self,overwrite_transmission):
         """
         Perform the transmission correction.
         """
+        if overwrite_transmission is not None:
+            self.metadata.transmission=overwrite_transmission
         if len(self.metadata.transmission)==1:
             self.intensity /= float(self.metadata.transmission)
             self.intensity_e /= float(self.metadata.transmission)

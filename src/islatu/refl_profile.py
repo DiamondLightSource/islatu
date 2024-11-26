@@ -130,12 +130,16 @@ class Profile(Data):
             scan.footprint_correction(beam_width, sample_size)
         self.concatenate()
 
-    def transmission_normalisation(self):
+    def transmission_normalisation(self,overwrite_transmissions=None):
         """
         Perform the transmission correction.
         """
-        for scan in self.scans:
-            scan.transmission_normalisation()
+        for i,scan in enumerate(self.scans):
+            if overwrite_transmissions is not None:
+                overwrite_transmission=overwrite_transmissions[i]
+            else:
+                overwrite_transmission=None
+            scan.transmission_normalisation(overwrite_transmission)
 
         self.concatenate()
 
