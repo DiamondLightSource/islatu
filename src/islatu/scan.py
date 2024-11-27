@@ -58,13 +58,15 @@ class Scan(MeasurementBase):
         Perform the transmission correction.
         """
         if overwrite_transmission is not None:
-            self.metadata.transmission=overwrite_transmission
-        if len(self.metadata.transmission)==1:
-            self.intensity /= float(self.metadata.transmission)
-            self.intensity_e /= float(self.metadata.transmission)
+            transmissionvalue=overwrite_transmission
         else:
-            self.intensity /= self.metadata.transmission
-            self.intensity_e /= self.metadata.transmission
+            transmissionvalue=self.metadata.transmission
+        if len(self.metadata.transmission)==1:
+            self.intensity /= float(transmissionvalue)
+            self.intensity_e /= float(transmissionvalue)
+        else:
+            self.intensity /= transmissionvalue
+            self.intensity_e /= transmissionvalue
 
     def qdcd_normalisation(self, itp):
         """
