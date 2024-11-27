@@ -333,12 +333,22 @@ class I07Nexus(NexusBase):
         to strike the sample.
         """
         if 'filterset' in self.instrument:
-            return np.array([self.instrument.filterset.transmission])
+            valsarr=np.array(self.instrument.filterset.transmission)
+            if len(np.shape(valsarr))==0:
+                outarr=np.array([self.instrument.filterset.transmission])
+            else:
+                outarr=valsarr
+            return outarr
         elif 'fatt' in self.instrument:
-            return np.array([self.instrument.fatt.transmission])
+            valsarr=np.array(self.instrument.fatt.transmission)
+            if len(np.shape(valsarr))==0:
+                outarr=np.array([self.instrument.fatt.transmission])
+            else:
+                outarr=valsarr
+            return outarr
         else:
             debug.log(f"\n No transmission value found in expected location, set transmission to 1 \n")
-            return float(1)
+            return np.array([float(1)])
 
     @property
     def detector_distance(self):
