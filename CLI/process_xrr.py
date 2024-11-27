@@ -7,6 +7,7 @@ import argparse
 import os
 from pathlib import Path
 import subprocess
+import time
 
 if __name__ == "__main__":
     # First deal with the parsing of the command line arguments using the
@@ -300,8 +301,47 @@ if __name__ == "__main__":
             else:
                 f.write(line)
         f.close()
+        
+        #get list of slurm out files in home directory
+        startfiles=os.listdir(f'{Path.home()}/islatu')
+        startslurms=[x for x in startfiles if '.out' in x]
+        startslurms.append(startfiles[0])
+        startslurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+        
+        #get latest slurm file  before submitting job
+        endfiles=os.listdir(f'{Path.home()}/islatu')
+        endslurms=[x for x in endfiles if '.out' in x]
+        endslurms.append(endfiles[0])
+        endslurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+        count=0
+        limit=0
+
         #call subprocess to submit job using wilson
         subprocess.run(["ssh","wilson","cd islatu \nsbatch jobscript.sh"])
+        while endslurms[-1]==startslurms[-1]:
+            endfiles=os.listdir(f'{Path.home()}/islatu')
+            endslurms=[x for x in endfiles if '.out' in x]
+            endslurms.append(endfiles[0])
+            endslurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+            if count >50:
+                limit=1
+                break
+            print(f'Job submitted, waiting for SLURM output.  Timer={5*count}',end="\r")
+            time.sleep(5)
+            count+=1
+        if limit==1:
+            print('Timer limit reached before new slurm ouput file found')
+        else:
+            print(f'Slurm output file: {Path.home()}/islatu//{endslurms[-1]}\n')
+            breakerline='*'*35
+            monitoring_line=f"\n{breakerline}\n ***STARTING TO MONITOR TAIL END OF FILE, TO EXIT THIS VIEW PRESS ANY LETTER FOLLOWED BY ENTER**** \n{breakerline} \n"
+            timer=0
+            while timer==0:
+                subprocess.Popen(["tail","-f",f"{Path.home()}/islatu//{endslurms[-1]}"])
+                timer=input(f"{monitoring_line}")
+
+        
+        
     else:
         i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
               filename=args.output, q_subsample_dicts=args.limit_q)
