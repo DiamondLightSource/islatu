@@ -19,4 +19,4 @@ def crop_to_region(array: np.ndarray, region: Region):
         region:
             The instance of Region to crop to.
     """
-    return array[region.x_start:region.x_end, region.y_start:region.y_end]
+    return array[region.y_start:region.y_end,region.x_start:region.x_end]

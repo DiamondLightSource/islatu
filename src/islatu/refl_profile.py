@@ -6,9 +6,9 @@ intensity as a function of scattering vector data.
 
 from typing import List
 
-from .scan import Scan
-from .stitching import concatenate, rebin
-from .data import Data
+from islatu.scan import Scan
+from islatu.stitching import concatenate, rebin
+from islatu.data import Data
 
 
 class Profile(Data):
@@ -136,9 +136,9 @@ class Profile(Data):
         """
         for i,scan in enumerate(self.scans):
             if overwrite_transmissions is not None:
-                overwrite_transmission=overwrite_transmissions[i]
+                overwrite_transmission = overwrite_transmissions[i]
             else:
-                overwrite_transmission=None
+                overwrite_transmission = None
             scan.transmission_normalisation(overwrite_transmission)
 
         self.concatenate()

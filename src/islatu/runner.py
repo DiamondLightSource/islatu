@@ -455,11 +455,13 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     if q_subsample_dicts is not None:
         log_processing_stage(
-            "Doctoring data.\nSorry, I mean: Bounding q-vectors.")
+            "Bounding q-vectors.")
         # We'll need to subsample a subset of our scans.
         for q_subsample_dict in q_subsample_dicts:
             refl.subsample_q(**q_subsample_dict)
         debug.log("Limited q-range on specified scans.")
+    
+
 
     # Rebin the data, if the user requested this.
     if the_boss.data.rebin:

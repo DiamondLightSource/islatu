@@ -51,7 +51,7 @@ class Scan(MeasurementBase):
         # be used like this, and they encourage np.asarray(condition).nonzero()
 
         # Now remove all data points at these qs.
-        self.remove_data_points(illegal_q_indices)
+        self.remove_data_points(illegal_q_indices)   
 
     def transmission_normalisation(self,overwrite_transmission):
         """
@@ -107,11 +107,13 @@ class Scan2D(Scan):
             The detector images in the given scan.
     """
 
-    def __init__(self, data: Data, metadata: Metadata, images: List[Image]) \
+    def __init__(self, data: Data, metadata: Metadata, images: List[Image],remove_indices=None) \
             -> None:
         super().__init__(data, metadata)
         self.images = images
-
+        if remove_indices is not None:
+            self.remove_data_points(remove_indices)
+            
     def crop(self, crop_function, **kwargs):
         """
         Crop every image in images according to crop_function.
