@@ -51,17 +51,21 @@ class Scan(MeasurementBase):
         # be used like this, and they encourage np.asarray(condition).nonzero()
 
         # Now remove all data points at these qs.
-        self.remove_data_points(illegal_q_indices)   
+        self.remove_data_points(illegal_q_indices)
 
     def transmission_normalisation(self,overwrite_transmission):
         """
         Perform the transmission correction.
         """
+        
         if overwrite_transmission is not None:
             transmissionvalue=overwrite_transmission
+        elif 'transmissions' in dir(self.metadata):
+            transmissionvalue=self.metadata.transmissions
         else:
             transmissionvalue=self.metadata.transmission
-        if len(self.metadata.transmission)==1:
+            
+        if len(transmissionvalue)==1:
             self.intensity /= float(transmissionvalue)
             self.intensity_e /= float(transmissionvalue)
         else:
@@ -111,6 +115,9 @@ class Scan2D(Scan):
             -> None:
         super().__init__(data, metadata)
         self.images = images
+        self.detname=self.metadata.detector_name
+        if 'attenuation_filters_moving' in self.metadata.entry[f'{self.detname}'].keys():
+            self.metadata.transmissions=self.metadata.entry[f'{self.detname}_transmission/transmission'].nxdata
         if remove_indices is not None:
             self.remove_data_points(remove_indices)
             
@@ -182,6 +189,8 @@ class Scan2D(Scan):
                 The indices to be removed.
         """
         super().remove_data_points(indices)
+        if 'transmissions' in dir(self.metadata):
+            self.metadata.transmissions =np.delete(self.metadata.transmissions,indices)
 
         # Delete images in reverse order if you don't like errors.
         for idx in sorted(indices, reverse=True):
