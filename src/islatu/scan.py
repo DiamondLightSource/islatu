@@ -65,7 +65,7 @@ class Scan(MeasurementBase):
         else:
             transmissionvalue=self.metadata.transmission
             
-        if len(transmissionvalue)==1:
+        if np.size(np.array(transmissionvalue))==1:
             self.intensity /= float(transmissionvalue)
             self.intensity_e /= float(transmissionvalue)
         else:
