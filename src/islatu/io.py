@@ -577,7 +577,7 @@ def i07_nxs_parser(file_path: str,remove_indices=None):
     """
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
-    detname=list(i07_nxs.entry.instrument.keys())[0]
+    detname=i07_nxs.detector_name
     if 'attenuation_filters_moving' in i07_nxs.entry[f'{detname}'].keys():
         remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
     # Load the images, taking a transpose if necessary (because which axis is
