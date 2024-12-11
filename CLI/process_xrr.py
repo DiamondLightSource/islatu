@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import subprocess
 import time
+import re
 
 if __name__ == "__main__":
     # First deal with the parsing of the command line arguments using the
