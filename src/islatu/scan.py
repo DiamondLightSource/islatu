@@ -117,7 +117,9 @@ class Scan2D(Scan):
         self.images = images
         self.detname=self.metadata.detector_name
         if 'attenuation_filters_moving' in self.metadata.entry[f'{self.detname}'].keys():
-            self.metadata.transmissions=self.metadata.entry[f'{self.detname}_transmission/transmission'].nxdata
+            if len(self.metadata.entry[f'{self.detname}/attenuation_filters_moving'].nxdata) >1:
+                self.metadata.transmissionsraw=self.metadata.entry[f'{self.detname}_transmission/transmission'].nxdata
+                self.metadata.transmissions=np.delete(np.insert(self.metadata.transmissionsraw,0,1e-9),-1)
         if remove_indices is not None:
             self.remove_data_points(remove_indices)
             
