@@ -335,11 +335,17 @@ if __name__ == "__main__":
             print(f'Slurm output file: {Path.home()}/islatu//{endslurms[-1]}\n')
             breakerline='*'*35
             monitoring_line=f"\n{breakerline}\n ***STARTING TO MONITOR TAIL END OF FILE, TO EXIT THIS VIEW PRESS ANY LETTER FOLLOWED BY ENTER**** \n{breakerline} \n"
+            print(monitoring_line)
             process = subprocess.Popen(["tail","-f",f"{Path.home()}/islatu//{endslurms[-1]}"], stdout=subprocess.PIPE, text=True)
             target_phrase="Reduced data stored"
             try:
                 for line in process.stdout:
-                    print(line.strip())  # Print each line of output
+                    if "Loading images" in line:
+                        print(line.strip(),'\n')
+                    elif"Currently loaded" in line:
+                        print(f"\r{line.strip()}", end='')
+                    else:
+                        print(line.strip())  # Print each line of output
                     if re.search(target_phrase, line):
                         print(f"Target phrase '{target_phrase}' found. Closing tail.")
                         break
