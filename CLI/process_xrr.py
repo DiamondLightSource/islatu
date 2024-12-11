@@ -335,12 +335,21 @@ if __name__ == "__main__":
             print(f'Slurm output file: {Path.home()}/islatu//{endslurms[-1]}\n')
             breakerline='*'*35
             monitoring_line=f"\n{breakerline}\n ***STARTING TO MONITOR TAIL END OF FILE, TO EXIT THIS VIEW PRESS ANY LETTER FOLLOWED BY ENTER**** \n{breakerline} \n"
-            timer=0
-            while timer==0:
-                subprocess.Popen(["tail","-f",f"{Path.home()}/islatu//{endslurms[-1]}"])
-                timer=input(f"{monitoring_line}")
-
-        
+            process = subprocess.Popen(["tail","-f",f"{Path.home()}/islatu//{endslurms[-1]}"], stdout=subprocess.PIPE, text=True)
+            target_phrase="Reduced data stored"
+            try:
+                for line in process.stdout:
+                    print(line.strip())  # Print each line of output
+                    if re.search(target_phrase, line):
+                        print(f"Target phrase '{target_phrase}' found. Closing tail.")
+                        break
+                    if( "Errno" in line) or ("error" in line) or ("Error" in line):
+                        print("error found. closing tail")
+                        break
+            finally:
+                process.terminate()
+                process.wait()
+        print("Python script on cluster completed successfully")
         
     else:
         i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
