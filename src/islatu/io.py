@@ -545,7 +545,7 @@ def load_images_from_h5(h5_file_path,datanxfilepath,transpose=False):
     images = []
     debug.log("Loading images from file " + h5_file_path, unimportance=0)
     with h5py.File(h5_file_path, "r") as file_handle:
-        dataset = file_handle[internal_data_path][()]
+        dataset = file_handle[internal_data_path]#[()]
 
         num_images = dataset.shape[0]
         # Prepare to show a progress bar for image loading.
@@ -579,7 +579,17 @@ def i07_nxs_parser(file_path: str,remove_indices=None):
     i07_nxs = I07Nexus(file_path)
     detname=i07_nxs.detector_name
     if 'attenuation_filters_moving' in i07_nxs.entry[f'{detname}'].keys():
-        remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        try:
+            attenuationvalues=i07_nxs.entry[f'{detname}/attenuation_value'].nxdata
+            movingfilters=[0 if attenuationvalues[i]==attenuationvalues[i-1] else 1 for i in np.arange(1,len(attenuationvalues[0:5]))]
+        except (AttributeError,TypeError):
+            debug.log("unable to read in attenuation information, possible missing attenuation h5 file. Will assume no moving attenuation.", unimportance=2)
+            attenuationvalues=i07_nxs.entry[f'{detname}/attenuation_value']
+            movingfilters=[]
+        remove_indices=np.where(movingfilters)[0]
+        #remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        remove_indices+=1
+        
     # Load the images, taking a transpose if necessary (because which axis is
     # x and which is why is determined by fast vs slow detector axes in memory).
     if i07_nxs.detector_name in [
@@ -604,10 +614,11 @@ def i07_nxs_parser(file_path: str,remove_indices=None):
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
                     theta=axis)
     elif i07_nxs.default_axis_type == 'tth':
-        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                theta=axis/2)
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
+                    theta=axis/2)
     else:
         raise NotImplementedError(
-            f"{i07_nxs.default_axis_type} is not a supported axis type.")
+            f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
 
     # Returns the Scan2D object
     return Scan2D(data, i07_nxs, images, remove_indices)
