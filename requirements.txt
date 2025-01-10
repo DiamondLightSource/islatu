@@ -5,7 +5,7 @@ coverage
 pandas
 pyyaml
 nexusformat
-pytest
+pytest==7.4.4
 pytest-lazy-fixture
 nbsphinx
 jupyter-sphinx
