@@ -21,7 +21,7 @@ If you need to contact the developers about anything, please either `raise an is
 
 Contributors
 ------------
-- Philip Mousley
+- `Philip Mousley`
 - `Richard Brearton`_
 - `Andrew R. McCluskey`_
 

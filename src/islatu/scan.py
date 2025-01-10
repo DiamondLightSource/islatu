@@ -53,16 +53,24 @@ class Scan(MeasurementBase):
         # Now remove all data points at these qs.
         self.remove_data_points(illegal_q_indices)
 
-    def transmission_normalisation(self):
+    def transmission_normalisation(self,overwrite_transmission):
         """
         Perform the transmission correction.
         """
-        if len(self.metadata.transmission)==1:
-            self.intensity /= float(self.metadata.transmission)
-            self.intensity_e /= float(self.metadata.transmission)
+        
+        if overwrite_transmission is not None:
+            transmissionvalue=overwrite_transmission
+        elif 'transmissions' in dir(self.metadata):
+            transmissionvalue=self.metadata.transmissions
         else:
-            self.intensity /= self.metadata.transmission
-            self.intensity_e /= self.metadata.transmission
+            transmissionvalue=self.metadata.transmission
+            
+        if np.size(np.array(transmissionvalue))==1:
+            self.intensity /= float(transmissionvalue)
+            self.intensity_e /= float(transmissionvalue)
+        else:
+            self.intensity /= transmissionvalue
+            self.intensity_e /= transmissionvalue
 
     def qdcd_normalisation(self, itp):
         """
@@ -103,11 +111,22 @@ class Scan2D(Scan):
             The detector images in the given scan.
     """
 
-    def __init__(self, data: Data, metadata: Metadata, images: List[Image]) \
+    def __init__(self, data: Data, metadata: Metadata, images: List[Image],remove_indices=None) \
             -> None:
         super().__init__(data, metadata)
         self.images = images
-
+        self.detname=self.metadata.detector_name
+        if 'attenuation_filters_moving' in self.metadata.entry[f'{self.detname}'].keys():
+            try:
+                filterslist=self.metadata.entry[f'{self.detname}/attenuation_filters_moving'].nxdata
+            except (AttributeError,TypeError):
+                filterslist=[]
+            if len(filterslist) >1:
+                self.metadata.transmissionsraw=self.metadata.entry[f'{self.detname}_transmission/transmission'].nxdata
+                self.metadata.transmissions=np.delete(np.insert(self.metadata.transmissionsraw,0,1e-9),-1)
+        if remove_indices is not None:
+            self.remove_data_points(remove_indices)
+            
     def crop(self, crop_function, **kwargs):
         """
         Crop every image in images according to crop_function.
@@ -176,6 +195,8 @@ class Scan2D(Scan):
                 The indices to be removed.
         """
         super().remove_data_points(indices)
+        if 'transmissions' in dir(self.metadata):
+            self.metadata.transmissions =np.delete(self.metadata.transmissions,indices)
 
         # Delete images in reverse order if you don't like errors.
         for idx in sorted(indices, reverse=True):

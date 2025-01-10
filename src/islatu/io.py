@@ -24,12 +24,12 @@ import numpy as np
 import h5py
 
 
-from .scan import Scan2D
-from .image import Image
-from .data import Data
-from .region import Region
-from .debug import debug
-from .metadata import Metadata
+from islatu.scan import Scan2D
+from islatu.image import Image
+from islatu.data import Data
+from islatu.region import Region
+from islatu.debug import debug
+from islatu.metadata import Metadata
 
 
 class NexusBase(Metadata):
@@ -70,7 +70,7 @@ class NexusBase(Metadata):
         Raises:
             ValueError if more than one NXdetector is found.
         """
-        det, = self.instrument.NXdetector
+        det, = self.instrument.NXdetector[0]
         return det
 
     @property
@@ -152,6 +152,8 @@ class I07Nexus(NexusBase):
     """
     excalibur_detector_2021 = "excroi"
     excalibur_04_2022 = "exr"
+    pilatus_02_2024 = "PILATUS"
+    excalibur_08_2024= "EXCALIBUR"
 
     @property
     def local_data_path(self) -> str:
@@ -164,7 +166,7 @@ class I07Nexus(NexusBase):
             FileNotFoundError if the data file cant be found.
         """
         file = _try_to_find_files(
-            [self._src_data_path], [self.local_path])[0]
+            [self._src_data_path[0]], [self.local_path])[0]
         return file
 
     @property
@@ -177,6 +179,10 @@ class I07Nexus(NexusBase):
             return I07Nexus.excalibur_detector_2021
         if "exr" in self.entry:
             return I07Nexus.excalibur_04_2022
+        if "PILATUS" in self.entry:
+            return I07Nexus.pilatus_02_2024
+        if "EXCALIBUR" in self.entry:
+            return I07Nexus.excalibur_08_2024
         # Couldn't recognise the detector.
         raise NotImplementedError()
 
@@ -198,10 +204,20 @@ class I07Nexus(NexusBase):
             return 'th'  
         if self.default_axis_name == 'diff1delta':
             return 'tth'
+
+        
         # It's also possible that self.default_axis_name isn't recorded in some
         # nexus files. Just in case, let's check the length of diff1delta.
         if isinstance(self.instrument["diff1delta"].value.nxdata, np.ndarray):
             return 'tth'
+        
+        #add in option for EH2 scanning alpha
+        if self.default_axis_name == 'diff2alpha_value_set':
+            return 'th'
+        
+        #add in option for EH1 scanning chi
+        if self.default_axis_name == 'diff1chi_value_set':
+            return 'th'
 
     def _get_ith_region(self, i: int):
         """
@@ -231,7 +247,8 @@ class I07Nexus(NexusBase):
         """
         if self.detector_name == I07Nexus.excalibur_detector_2021:
             return [self._get_ith_region(i=1)]
-        if self.detector_name == I07Nexus.excalibur_04_2022:
+        excaliburlist=[I07Nexus.excalibur_04_2022,I07Nexus.excalibur_08_2024]
+        if self.detector_name in excaliburlist:
             # Make sure our code executes for bytes and strings.
             try:
                 json_str = self.instrument[
@@ -242,6 +259,17 @@ class I07Nexus(NexusBase):
 
             # This is badly formatted and cant be loaded by the json lib. We
             # need to make a series of modifications.
+            json_str = json_str.replace('u', '')
+            json_str = json_str.replace("'", '"')
+
+            roi_dict = json.loads(json_str)
+            return [Region.from_dict(roi_dict['Region_1'])]
+        #add in similar option for pilatus option
+        if self.detector_name== I07Nexus.pilatus_02_2024:
+            try: 
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value.decode("utf-8")
+            except AttributeError:
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value
             json_str = json_str.replace('u', '')
             json_str = json_str.replace("'", '"')
 
@@ -260,7 +288,8 @@ class I07Nexus(NexusBase):
         if self.detector_name == I07Nexus.excalibur_detector_2021:
             return [self._get_ith_region(i)
                     for i in range(2, self._number_of_regions+1)]
-        if self.detector_name == I07Nexus.excalibur_04_2022:
+        excaliburlist=[I07Nexus.excalibur_04_2022,I07Nexus.excalibur_08_2024]
+        if self.detector_name in excaliburlist:
             # Make sure our code executes for bytes and strings.
             try:
                 json_str = self.instrument[
@@ -276,7 +305,18 @@ class I07Nexus(NexusBase):
             roi_dict = json.loads(json_str)
             bkg_roi_list = list(roi_dict.values())[1:2]
             return [Region.from_dict(x) for x in bkg_roi_list]
-
+        #add in similar option for pilatus option
+        if self.detector_name== I07Nexus.pilatus_02_2024:
+            try: 
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value.decode("utf-8")
+            except AttributeError:
+                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value
+            json_str = json_str.replace('u', '')
+            json_str = json_str.replace("'", '"')
+            
+            roi_dict = json.loads(json_str)
+            bkg_roi_list = list(roi_dict.values())[1:2]
+            return [Region.from_dict(x) for x in bkg_roi_list]
         raise NotImplementedError()
 
     @property
@@ -293,12 +333,22 @@ class I07Nexus(NexusBase):
         to strike the sample.
         """
         if 'filterset' in self.instrument:
-            return float(self.instrument.filterset.transmission)
+            valsarr=np.array(self.instrument.filterset.transmission)
+            if len(np.shape(valsarr))==0:
+                outarr=np.array([self.instrument.filterset.transmission])
+            else:
+                outarr=valsarr
+            return outarr
         elif 'fatt' in self.instrument:
-            return np.array(self.instrument.fatt.transmission)
+            valsarr=np.array(self.instrument.fatt.transmission)
+            if len(np.shape(valsarr))==0:
+                outarr=np.array([self.instrument.fatt.transmission])
+            else:
+                outarr=valsarr
+            return outarr
         else:
             debug.log(f"\n No transmission value found in expected location, set transmission to 1 \n")
-            return float(1)
+            return np.array([float(1)])
 
     @property
     def detector_distance(self):
@@ -320,8 +370,9 @@ class I07Nexus(NexusBase):
         # a pretty rubbish task. Here I just grab the first .h5 file I find
         # and run with it.
         found_h5_files = []
+        datanxfilepaths=[]
 
-        def recurse_over_nxgroups(nx_object, found_h5_files):
+        def recurse_over_nxgroups(nx_object, found_h5_files,datanxfilepaths):
             """
             Recursively looks for nxgroups in nx_object that, when cast to a
             string, end in .h5.
@@ -329,18 +380,21 @@ class I07Nexus(NexusBase):
             for key in nx_object:
                 new_obj = nx_object[key]
                 if key == "data":
-                    if new_obj.tree[8:-9].endswith(".h5"):
-                        found_h5_files.append(new_obj.tree[8:-9])
+                    if isinstance(new_obj,nx.NXlink):
+                        found_h5_files.append(new_obj.nxfilename)
+                        datanxfilepaths.append(new_obj.nxfilepath)
+                    # if new_obj.tree[8:-9].endswith(".h5"):
+                    #     found_h5_files.append(new_obj.tree[8:-9])
                 if str(new_obj).endswith(".h5"):
                     found_h5_files.append(str(new_obj))
                 if str(new_obj).endswith(".h5['/data']"):
                     found_h5_files.append(str(new_obj)[:-9])
                 if isinstance(new_obj, nx.NXgroup):
-                    recurse_over_nxgroups(new_obj, found_h5_files)
+                    recurse_over_nxgroups(new_obj, found_h5_files,datanxfilepaths)
 
-        recurse_over_nxgroups(self.nxfile, found_h5_files)
+        recurse_over_nxgroups(self.nxfile, found_h5_files,datanxfilepaths)
 
-        return found_h5_files[0]
+        return np.array([found_h5_files[0],datanxfilepaths[0]])
 
     @property
     def _region_keys(self) -> List[str]:
@@ -477,7 +531,7 @@ def i07_dat_to_dict_dataframe(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
-def load_images_from_h5(h5_file_path, transpose=False):
+def load_images_from_h5(h5_file_path,datanxfilepath,transpose=False):
     """
     Loads images from a .h5 file.
 
@@ -487,11 +541,11 @@ def load_images_from_h5(h5_file_path, transpose=False):
         transpose:
             Should we take the transpose of these images? Defaults to True.
     """
-    internal_data_path = 'data'
+    internal_data_path = datanxfilepath#'data'
     images = []
     debug.log("Loading images from file " + h5_file_path, unimportance=0)
     with h5py.File(h5_file_path, "r") as file_handle:
-        dataset = file_handle[internal_data_path][()]
+        dataset = file_handle[internal_data_path]#[()]
 
         num_images = dataset.shape[0]
         # Prepare to show a progress bar for image loading.
@@ -506,7 +560,7 @@ def load_images_from_h5(h5_file_path, transpose=False):
     return images
 
 
-def i07_nxs_parser(file_path: str):
+def i07_nxs_parser(file_path: str,remove_indices=None):
     """
     Parses a .nxs file acquired from the I07 beamline at diamond, returning an
     instance of Scan2D. This process involves loading the images contained in
@@ -523,13 +577,27 @@ def i07_nxs_parser(file_path: str):
     """
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
-
+    detname=i07_nxs.detector_name
+    if 'attenuation_filters_moving' in i07_nxs.entry[f'{detname}'].keys():
+        try:
+            attenuationvalues=i07_nxs.entry[f'{detname}/attenuation_value'].nxdata
+            movingfilters=[0 if attenuationvalues[i]==attenuationvalues[i-1] else 1 for i in np.arange(1,len(attenuationvalues[0:5]))]
+        except (AttributeError,TypeError):
+            debug.log("unable to read in attenuation information, possible missing attenuation h5 file. Will assume no moving attenuation.", unimportance=2)
+            attenuationvalues=i07_nxs.entry[f'{detname}/attenuation_value']
+            movingfilters=[]
+        remove_indices=np.where(movingfilters)[0]
+        #remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        remove_indices+=1
+        
     # Load the images, taking a transpose if necessary (because which axis is
     # x and which is why is determined by fast vs slow detector axes in memory).
     if i07_nxs.detector_name in [
             I07Nexus.excalibur_detector_2021,
-            I07Nexus.excalibur_04_2022]:
-        images = load_images_from_h5(i07_nxs.local_data_path, transpose=True)
+            I07Nexus.excalibur_04_2022,
+            I07Nexus.pilatus_02_2024,
+            I07Nexus.excalibur_08_2024]:
+        images = load_images_from_h5(i07_nxs.local_data_path,i07_nxs._src_data_path[1], transpose=False)
 
     # The dependent variable.
     rough_intensity = i07_nxs.default_signal
@@ -546,14 +614,14 @@ def i07_nxs_parser(file_path: str):
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
                     theta=axis)
     elif i07_nxs.default_axis_type == 'tth':
-        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
                     theta=axis/2)
     else:
         raise NotImplementedError(
-            f"{i07_nxs.default_axis_type} is not a supported axis type.")
+            f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
 
     # Returns the Scan2D object
-    return Scan2D(data, i07_nxs, images)
+    return Scan2D(data, i07_nxs, images, remove_indices)
 
 
 def _try_to_find_files(filenames: List[str],

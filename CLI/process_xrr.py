@@ -5,7 +5,10 @@
 
 import argparse
 import os
-
+from pathlib import Path
+import subprocess
+import time
+import re
 
 if __name__ == "__main__":
     # First deal with the parsing of the command line arguments using the
@@ -133,13 +136,6 @@ if __name__ == "__main__":
     # Set islatu's logger to requested verbosity.
     debug.logging_lvl = args.verbose
 
-    # Now it's time to prepare to do some XRR reduction. If the user is in
-    # diamond and wants to use a cluster, then we should go ahead and do that.
-    if args.cluster:
-        raise NotImplementedError(
-            "Islatu currently only runs locally. If cluster submission is " +
-            "necessary, please contact richard.brearton@diamond.ac.uk"
-        )
 
     # If execution reaches here, we're processing the scan locally. First look
     # for the .yaml file if we weren't explicitly told where it is.
@@ -264,5 +260,104 @@ if __name__ == "__main__":
     # If execution reaches here, we found the .yaml file and we have the scan
     # numbers we'll construct the XRR curve from. This is all that we need: a
     # recipe and some data; let's go ahead and process the data on this machine.
-    i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
+    # Now it's time to prepare to do some XRR reduction. If the user is in
+    # diamond and wants to use a cluster, then we should go ahead and do that.
+    if args.cluster:
+        islatufolder=f'{Path.home()}/islatu'
+        if not os.path.exists(islatufolder):
+            os.makedirs(islatufolder)
+        i=1
+        save_path=f'{islatufolder}/jobscript_{i}.py'
+        while (os.path.exists(str(save_path))):
+            i += 1
+            save_file_name = f'{islatufolder}/testscript_{i}.py'
+            save_path = Path(save_file_name)
+            if i > 1e7:
+                raise ValueError(
+                    "naming counter hit limit therefore exiting ")   
+        f=open(save_path,'x')
+        f.write("from islatu.runner import i07reduce\n")
+        f.write(f"scans = {args.scan_numbers}\nyamlpath='{args.yaml_path}'\ndatapath='{args.data_path}'\noutfile='{args.output}'\nqsubdict={args.limit_q}\n")
+        f.write("i07reduce(scans, yamlpath, datapath,filename=outfile, q_subsample_dicts=qsubdict)")
+        #f.write(f"i07reduce({args.scan_numbers}, {args.yaml_path}, {args.data_path},\
+        #      filename={args.output}, q_subsample_dicts={args.limit_q})")
+        f.close()
+            
+        #load in template mapscript, new paths
+        f=open('/dls_sw/apps/islatu/testing/islatu/CLI/islatuscript_template.sh')
+        lines=f.readlines()
+        f.close()
+        jobfile=f'{islatufolder}//jobscript.sh'
+        if os.path.exists(jobfile):
+            f=open(jobfile,'w')
+        else:
+            f=open(jobfile,'x')
+        for line in lines:
+            if '$' in line:
+                phrase=line[line.find('$'):line.find('}')+1]
+                outphrase=phrase.strip('$').strip('{').strip('}')
+                outline=line.replace(phrase,str(locals()[f'{outphrase}']))
+                #print(outline)
+                f.write(outline)
+            else:
+                f.write(line)
+        f.close()
+        
+        #get list of slurm out files in home directory
+        startfiles=os.listdir(f'{Path.home()}/islatu')
+        startslurms=[x for x in startfiles if '.out' in x]
+        startslurms.append(startfiles[0])
+        startslurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+        
+        #get latest slurm file  before submitting job
+        endfiles=os.listdir(f'{Path.home()}/islatu')
+        endslurms=[x for x in endfiles if '.out' in x]
+        endslurms.append(endfiles[0])
+        endslurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+        count=0
+        limit=0
+
+        #call subprocess to submit job using wilson
+        subprocess.run(["ssh","wilson","cd islatu \nsbatch jobscript.sh"])
+        while endslurms[-1]==startslurms[-1]:
+            endfiles=os.listdir(f'{Path.home()}/islatu')
+            endslurms=[x for x in endfiles if '.out' in x]
+            endslurms.append(endfiles[0])
+            endslurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+            if count >50:
+                limit=1
+                break
+            print(f'Job submitted, waiting for SLURM output.  Timer={5*count}',end="\r")
+            time.sleep(5)
+            count+=1
+        if limit==1:
+            print('Timer limit reached before new slurm ouput file found')
+        else:
+            print(f'Slurm output file: {Path.home()}/islatu//{endslurms[-1]}\n')
+            breakerline='*'*35
+            monitoring_line=f"\n{breakerline}\n ***STARTING TO MONITOR TAIL END OF FILE, TO EXIT THIS VIEW PRESS ANY LETTER FOLLOWED BY ENTER**** \n{breakerline} \n"
+            print(monitoring_line)
+            process = subprocess.Popen(["tail","-f",f"{Path.home()}/islatu//{endslurms[-1]}"], stdout=subprocess.PIPE, text=True)
+            target_phrase="Reduced data stored"
+            try:
+                for line in process.stdout:
+                    if "Loading images" in line:
+                        print(line.strip(),'\n')
+                    elif"Currently loaded" in line:
+                        print(f"\r{line.strip()}", end='')
+                    else:
+                        print(line.strip())  # Print each line of output
+                    if re.search(target_phrase, line):
+                        print(f"Target phrase '{target_phrase}' found. Closing tail.")
+                        break
+                    if( "Errno" in line) or ("error" in line) or ("Error" in line):
+                        print("error found. closing tail")
+                        break
+            finally:
+                process.terminate()
+                process.wait()
+        print("Python script on cluster completed successfully")
+        
+    else:
+        i07reduce(args.scan_numbers, args.yaml_path, args.data_path,
               filename=args.output, q_subsample_dicts=args.limit_q)

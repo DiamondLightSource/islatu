@@ -14,8 +14,8 @@ import numpy as np
 from scipy.stats import norm
 from scipy.optimize import curve_fit
 
-from .region import Region
-from .image import Image
+from islatu.region import Region
+from islatu.image import Image
 
 
 @dataclass
@@ -70,8 +70,8 @@ def roi_subtraction(image, list_of_regions: List[Region]):
         # the intensity measured in all the background regions so far.
         sum_of_bkg_areas += np.sum(
             image.array_original[
-                int(region.x_start):int(region.x_end),
-                int(region.y_start):int(region.y_end)
+                int(region.y_start):int(region.y_end),
+                int(region.x_start):int(region.x_end)
             ]
         )
         # Add the number of pixels in this background ROI to the total number of

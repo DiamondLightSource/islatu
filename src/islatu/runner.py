@@ -140,7 +140,7 @@ class Reduction:
                  data_state=DataState(), parser=io.i07_nxs_parser,
                  crop_function=cropping.crop_to_region, crop_kwargs=None,
                  bkg_function=background.fit_gaussian_1d, bkg_kwargs=None,
-                 dcd_normalisation=None, sample_size=None, beam_width=None):
+                 dcd_normalisation=None, sample_size=None, beam_width=None,overwrite_transmission=None):
         if input_files is None:
             input_files = []
         self.software = software
@@ -154,6 +154,7 @@ class Reduction:
         self.dcd_normalisation = dcd_normalisation
         self.sample_size = sample_size
         self.beam_width = beam_width
+        self.overwrite_transmission=overwrite_transmission
 
 
 class Data:
@@ -255,7 +256,8 @@ class Foreperson:
                 recipe['background']['method']]
             if 'kwargs' in recipe['background']:
                 self.reduction.bkg_kwargs = recipe['background']['kwargs']
-
+        if 'transmission' in keys:
+            self.reduction.overwrite_transmission=recipe['transmission']['values']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -311,7 +313,7 @@ class Foreperson:
                 self.data = Data(
                     columns=[
                         'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'])
-            if recipe['output columns'] == 34:
+            if recipe['output columns'] == 4:
                 self.data = Data(columns='both')
         if 'rebin' in keys:
             if 'n qvectors' in recipe['rebin'].keys():
@@ -373,6 +375,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     files_to_reduce = the_boss.reduction.input_files
 
     log_processing_stage("File parsing")
+    #return the_boss,files_to_reduce
     refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
     # Set the energy correctly.
@@ -417,7 +420,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
     if the_boss.reduction.bkg_function is not None:
         refl.bkg_sub(the_boss.reduction.bkg_function,
-                     **the_boss.reduction.bkg_kwargs)
+                      **the_boss.reduction.bkg_kwargs)
         the_boss.reduction.data_state.background = 'corrected'
 
 
@@ -440,18 +443,25 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
 
     log_processing_stage("Transmission normalisation.")
-    refl.transmission_normalisation()
+    if the_boss.reduction.overwrite_transmission is not None:
+        overwrite_transmissions=the_boss.reduction.overwrite_transmission
+    else:
+        overwrite_transmissions=None
+
+    refl.transmission_normalisation(overwrite_transmissions)
     the_boss.reduction.data_state.transmission = 'normalised'
     refl.concatenate()
 
 
     if q_subsample_dicts is not None:
         log_processing_stage(
-            "Doctoring data.\nSorry, I mean: Bounding q-vectors.")
+            "Bounding q-vectors.")
         # We'll need to subsample a subset of our scans.
         for q_subsample_dict in q_subsample_dicts:
             refl.subsample_q(**q_subsample_dict)
         debug.log("Limited q-range on specified scans.")
+    
+
 
     # Rebin the data, if the user requested this.
     if the_boss.data.rebin:
@@ -473,7 +483,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
                 f"{refl.q_vectors.max()}Å.", unimportance=2
             )
             refl.rebin(new_q=spacing(refl.q_vectors.min(), refl.q_vectors.max(),
-                                     the_boss.data.q_step))
+                                      the_boss.data.q_step))
         the_boss.reduction.data_state.rebinned = the_boss.data.q_shape
 
     the_boss.data_source.experiment.measurement.q_range = [
@@ -505,7 +515,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Write the data.
     np.savetxt(
-        filename, data, header=f"{dump(vars(the_boss))}\n Q(1/Å) R R_error"
+        filename, data, header=f"{dump(vars(the_boss))}\n Q(1/Å)\tR\tR_error"
     )
 
     debug.log("-" * 10)
