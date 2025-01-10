@@ -140,7 +140,7 @@ class Reduction:
                  data_state=DataState(), parser=io.i07_nxs_parser,
                  crop_function=cropping.crop_to_region, crop_kwargs=None,
                  bkg_function=background.fit_gaussian_1d, bkg_kwargs=None,
-                 dcd_normalisation=None, sample_size=None, beam_width=None,overwrite_transmission=None):
+                 dcd_normalisation=None, sample_size=None, beam_width=None,overwrite_transmission=None,normalisation=True):
         if input_files is None:
             input_files = []
         self.software = software
@@ -155,6 +155,7 @@ class Reduction:
         self.sample_size = sample_size
         self.beam_width = beam_width
         self.overwrite_transmission=overwrite_transmission
+        self.normalisation=normalisation
 
 
 class Data:
@@ -258,6 +259,9 @@ class Foreperson:
                 self.reduction.bkg_kwargs = recipe['background']['kwargs']
         if 'transmission' in keys:
             self.reduction.overwrite_transmission=recipe['transmission']['values']
+            
+        if 'normalisation' in keys:
+            self.reduction.normalisation=recipe['normalisation']['maxnorm']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -493,7 +497,10 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
 
     # Prepare the data array.
-    data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
+    if the_boss.reduction.normalisation==True:
+        data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
+    elif the_boss.reduction.normalisation==False:
+        data = np.array([refl.q_vectors, refl.reflectivity_nonorm, refl.reflectivity_e_nonorm]).T
     debug.log("XRR reduction completed.", unimportance=2)
 
     # Work out where to save the file.
