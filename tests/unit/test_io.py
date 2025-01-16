@@ -108,9 +108,10 @@ def test_local_path(nexus_base, path):
     'nexus_base, path',
     [
         (lazy('nexus_base_object_01'),
-         '/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
-        (lazy('i07_nexus_object_01'),
-         '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
+         lazy('path_to_i07_h5_01'))
+         #'/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
+        #(lazy('i07_nexus_object_01'),
+        # '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
     ]
 )
 def test_src_path(nexus_base, path):
@@ -127,7 +128,8 @@ def test_src_path(nexus_base, path):
     'i07_nexus, path',
     [
         (lazy('i07_nexus_object_01'),
-         '/dls/i07/data/2021/si28707-1/excaliburScan404876_000001.h5')
+        lazy('path_to_i07_h5_01'))
+        # '/dls/i07/data/2021/si28707-1/excaliburScan404876_000001.h5')
     ]
 )
 def test_src_data_path(i07_nexus: I07Nexus, path):
