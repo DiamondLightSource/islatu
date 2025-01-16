@@ -70,7 +70,7 @@ class NexusBase(Metadata):
         Raises:
             ValueError if more than one NXdetector is found.
         """
-        det, = self.instrument.NXdetector[0]
+        det, = self.instrument.NXdetector
         return det
 
     @property
