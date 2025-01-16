@@ -108,10 +108,9 @@ def test_local_path(nexus_base, path):
     'nexus_base, path',
     [
         (lazy('nexus_base_object_01'),
-         lazy('path_to_i07_h5_01'))
-         #'/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
-        #(lazy('i07_nexus_object_01'),
-        # '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
+        '/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
+        (lazy('i07_nexus_object_01'),
+         '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
     ]
 )
 def test_src_path(nexus_base, path):
