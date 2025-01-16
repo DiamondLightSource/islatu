@@ -206,10 +206,6 @@ class I07Nexus(NexusBase):
             return 'tth'
 
         
-        # It's also possible that self.default_axis_name isn't recorded in some
-        # nexus files. Just in case, let's check the length of diff1delta.
-        if isinstance(self.instrument["diff1delta"].value.nxdata, np.ndarray):
-            return 'tth'
         
         #add in option for EH2 scanning alpha
         if self.default_axis_name == 'diff2alpha_value_set':
@@ -218,6 +214,11 @@ class I07Nexus(NexusBase):
         #add in option for EH1 scanning chi
         if self.default_axis_name == 'diff1chi_value_set':
             return 'th'
+    
+        # It's also possible that self.default_axis_name isn't recorded in some
+        # nexus files. Just in case, let's check the length of diff1delta.
+        if isinstance(self.instrument["diff1delta"].value.nxdata, np.ndarray):
+            return 'tth'
 
     def _get_ith_region(self, i: int):
         """
@@ -560,7 +561,7 @@ def load_images_from_h5(h5_file_path,datanxfilepath,transpose=False):
     return images
 
 
-def i07_nxs_parser(file_path: str,remove_indices=None):
+def i07_nxs_parser(file_path: str,remove_indices=None,new_axis_info=None):
     """
     Parses a .nxs file acquired from the I07 beamline at diamond, returning an
     instance of Scan2D. This process involves loading the images contained in
@@ -605,20 +606,38 @@ def i07_nxs_parser(file_path: str,remove_indices=None):
 
     # The independent variable.
     axis = i07_nxs.default_axis
-
-    # We have to load the Data according to what our independent variable is.
-    if i07_nxs.default_axis_type == 'q':
-        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                    q_vectors=axis)
-    elif i07_nxs.default_axis_type == 'th':
-        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                    theta=axis)
-    elif i07_nxs.default_axis_type == 'tth':
-        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
-                    theta=axis/2)
+    if (new_axis_info!=None):
+        print(new_axis_info)
+        axis_name=new_axis_info[0]
+        axis=i07_nxs.instrument[f'{axis_name}'].value.nxdata
+        new_type=new_axis_info[1] 
+        if new_type== 'q':
+            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                        q_vectors=axis)
+        elif new_type  == 'th':
+            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                        theta=axis)
+        elif new_type  == 'tth':
+            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
+                        theta=axis/2)
+        else:
+            raise NotImplementedError(
+                f"{new_type} is not a supported axis type. Axis name={axis_name}")
+    
     else:
-        raise NotImplementedError(
-            f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
+        # We have to load the Data according to what our independent variable is.
+        if i07_nxs.default_axis_type == 'q':
+            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                        q_vectors=axis)
+        elif i07_nxs.default_axis_type == 'th':
+            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                        theta=axis)
+        elif i07_nxs.default_axis_type == 'tth':
+            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
+                        theta=axis/2)
+        else:
+            raise NotImplementedError(
+                f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
 
     # Returns the Scan2D object
     return Scan2D(data, i07_nxs, images, remove_indices)

@@ -140,7 +140,8 @@ class Reduction:
                  data_state=DataState(), parser=io.i07_nxs_parser,
                  crop_function=cropping.crop_to_region, crop_kwargs=None,
                  bkg_function=background.fit_gaussian_1d, bkg_kwargs=None,
-                 dcd_normalisation=None, sample_size=None, beam_width=None,overwrite_transmission=None,normalisation=True):
+                 dcd_normalisation=None, sample_size=None, beam_width=None,
+                 overwrite_transmission=None,normalisation=True,new_axis_name=None,new_axis_type=None):
         if input_files is None:
             input_files = []
         self.software = software
@@ -156,6 +157,8 @@ class Reduction:
         self.beam_width = beam_width
         self.overwrite_transmission=overwrite_transmission
         self.normalisation=normalisation
+        self.new_axis_name=new_axis_name
+        self.new_axis_type=new_axis_type
 
 
 class Data:
@@ -262,6 +265,12 @@ class Foreperson:
             
         if 'normalisation' in keys:
             self.reduction.normalisation=recipe['normalisation']['maxnorm']
+            
+        if 'adjustments'  in keys:
+            if 'new_axis_name' in recipe['adjustments'].keys():
+                self.reduction.new_axis_name=recipe['adjustments']['new_axis_name']
+            if 'new_axis_type' in recipe['adjustments'].keys():
+                self.reduction.new_axis_type=recipe['adjustments']['new_axis_type']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -313,11 +322,11 @@ class Foreperson:
         else:
             raise ValueError(f"No setup given in {self.yaml_file}.")
         if 'output_columns' in keys:
-            if recipe['output columns'] == 3:
+            if recipe['output_columns'] == 3:
                 self.data = Data(
                     columns=[
                         'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'])
-            if recipe['output columns'] == 4:
+            if recipe['output_columns'] == 4:
                 self.data = Data(columns='both')
         if 'rebin' in keys:
             if 'n qvectors' in recipe['rebin'].keys():
@@ -380,7 +389,10 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     log_processing_stage("File parsing")
     #return the_boss,files_to_reduce
-    refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
+    if the_boss.reduction.new_axis_name is not None:
+        refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,[the_boss.reduction.new_axis_name,the_boss.reduction.new_axis_type])
+    else:
+        refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
     # Set the energy correctly.
     the_boss.data_source.experiment.energy = refl.energy
