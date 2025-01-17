@@ -609,7 +609,7 @@ def i07_nxs_parser(file_path: str,remove_indices=None,new_axis_info=None):
     if (new_axis_info!=None):
         print(new_axis_info)
         axis_name=new_axis_info[0]
-        axis=i07_nxs.instrument[f'{axis_name}'].value.nxdata
+        axis=i07_nxs.instrument[f'{axis_name}'].value_set.nxdata
         new_type=new_axis_info[1] 
         if new_type== 'q':
             data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
