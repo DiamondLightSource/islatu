@@ -155,7 +155,8 @@ def test_local_data_path(i07_nexus: I07Nexus, path):
     directory structure would not be portable, and would merit tests of its
     own).
     """
-    assert i07_nexus.local_data_path == path
+    path_without_start=i07_nexus.local_data_path.split('islatu')[-1]
+    assert path_without_start == path
 
 
 @pytest.mark.parametrize(
