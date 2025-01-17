@@ -137,7 +137,7 @@ def test_src_data_path(i07_nexus: I07Nexus, path):
     stored, as referenced in the .nxs file. This is used to guess where the
     .h5 file is stored locally.
     """
-    assert i07_nexus._src_data_path == path
+    assert i07_nexus._src_data_path[0] == path
 
 
 @pytest.mark.parametrize(
@@ -155,7 +155,7 @@ def test_local_data_path(i07_nexus: I07Nexus, path):
     directory structure would not be portable, and would merit tests of its
     own).
     """
-    path_without_start=i07_nexus.local_data_path.split('islatu')[-1]
+    path_without_start=i07_nexus.local_data_path.split('islatu/')[-1]
     assert path_without_start == path
 
 
