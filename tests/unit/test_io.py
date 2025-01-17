@@ -136,8 +136,11 @@ def test_src_data_path(i07_nexus: I07Nexus, path):
     Make sure we can properly find the path to where the data was originally
     stored, as referenced in the .nxs file. This is used to guess where the
     .h5 file is stored locally.
+    edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
+    only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
-    assert i07_nexus._src_data_path[0] == path
+    path_without_start=i07_nexus._src_data_path[0].split('islatu/')[-1]
+    assert path_without_start == path
 
 
 @pytest.mark.parametrize(
@@ -154,6 +157,8 @@ def test_local_data_path(i07_nexus: I07Nexus, path):
     these are not tested (a test generating .h5 files throughout the
     directory structure would not be portable, and would merit tests of its
     own).
+    edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
+    only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
     path_without_start=i07_nexus.local_data_path.split('islatu/')[-1]
     assert path_without_start == path
