@@ -24,7 +24,7 @@ jobs:
           pytest --cov=./ --cov-report=xml
           coverage xml
       - name: Upload coverage reports to Codecov
-          uses: codecov/codecov-action@v5
-          with:
-            token: ${{ secrets.CODECOV_TOKEN }}
-            slug: DiamondLightSource/islatu
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: DiamondLightSource/islatu
