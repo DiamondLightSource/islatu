@@ -81,6 +81,19 @@ class Data:
         intensity array.
         """
         return self.intensity_e/np.amax(self.intensity)
+    @property
+    def reflectivity_nonorm(self) -> np.array:
+        """
+        Returns the intensity, unnormalised
+        """
+        return self.intensity
+
+    @property
+    def reflectivity_e_nonorm(self) -> np.array:
+        """
+        Returns the errors on the intensity, unnormalised
+        """
+        return self.intensity_e
 
     @property
     def q_vectors(self) -> np.array:

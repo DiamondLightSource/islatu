@@ -9,4 +9,4 @@ Installation
 
 Alternatively, the latest development build can be found `Github`_. 
 
-.. _Github: https://github.com/arm61/islatu
+.. _Github: https://github.com/DiamondLightSource/islatu

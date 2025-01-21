@@ -1,4 +1,4 @@
 MAJOR = 1
 MINOR = 0
-MICRO = 7
-__version__ = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+MICRO = '8testing'
+__version__ = '%d.%d.%s' % (MAJOR, MINOR, MICRO)

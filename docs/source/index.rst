@@ -2,6 +2,13 @@
    sphinx-quickstart on Fri Jan 17 18:56:48 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
+   
+Searching
+=========
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 X-ray reflectometry reduction in Python
 =======================================
@@ -21,7 +28,7 @@ If you need to contact the developers about anything, please either `raise an is
 
 Contributors
 ------------
-- `Philip Mousley`
+- `Philip Mousley`_
 - `Richard Brearton`_
 - `Andrew R. McCluskey`_
 
@@ -31,15 +38,15 @@ Acknowledgements
 We acknowledge the support of the Ada Lovelace Centre – a joint initiative between the Science and Technology Facilities Council (as part of UK Research and Innovation), Diamond Light Source, and the UK Atomic Energy Authority, in the development of this software.
 
 .. _Diamond Light Source: https://www.diamond.ac.uk
-.. _open an issue on the github repository: https://github.com/RBrearton/islatu/issues
-.. _raise an issue: https://github.com/RBrearton/islatu/issues
-.. _raise an issue on the github repository: https://github.com/RBrearton/islatu/issues
+.. _open an issue on the github repository: https://github.com/DiamondLightSource/islatu/issues
+.. _raise an issue: https://github.com/DiamondLightSource/islatu/issues
+.. _raise an issue on the github repository: https://github.com/DiamondLightSource/islatu/issues
 .. _API-level documentation: ./modules.html
 .. _workflows: ./workflows.html
 .. _command line interface: ./process_xrr.ipynb
 .. _Andrew R. McCluskey: https://www.armccluskey.com
 .. _Richard Brearton: https://scholar.google.com/citations?user=fD9zp0YAAAAJ&hl=en
-
+.. _Philip Mousley: https://orcid.org/0000-0002-3666-3768 
 .. toctree::
    :hidden:
    :maxdepth: 2
@@ -49,9 +56,4 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
    process_xrr
    modules
 
-Searching
-=========
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

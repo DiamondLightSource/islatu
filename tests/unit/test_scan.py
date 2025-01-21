@@ -235,8 +235,8 @@ def test_crop_03(scan2d_from_nxs_01: Scan2D, region_01: Region):
     Make sure that the region we've cropped to has the specified shape.
     """
     scan2d_from_nxs_01.crop(crop_to_region, region=region_01)
-    assert scan2d_from_nxs_01.images[0].shape[0] == region_01.x_length
-    assert scan2d_from_nxs_01.images[0].shape[1] == region_01.y_length
+    assert scan2d_from_nxs_01.images[0].shape[0] == region_01.y_length
+    assert scan2d_from_nxs_01.images[0].shape[1] == region_01.x_length
 
 
 def test_bkg_sub_01(scan2d_from_nxs_01: Scan2D):

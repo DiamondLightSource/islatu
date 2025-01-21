@@ -23,7 +23,7 @@ class Profile(Data):
         self.scans = scans
 
     @classmethod
-    def fromfilenames(cls, filenames, parser):
+    def fromfilenames(cls, filenames, parser,new_axis=None):
         """
         Instantiate a profile from a list of scan filenames.
 
@@ -36,7 +36,10 @@ class Profile(Data):
         """
 
         # Load the scans, specifying the scan axis name if necessary.
-        scans = [parser(filename) for filename in filenames]
+        if new_axis==None:
+            scans = [parser(filename) for filename in filenames]
+        else:
+            scans = [parser(filename,new_axis_info=new_axis) for filename in filenames]
 
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the
@@ -130,11 +133,11 @@ class Profile(Data):
             scan.footprint_correction(beam_width, sample_size)
         self.concatenate()
 
-    def transmission_normalisation(self,overwrite_transmissions=None):
+    def transmission_normalisation(self, overwrite_transmissions=None):
         """
         Perform the transmission correction.
         """
-        for i,scan in enumerate(self.scans):
+        for i, scan in enumerate(self.scans):
             if overwrite_transmissions is not None:
                 overwrite_transmission = overwrite_transmissions[i]
             else:

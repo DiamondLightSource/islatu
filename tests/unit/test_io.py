@@ -108,7 +108,7 @@ def test_local_path(nexus_base, path):
     'nexus_base, path',
     [
         (lazy('nexus_base_object_01'),
-         '/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
+        '/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
         (lazy('i07_nexus_object_01'),
          '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
     ]
@@ -127,7 +127,8 @@ def test_src_path(nexus_base, path):
     'i07_nexus, path',
     [
         (lazy('i07_nexus_object_01'),
-         '/dls/i07/data/2021/si28707-1/excaliburScan404876_000001.h5')
+        lazy('path_to_i07_h5_01'))
+        # '/dls/i07/data/2021/si28707-1/excaliburScan404876_000001.h5')
     ]
 )
 def test_src_data_path(i07_nexus: I07Nexus, path):
@@ -135,8 +136,11 @@ def test_src_data_path(i07_nexus: I07Nexus, path):
     Make sure we can properly find the path to where the data was originally
     stored, as referenced in the .nxs file. This is used to guess where the
     .h5 file is stored locally.
+    edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
+    only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
-    assert i07_nexus._src_data_path == path
+    path_without_start=i07_nexus._src_data_path[0].split('islatu/')[-1]
+    assert path_without_start == path
 
 
 @pytest.mark.parametrize(
@@ -153,8 +157,11 @@ def test_local_data_path(i07_nexus: I07Nexus, path):
     these are not tested (a test generating .h5 files throughout the
     directory structure would not be portable, and would merit tests of its
     own).
+    edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
+    only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
-    assert i07_nexus.local_data_path == path
+    path_without_start=i07_nexus.local_data_path.split('islatu/')[-1]
+    assert path_without_start == path
 
 
 @pytest.mark.parametrize(

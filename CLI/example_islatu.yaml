@@ -17,26 +17,7 @@ setup:
   #==== /path/to/normalization/file  comment this line out if not using dcd normalisation
   #=== Outside of diamond, this might look like, for example:
   # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
-  dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
-
-
-
-#name of q_axis e.g. 'qdcd' - used in interpolator for corrections, defaults to "qdcd_"
-#  q axis:
-
-#set whether image is transposed or not, will the swap qz and qxy if transposed. 
-#  transpose: True
-
-# unclear where this is used by islatu
-#  pixel max:
-
-# unclear where this is used by islatu
-#  hot pixel max:
-
-  #name of theta axis e.g 'dcdtheta' - unclear where this is used by islatu
-#  theta_axis:  
-  
-  
+  #dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
 crop:
   method: crop
   # Leave kwargs commented to crop to ROI_1, as specified in GDA.
@@ -48,6 +29,9 @@ background:
   method: roi_subtraction
 # Uncomment kwargs to background to manually set the background region.
 # kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+normalisation:
+  #choose whether to normalise the final intensity profile by the maximum value
+  maxnorm: True
 
 #set what columns you want in the output, currently only working option is 3
 # 3 =  'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'
@@ -56,8 +40,4 @@ rebin:
   # Number of bins to place q-vectors into. These bins are linearly spaced in q
   # by default.
   n qvectors: 5000
-  #alternative definition of rebinning parameters, although does not seem to be fully implemented
-  # min:
-  # max:
-  # step:
-  # shape:
+
