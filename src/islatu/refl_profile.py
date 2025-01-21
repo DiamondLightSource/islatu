@@ -118,10 +118,6 @@ class Profile(Data):
                 scan.subsample_q(q_min, q_max)
         self.concatenate()
 
-    def remove_moving_attenuator_images(self,):
-        for scan in self.scans:
-            scan.remove_moving_att_images()
-
     def footprint_correction(self, beam_width, sample_size):
         """
         Class method for :func:`~islatu.refl_data.Scan.footprint_correction`
