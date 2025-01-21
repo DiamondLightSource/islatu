@@ -1,3 +1,4 @@
+---
 ignore:
-  - "*/tests/*”
-  - "**/docs/*”
+  - "tests/**/*"
+  - "docs/**/*"
