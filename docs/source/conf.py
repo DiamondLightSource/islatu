@@ -38,7 +38,7 @@ release = '1.0.8'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
+    #'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -48,7 +48,23 @@ extensions = [
     'sphinx.ext.imgmath',
     'nbsphinx',
     'jupyter_sphinx',
-    'sphinx_collapse'
+    'sphinx_collapse',
+    'autodoc2',
+]
+
+autodoc2_packages = [
+    "../../src/islatu/background.py",
+    "../../src/islatu/corrections.py",    
+    "../../src/islatu/cropping.py",
+    "../../src/islatu/data.py",
+    "../../src/islatu/debug.py",
+    "../../src/islatu/image.py",
+    "../../src/islatu/io.py",
+    "../../src/islatu/metadata.py",
+    "../../src/islatu/refl_profile.py",
+    "../../src/islatu/region.py",
+    "../../src/islatu/scan.py",
+    "../../src/islatu/stitching.py"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -68,7 +84,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
