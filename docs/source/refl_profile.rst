@@ -1,5 +1,5 @@
 islatu\.refl_profile
-=================
+====================
 
 .. automodule:: islatu.refl_profile
     :members:

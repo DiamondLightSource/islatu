@@ -3,12 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
    
-Searching
-=========
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 X-ray reflectometry reduction in Python
 =======================================
@@ -18,12 +13,26 @@ Currently, :py:mod:`islatu` is developed at and supports data from `Diamond Ligh
 
 These webpages include `API-level documentation`_ and information about some `workflows`_ that can be used for data reduction. There is also documentation on a `command line interface`_ that can be used to process reflectivity data without any python programming.
 
+Searching
+----------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
 Contributing
 ------------
 As with any coding project, there are many ways to contribue. To report a bug or suggest a feature, `open an issue on the github repository`_. If you would like to contribute code, we would recommend that you first `raise an issue`_ before diving into writing code, so we can let you know if we are working on something similar already. To e.g. fix typos in documentation or in the code, or for other minor changes, feel free to make pull requests directly.
 
+Test section
+----------------
+.. collapse:: Click to Open
+    
+    This section will be visible when the page load
+    test content block
+
 Contact us
-----------
+----------------
 If you need to contact the developers about anything, please either `raise an issue on the github repository`_ if appropriate, or send an email to philip.mousley@diamond.ac.uk.
 
 Contributors
