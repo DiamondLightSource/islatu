@@ -47,7 +47,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.imgmath',
     'nbsphinx',
-    'jupyter_sphinx'
+    'jupyter_sphinx',
+    'sphinx_collapse'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
