@@ -15,7 +15,7 @@ from typing import List
 import numpy as np
 from scipy.interpolate import splev
 
-from islatu import corrections
+import islatu.corrections as corrections
 from islatu.metadata import Metadata
 from islatu.data import Data, MeasurementBase
 from islatu.image import Image

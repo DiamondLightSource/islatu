@@ -99,9 +99,9 @@ def univariate_normal(data, mean, sigma, offset, factor):
         data (:py:attr:`array_like`): Abscissa data.
         mean (:py:attr:`float`): Mean (horizontal).
         sigma (:py:attr:`float`): Variance (horizontal).
-        offset (:py:attr:`float`): Offset from the 0 for the ordinate, this is
+        offset (:py:attr:`float`): Offset from the 0 for the ordinate, this is\
             the background level.
-        factor (:py:attr:`float`): Multiplicative factor for area of normal
+        factor (:py:attr:`float`): Multiplicative factor for area of normal\
             distribution.
 
     Returns:
