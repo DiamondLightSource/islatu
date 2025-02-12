@@ -12,8 +12,7 @@ from scipy.interpolate import splrep
 
 def footprint_correction(beam_width, sample_size, theta):
     """
-    The factor by which the intensity should be multiplied to account for the
-    scattering geometry, where the beam is Gaussian in shape.
+    The factor by which the intensity should be multiplied to account for the scattering geometry, where the beam is Gaussian in shape.
 
     Args:
         beam_width (:py:attr:`float`):
@@ -41,17 +40,13 @@ def footprint_correction(beam_width, sample_size, theta):
 def get_interpolator(
         file_path, parser, q_axis_name="qdcd_", intensity_axis_name="adc2"):
     """
-    Get an interpolator object from scipy, this is useful for the DCD
-    q-normalisation step.
+    Get an interpolator object from scipy, this is useful for the DCD q-normalisation step.
 
     Args:
         file_path (:py:attr:`str`): File path to the normalisation file.
-        parser (:py:attr:`callable`): Parser function for the normalisation
-            file.
-        q_axis_name (:py:attr:`str`, optional): Label for the q-value in the
-            normalisation file. Defaults to ``'qdcd_'``.
-        intensity_axis_name (:py:attr:`str`, optional): Label for the
-            intensity in the normalisation file. Defaults to ``'adc2'``.
+        parser (:py:attr:`callable`): Parser function for the normalisation file.
+        q_axis_name (:py:attr:`str`, optional): Label for the q-value in the normalisation file. Defaults to ``'qdcd_'``.
+        intensity_axis_name (:py:attr:`str`, optional): Label for the intensity in the normalisation file. Defaults to ``'adc2'``.
 
     Returns:
         :py:attr:`tuple`: Containing:

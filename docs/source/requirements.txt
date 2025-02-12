@@ -2,3 +2,4 @@ nbsphinx
 ipykernel
 jupyter_sphinx
 sphinx-collapse
+autodoc2

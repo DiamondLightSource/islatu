@@ -28,10 +28,8 @@ class Image:
 
     Args:
         file_path (:py:attr:`str`): The file path for the image.
-        data (:py:class:`pandas.DataFrame`, optional): Experimental data about
-            the measurement. Defaults to :py:attr:`None`.
-        transpose (:py:attr:`bool`, optional): Should the data be rotated by
-            90 degrees? Defaults to :py:attr:`False`.
+        data (:py:class:`pandas.DataFrame`, optional): Experimental data about the measurement. Defaults to :py:attr:`None`.
+        transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False`.
     """
 
     def __init__(self, array: np.ndarray, transpose: bool = False):
@@ -114,10 +112,8 @@ class Image:
         Perform a background subtraction based on some function.
 
         Args:
-            background_subtraction_function (:py:attr:`callable`): The
-                function to model the data and therefore remove the background.
-            **kwargs (:py:attr:`dict`): The background substraction function
-                keyword arguments.
+            background_subtraction_function (:py:attr:`callable`): The function to model the data and therefore remove the background.
+            **kwargs (:py:attr:`dict`): The background substraction function keyword arguments.
         """
 
         bkg_sub_info = background_subtraction_function(

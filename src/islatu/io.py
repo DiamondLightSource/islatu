@@ -192,7 +192,7 @@ class I07Nexus(NexusBase):
         Returns the name of the default axis.
         """
         return self.entry[self.entry.default].axes
-
+    
     @property
     def default_axis_type(self) -> str:
         """
@@ -422,14 +422,11 @@ class I07Nexus(NexusBase):
 
         Args:
             region_no:
-                An integer corresponding the the particular region of interest
-                we're interested in generating a key for.
+                An integer corresponding the the particular region of interest we're interested in generating a key for.
             kind:
-                The kind of region bounds keys we're interested in. This can
-                take the values:
+                The kind of region bounds keys we're interested in. This can take the values:
                     'x_1', 'width', 'y_1', 'height'
-                where '1' can be replaced with 'start' and with/without caps on
-                first letter of width/height.
+                where '1' can be replaced with 'start' and with/without caps on first letter of width/height.
 
         Raises:
             ValueError if 'kind' argument is not one of the above.
