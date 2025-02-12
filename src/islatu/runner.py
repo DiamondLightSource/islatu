@@ -23,10 +23,10 @@ import src.islatu.background
 import src.islatu.corrections
 import src.islatu.cropping
 import src.islatu.io
-from src.islatu.region import Region
-from src.islatu.io import i07_dat_to_dict_dataframe
-from src.islatu.refl_profile import Profile
-from src.islatu.debug import debug
+from islatu.region import Region
+from islatu.io import i07_dat_to_dict_dataframe
+from islatu.refl_profile import Profile
+from islatu.debug import debug
 
 
 # This could be done by reflection, but it feels slightly less arcane to use

@@ -6,7 +6,7 @@ makes sense to crop the image to the peak.
 
 import numpy as np
 
-from src.islatu.region import Region
+from islatu.region import Region
 
 
 def crop_to_region(array: np.ndarray, region: Region):

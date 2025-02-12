@@ -16,9 +16,9 @@ import numpy as np
 from scipy.interpolate import splev
 
 import src.islatu.corrections
-from src.islatu.metadata import Metadata
-from src.islatu.data import Data, MeasurementBase
-from src.islatu.image import Image
+from islatu.metadata import Metadata
+from islatu.data import Data, MeasurementBase
+from islatu.image import Image
 
 
 class Scan(MeasurementBase):
