@@ -19,10 +19,10 @@ from yaml import load, dump
 import numpy as np
 
 
-import src.islatu.background
-import src.islatu.corrections
-import src.islatu.cropping
-import src.islatu.io
+import islatu.background
+import islatu.corrections
+import islatu.cropping
+import islatu.io
 from islatu.region import Region
 from islatu.io import i07_dat_to_dict_dataframe
 from islatu.refl_profile import Profile
