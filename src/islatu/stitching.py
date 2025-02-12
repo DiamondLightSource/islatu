@@ -7,7 +7,7 @@ from typing import List
 
 import numpy as np
 
-from scan import Scan
+from src.islatu.sscan import Scan
 
 
 def concatenate(scan_list: List[Scan]):

@@ -19,14 +19,14 @@ from yaml import load, dump
 import numpy as np
 
 
-import background
-import corrections
-import cropping
-import io
-from region import Region
-from io import i07_dat_to_dict_dataframe
-from refl_profile import Profile
-from debug import debug
+import src.islatu.background
+import src.islatu.corrections
+import src.islatu.cropping
+import src.islatu.io
+from src.islatu.region import Region
+from src.islatu.io import i07_dat_to_dict_dataframe
+from src.islatu.refl_profile import Profile
+from src.islatu.debug import debug
 
 
 # This could be done by reflection, but it feels slightly less arcane to use

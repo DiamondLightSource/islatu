@@ -14,8 +14,8 @@ import numpy as np
 from scipy.stats import norm
 from scipy.optimize import curve_fit
 
-from region import Region
-from image import Image
+from src.islatu.region import Region
+from src.islatu.image import Image
 
 
 @dataclass
