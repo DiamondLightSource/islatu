@@ -6,9 +6,9 @@ intensity as a function of scattering vector data.
 
 from typing import List
 
-from islatu.scan import Scan
-from islatu.stitching import concatenate, rebin
-from islatu.data import Data
+from scan import Scan
+from stitching import concatenate, rebin
+from data import Data
 
 
 class Profile(Data):

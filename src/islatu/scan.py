@@ -15,10 +15,10 @@ from typing import List
 import numpy as np
 from scipy.interpolate import splev
 
-from islatu import corrections
-from islatu.metadata import Metadata
-from islatu.data import Data, MeasurementBase
-from islatu.image import Image
+import corrections
+from metadata import Metadata
+from data import Data, MeasurementBase
+from image import Image
 
 
 class Scan(MeasurementBase):

@@ -7,7 +7,7 @@ from typing import List
 
 import numpy as np
 
-from .scan import Scan
+from scan import Scan
 
 
 def concatenate(scan_list: List[Scan]):

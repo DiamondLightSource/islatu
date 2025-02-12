@@ -24,12 +24,12 @@ import numpy as np
 import h5py
 
 
-from islatu.scan import Scan2D
-from islatu.image import Image
-from islatu.data import Data
-from islatu.region import Region
-from islatu.debug import debug
-from islatu.metadata import Metadata
+from scan import Scan2D
+from image import Image
+from data import Data
+from region import Region
+from debug import debug
+from metadata import Metadata
 
 
 class NexusBase(Metadata):

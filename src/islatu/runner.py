@@ -18,15 +18,15 @@ except ImportError:
 from yaml import load, dump
 import numpy as np
 
-import islatu
-from islatu import background
-from islatu import corrections
-from islatu import cropping
-from islatu import io
-from islatu.region import Region
-from islatu.io import i07_dat_to_dict_dataframe
-from islatu.refl_profile import Profile
-from islatu.debug import debug
+
+import background
+import corrections
+import cropping
+import io
+from region import Region
+from io import i07_dat_to_dict_dataframe
+from refl_profile import Profile
+from debug import debug
 
 
 # This could be done by reflection, but it feels slightly less arcane to use
