@@ -24,12 +24,6 @@ Contributing
 ------------
 As with any coding project, there are many ways to contribue. To report a bug or suggest a feature, `open an issue on the github repository`_. If you would like to contribute code, we would recommend that you first `raise an issue`_ before diving into writing code, so we can let you know if we are working on something similar already. To e.g. fix typos in documentation or in the code, or for other minor changes, feel free to make pull requests directly.
 
-Test section
-----------------
-.. collapse:: Click to Open
-    
-    This section will be visible when the page load
-    test content block
 
 Contact us
 ----------------
@@ -37,9 +31,9 @@ If you need to contact the developers about anything, please either `raise an is
 
 Contributors
 ------------
-- `Philip Mousley`_
-- `Richard Brearton`_
 - `Andrew R. McCluskey`_
+- `Richard Brearton`_
+- `Philip Mousley`_
 
 Acknowledgements
 ----------------
@@ -50,7 +44,7 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
 .. _open an issue on the github repository: https://github.com/DiamondLightSource/islatu/issues
 .. _raise an issue: https://github.com/DiamondLightSource/islatu/issues
 .. _raise an issue on the github repository: https://github.com/DiamondLightSource/islatu/issues
-.. _API-level documentation: ./modules.html
+.. _API-level documentation: ./apidocs/index.html
 .. _workflows: ./workflows.html
 .. _command line interface: ./process_xrr.ipynb
 .. _Andrew R. McCluskey: https://www.armccluskey.com

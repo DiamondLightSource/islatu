@@ -20,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'islatu'
-copyright = '2020, Andrew R. McCluskey'
-author = 'Andrew R. McCluskey'
+copyright = '2020-2025, Diamond Light Source Ltd'
+author = 'Philip Mousley'
 
 version = '1.0.8'
 # The full version, including alpha/beta/rc tags
@@ -107,6 +107,11 @@ html_theme = 'alabaster'
 # documentation.
 #
 # html_theme_options = {}
+html_theme_options = {
+    'page_width': '1800px',
+    'body_max_width': 'none',
+    'sidebar_width': '300px'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -155,7 +160,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'islatu.tex', 'islatu Documentation',
-     'Andrew R. McCluskey', 'manual'),
+     'Philip Mousley', 'manual'),
 ]
 
 
