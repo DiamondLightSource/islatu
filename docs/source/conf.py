@@ -108,7 +108,7 @@ html_theme = 'alabaster'
 #
 # html_theme_options = {}
 html_theme_options = {
-    'page_width': '1800px',
+    'page_width': '1200px',
     'body_max_width': 'none',
     'sidebar_width': '300px'
 }

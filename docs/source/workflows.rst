@@ -3,7 +3,6 @@
 
 Working from a jupyter notebook on any system
 ---------------------------------------------------
-
 --------------------------------------------------------------------------
 
    The notebook linked below shows a typical data reduction workflow from a notebook handled by :py:mod:`islatu`  : 

@@ -14,12 +14,3 @@
     color: #000000;
 }
 
-div[class^="highlight-bash"] pre {
-    white-space: pre-wrap !important;
-    word-wrap: break-word !important;
-    overflow-x: visible !important;
-    max-width: 100% !important;
-}
-.wy-nav-content {
-    max-width: 1800px;
-}
