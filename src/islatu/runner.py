@@ -18,11 +18,11 @@ except ImportError:
 from yaml import load, dump
 import numpy as np
 
-
-import islatu.background
-import islatu.corrections
-import islatu.cropping
-import islatu.io
+import islatu
+import islatu.background as background
+import islatu.corrections as corrections
+import islatu.cropping as cropping
+import islatu.io as io
 from islatu.region import Region
 from islatu.io import i07_dat_to_dict_dataframe
 from islatu.refl_profile import Profile
@@ -417,7 +417,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         }
     elif 'width' in the_boss.reduction.crop_kwargs:
         the_boss.reduction.crop_kwargs = {
-            'region': Region.from_dict(**the_boss.reduction.crop_kwargs)
+            'region': Region.from_dict(region_dict=the_boss.reduction.crop_kwargs)
         }
     refl.crop(the_boss.reduction.crop_function,
               **the_boss.reduction.crop_kwargs)
@@ -438,7 +438,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             }
         elif 'width' in the_boss.reduction.bkg_kwargs:
             the_boss.reduction.bkg_kwargs = {
-                'list_of_regions': Region.from_dict(**the_boss.reduction.bkg_kwargs)
+                'list_of_regions': Region.from_dict(region_dict=the_boss.reduction.bkg_kwargs)
             }
     else:
         print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
