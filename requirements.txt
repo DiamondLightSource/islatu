@@ -13,4 +13,4 @@ jupyterlab
 ipywidgets
 coverage==6.3.2
 pytest-cov
-sphinx==8.0.0
+sphinx==7.4.7
