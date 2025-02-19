@@ -3,4 +3,4 @@ ipykernel
 jupyter_sphinx
 sphinx-collapse
 sphinx-autodoc2
-sphinx=8.2.0
+sphinx==8.2.0
