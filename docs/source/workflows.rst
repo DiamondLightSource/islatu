@@ -1,4 +1,4 @@
-**Processing Diamond data**
+Processing Diamond data
 ============================
 
 Working from a jupyter notebook on any system

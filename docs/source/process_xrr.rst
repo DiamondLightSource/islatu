@@ -19,49 +19,55 @@ to your experiment.
 An example of the .yaml file could be something like
 
 
-.. code-block:: bash 
+.. code-block:: yaml 
 
     instrument: 'i07'
     visit:
-    local contact: "Firstname Lastname"
-    user: 'Firstname Lastname'
-    user affiliation: 'InstitutionName'
-    visit id: 'experimentID'
-    date: 2021-08-06
+      local contact: "Firstname Lastname"
+      user: 'Firstname Lastname'
+      user affiliation: 'InstitutionName'
+      visit id: 'experimentID'
+      date: 2021-08-06
     setup:
-    # ====(sample_length, sample_width) in m
-    # ====...where the "length" direction is parallel to the wavevector of the
-    # ====incident light for |q|=0.
-    sample size: (200e-3, 10e-3)
+      # ====(sample_length, sample_width) in m
+      # ====...where the "length" direction is parallel to the wavevector of the
+      # ====incident light for |q|=0.
+      sample size: (200e-3, 10e-3)
 
-    # ====Beam FWHM in m
-    beam width: 100e-6
+      # ====Beam FWHM in m
+      beam width: 100e-6
 
-    #==== /path/to/normalization/file  comment this line out if not using dcd normalisation
-    #=== Outside of diamond, this might look like, for example:
-    # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
-    dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
+      #==== /path/to/normalization/file  comment this line out if not using dcd normalisation
+      #=== Outside of diamond, this might look like, for example:
+      # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
+      dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
 
     crop:
-    method: crop
-    # Leave kwargs commented to crop to ROI_1, as specified in GDA.
-    # Uncomment kwargs to crop to manually set the cropping region.
-    #  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+      # currently only one cropping method is available
+      method: crop
+      # comment out kwargs to crop to ROI_1 from nexus data file, as specified in GDA.
+      # leave kwargs uncommented  to manually crop to a specified cropping region.
+      kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+      
     background:
-    # The most reliable method that one can use to subtract background is
-    # roi_subtraction. We strongly recommend that this option is used.
-    method: roi_subtraction
-    # Uncomment kwargs to background to manually set the background region.
-    # kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+      # The most reliable method that one can use to subtract background is
+      # roi_subtraction. We strongly recommend that this option is used.
+      method: roi_subtraction
+      # comment out kwargs to use ROI_2 from nexus data file as background region.
+      # leave uncommented kwargs to manually select a specified background region.
+      kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
 
-    #set what columns you want in the output, currently only working option is 3
-    # 3 =  'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'
-    output_columns: 3
+    normalisation:
+      #choose whether to normalise the final intensity profile by the maximum value
+      maxnorm: True
+
     rebin:
-    # Number of bins to place q-vectors into. These bins are linearly spaced in q
-    # by default.
-    n qvectors: 5000
+      # Number of bins to place q-vectors into. These bins are linearly spaced in q
+      # by default.
+      n qvectors: 5000
 
+
+If the roi_subtraction option for background subtraction method is not suitable, more information on the alternative options can be found in the `API documentation`_.
 
 Processing with process_xrr.py
 ------------------------------------
@@ -115,3 +121,5 @@ Now, later on in the same experiment you want to process another reflectivity cu
 .. code-block:: bash
 
     process_xrr.py -d /dls/i07/data/2021/si28979-1/ -y /home/xrr12345/Documents/Recipes/DCD_si28979_1.yaml -o /home/xrr12345/Documents/Data/ -N 817241 817242 817243 817244 817245 817247 817248 817250 817251`
+
+.. _API documentation: ./apidocs/background/background.html
