@@ -17,27 +17,28 @@ setup:
   #==== /path/to/normalization/file  comment this line out if not using dcd normalisation
   #=== Outside of diamond, this might look like, for example:
   # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
-  #dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
+  dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat
+  
 crop:
+  # currently only one cropping method is available
   method: crop
-  # Leave kwargs commented to crop to ROI_1, as specified in GDA.
-  # Uncomment kwargs to crop to manually set the cropping region.
-#  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+  # comment out kwargs to crop to ROI_1 from nexus data file, as specified in GDA.
+  # leave kwargs uncommented  to manually crop to a specified cropping region.
+  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+
 background:
   # The most reliable method that one can use to subtract background is
   # roi_subtraction. We strongly recommend that this option is used.
   method: roi_subtraction
-# Uncomment kwargs to background to manually set the background region.
-# kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+  # comment out kwargs to use ROI_2 from nexus data file as background region.
+  # leave uncommented kwargs to manually select a specified background region.
+  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+
 normalisation:
   #choose whether to normalise the final intensity profile by the maximum value
   maxnorm: True
 
-#set what columns you want in the output, currently only working option is 3
-# 3 =  'Qz / Aa^-1', 'RQz', 'sigma RQz, standard deviation'
-output_columns: 3
 rebin:
   # Number of bins to place q-vectors into. These bins are linearly spaced in q
   # by default.
   n qvectors: 5000
-
