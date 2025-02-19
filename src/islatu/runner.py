@@ -411,9 +411,13 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         roi = refl.scans[0].metadata.signal_regions[0]
         the_boss.reduction.crop_kwargs = {'region': roi}
         debug.log(f"Crop ROI '{str(roi)}' generated from the .nxs file.")
-    else:
+    elif 'x_end' in the_boss.reduction.crop_kwargs:
         the_boss.reduction.crop_kwargs = {
             'region': Region(**the_boss.reduction.crop_kwargs)
+        }
+    elif 'width' in the_boss.reduction.crop_kwargs:
+        the_boss.reduction.crop_kwargs = {
+            'region': Region.from_dict(**the_boss.reduction.crop_kwargs)
         }
     refl.crop(the_boss.reduction.crop_function,
               **the_boss.reduction.crop_kwargs)
@@ -428,9 +432,13 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         if the_boss.reduction.bkg_kwargs is None:
             the_boss.reduction.bkg_kwargs = {
                 'list_of_regions': refl.scans[0].metadata.background_regions}
-        else:
+        elif 'x_end' in the_boss.reduction.bkg_kwargs:
             the_boss.reduction.bkg_kwargs = {
                 'list_of_regions': Region(**the_boss.reduction.bkg_kwargs)
+            }
+        elif 'width' in the_boss.reduction.bkg_kwargs:
+            the_boss.reduction.bkg_kwargs = {
+                'list_of_regions': Region.from_dict(**the_boss.reduction.bkg_kwargs)
             }
     else:
         print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")

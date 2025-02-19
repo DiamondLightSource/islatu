@@ -204,6 +204,14 @@ def region_01():
     """
     return Region(x_start=1056, x_end=1124, y_start=150, y_end=250)
 
+@pytest.fixture
+def region_02():
+    """
+    Returns a fairly generic instance of islatu.region's Region class, but loaded from dict 
+    """
+    return Region.from_dict({'x': 1056, 'width': 1124-1056, 'y': 150, 'height': 250-150})
+    
+
 
 @pytest.fixture
 def profile_01(path_to_i07_nxs_01):

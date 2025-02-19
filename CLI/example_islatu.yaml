@@ -18,21 +18,24 @@ setup:
   #=== Outside of diamond, this might look like, for example:
   # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
   dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat
-  
+
 crop:
   # currently only one cropping method is available
   method: crop
   # comment out kwargs to crop to ROI_1 from nexus data file, as specified in GDA.
   # leave kwargs uncommented  to manually crop to a specified cropping region.
-  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
-
+  #kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+  #alternative format is specify with width and height values
+  kwargs: { 'x': 1050  , 'width': 100 , 'y': 190   , 'height': 21  }
 background:
   # The most reliable method that one can use to subtract background is
   # roi_subtraction. We strongly recommend that this option is used.
   method: roi_subtraction
   # comment out kwargs to use ROI_2 from nexus data file as background region.
   # leave uncommented kwargs to manually select a specified background region.
-  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+  #kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+  #alternative format is specify with width and height values
+  kwargs: { 'x': 1050  , 'width': 100 , 'y': 190   , 'height': 21  }
 
 normalisation:
   #choose whether to normalise the final intensity profile by the maximum value
