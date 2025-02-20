@@ -48,3 +48,9 @@ def test_region_equality(region_01: Region):
     Make sure that out __eq__ method is working.
     """
     assert Region(1056, 1124, 150, 250) == region_01
+
+def test_region_from_dict(region_01:Region, region_02:Region):
+    """
+    make sure loading from_dict gives same region
+    """
+    assert region_01==region_02
