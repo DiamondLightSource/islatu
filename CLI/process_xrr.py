@@ -207,7 +207,8 @@ if __name__ == "__main__":
         # closed interval [args.lower_bound, args.upper_bound].
         args.scan_numbers = [x for x in nexus_files if
                              x >= args.lower_bound and x <= args.upper_bound]
-        debug.log("Scan numbers found: " + str(args.scan_numbers) + ".", 2)
+        args.scan_numbers.sort()
+        debug.log("Scan numbers found: " + str(args.scan_numbers) + ".")
 
         # Make sure we found some scans.
         if len(args.scan_numbers) == 0:
