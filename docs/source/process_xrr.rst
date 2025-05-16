@@ -60,6 +60,11 @@ An example of the .yaml file could be something like
     normalisation:
       #choose whether to normalise the final intensity profile by the maximum value
       maxnorm: True
+      
+    adjustments:
+      #use this section to define adjusments needed for specific cases, for example here to instruct islatu to use the delta angle for the theta calculations. 
+      new_axis_name: 'diff1delta'
+      new_axis_type: 'tth'
 
     rebin:
       # Number of bins to place q-vectors into. These bins are linearly spaced in q
