@@ -15,3 +15,4 @@ coverage==6.3.2
 pytest-cov
 sphinx<=8.0.0
 sphinx-rtd-theme
+setuptools>=61.0.0
