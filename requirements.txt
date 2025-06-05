@@ -14,3 +14,4 @@ ipywidgets
 coverage==6.3.2
 pytest-cov
 sphinx<=8.0.0
+sphinx-rtd-theme
