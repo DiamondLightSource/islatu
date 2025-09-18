@@ -23,9 +23,9 @@ project = 'islatu'
 copyright = '2020-2025, Diamond Light Source Ltd'
 author = 'Philip Mousley'
 
-version = '1.0.8'
+version = '1.0.9'
 # The full version, including alpha/beta/rc tags
-release = '1.0.8'
+release = '1.0.9'
 
 
 # -- General configuration ---------------------------------------------------
@@ -100,7 +100,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme ='sphinx_rtd_theme'# 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
