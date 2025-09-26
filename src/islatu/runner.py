@@ -268,8 +268,10 @@ class Foreperson:
             
         if 'adjustments'  in keys:
             if recipe['adjustments'] is not None:
-                debug.log("adjustments found")
+                log_processing_stage("Setting adjustments")
                 self.reduction.adjustments=SimpleNamespace(**recipe['adjustments'])
+                for key,val in vars(self.reduction.adjustments).items():
+                    debug.log(f'            {key} = {val}')
             # if 'new_axis_name' in recipe['adjustments'].keys():
             #     self.reduction.new_axis_name=recipe['adjustments']['new_axis_name']
             # if 'new_axis_type' in recipe['adjustments'].keys():
