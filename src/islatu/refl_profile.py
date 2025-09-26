@@ -23,7 +23,7 @@ class Profile(Data):
         self.scans = scans
 
     @classmethod
-    def fromfilenames(cls, filenames, parser,new_axis=None):
+    def fromfilenames(cls, filenames, parser,adjustments=None):
         """
         Instantiate a profile from a list of scan filenames.
 
@@ -36,10 +36,10 @@ class Profile(Data):
         """
 
         # Load the scans, specifying the scan axis name if necessary.
-        if new_axis==None:
+        if adjustments==None:
             scans = [parser(filename) for filename in filenames]
         else:
-            scans = [parser(filename,new_axis_info=new_axis) for filename in filenames]
+            scans = [parser(filename,adjustments=adjustments) for filename in filenames]
 
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the

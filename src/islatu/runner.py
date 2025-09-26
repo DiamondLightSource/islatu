@@ -9,7 +9,7 @@ from os import path
 import os
 from datetime import datetime
 from ast import literal_eval as make_tuple
-
+from types import SimpleNamespace
 
 try:
     from yaml import CLoader as Loader
@@ -267,10 +267,13 @@ class Foreperson:
             self.reduction.normalisation=recipe['normalisation']['maxnorm']
             
         if 'adjustments'  in keys:
-            if 'new_axis_name' in recipe['adjustments'].keys():
-                self.reduction.new_axis_name=recipe['adjustments']['new_axis_name']
-            if 'new_axis_type' in recipe['adjustments'].keys():
-                self.reduction.new_axis_type=recipe['adjustments']['new_axis_type']
+            if recipe['adjustments'] is not None:
+                debug.log("adjustments found")
+                self.reduction.adjustments=SimpleNamespace(**recipe['adjustments'])
+            # if 'new_axis_name' in recipe['adjustments'].keys():
+            #     self.reduction.new_axis_name=recipe['adjustments']['new_axis_name']
+            # if 'new_axis_type' in recipe['adjustments'].keys():
+            #     self.reduction.new_axis_type=recipe['adjustments']['new_axis_type']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -389,8 +392,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     log_processing_stage("File parsing")
     #return the_boss,files_to_reduce
-    if the_boss.reduction.new_axis_name is not None:
-        refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,[the_boss.reduction.new_axis_name,the_boss.reduction.new_axis_type])
+    if hasattr(the_boss.reduction,"adjustments"):
+        refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,adjustments=the_boss.reduction.adjustments)
     else:
         refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
