@@ -46,6 +46,9 @@ adjustments:
   new_axis_name: 'diff1delta'
   new_axis_type: 'tth'
 
+  #define an offset to apply to all recorded theta values
+  theta_offset: 0.00
+
 rebin:
   # Number of bins to place q-vectors into. These bins are linearly spaced in q
   # by default.
