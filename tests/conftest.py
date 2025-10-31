@@ -13,7 +13,11 @@ This module contains fixture definitions used when testing the islatu module.
 import os
 import pytest
 import numpy as np
-
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+from yaml import load, dump
 from islatu.io import I07Nexus, i07_nxs_parser, i07_dat_to_dict_dataframe
 from islatu.corrections import get_interpolator
 from islatu.data import Data, MeasurementBase
@@ -52,6 +56,19 @@ def path_to_i07_nxs_02(path_to_resources):
     """
     return os.path.join(path_to_resources, "i07-404877.nxs")
 
+@pytest.fixture
+def path_to_yaml(path_to_resources):
+    """
+    returns the path to the example yaml file. 
+    """
+    return os.path.join(path_to_resources,"dcd.yaml")
+
+@pytest.fixture
+def example_recipe_dcd_01(path_to_yaml):
+
+    with open(path_to_yaml, 'r', encoding='utf-8') as y_file:
+        recipe = load(y_file, Loader=Loader)
+    return recipe
 
 @pytest.fixture
 def path_to_dcd_normalisation_01(path_to_resources):

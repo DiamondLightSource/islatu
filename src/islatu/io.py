@@ -558,7 +558,7 @@ def load_images_from_h5(h5_file_path,datanxfilepath,transpose=False):
     return images
 
 
-def i07_nxs_parser(file_path: str,remove_indices=None,new_axis_info=None):
+def i07_nxs_parser(file_path: str,remove_indices=None,adjustments=None):
     """
     Parses a .nxs file acquired from the I07 beamline at diamond, returning an
     instance of Scan2D. This process involves loading the images contained in
@@ -601,44 +601,76 @@ def i07_nxs_parser(file_path: str,remove_indices=None,new_axis_info=None):
     rough_intensity = i07_nxs.default_signal
     rough_intensity_e = np.sqrt(rough_intensity)
 
+
+
     # The independent variable.
     axis = i07_nxs.default_axis
-    if (new_axis_info!=None):
-        print(new_axis_info)
-        axis_name=new_axis_info[0]
-        try:
-            axis=i07_nxs.instrument[f'{axis_name}'].value_set.nxdata
-        except:
-            axis=i07_nxs.instrument[f'{axis_name}'].value.nxdata
+    axis_type = i07_nxs.default_axis_type
+    theta_offset=0
 
-        new_type=new_axis_info[1] 
-        if new_type== 'q':
-            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                        q_vectors=axis)
-        elif new_type  == 'th':
-            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                        theta=axis)
-        elif new_type  == 'tth':
-            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
-                        theta=axis/2)
-        else:
-            raise NotImplementedError(
-                f"{new_type} is not a supported axis type. Axis name={axis_name}")
     
-    else:
-        # We have to load the Data according to what our independent variable is.
-        if i07_nxs.default_axis_type == 'q':
-            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                        q_vectors=axis)
-        elif i07_nxs.default_axis_type == 'th':
-            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                        theta=axis)
-        elif i07_nxs.default_axis_type == 'tth':
-            data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
-                        theta=axis/2)
+    if hasattr(adjustments,'new_axis_name'):
+        axis_name=adjustments.new_axis_name
+        if hasattr(i07_nxs.instrument[f'{axis_name}'],"value_set"):
+            axis=i07_nxs.instrument[f'{axis_name}'].value_set.nxdata
         else:
-            raise NotImplementedError(
-                f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
+            axis=i07_nxs.instrument[f'{axis_name}'].value.nxdata
+    if hasattr(adjustments,'new_axis_type'):
+        axis_type=adjustments.new_axis_type
+    if hasattr(adjustments,'theta_offset'):
+        theta_offset=adjustments.theta_offset
+
+    if axis_type== 'q':
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                    q_vectors=axis-theta_offset)
+    elif axis_type  == 'th':
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+                    theta=axis-(2*theta_offset))
+    elif axis_type  == 'tth':
+        data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
+                    theta=(axis/2-theta_offset))
+    else:
+        raise NotImplementedError(
+            f"{axis_type} is not a supported axis type. Axis name={axis_name}")
+
+
+
+    # if (new_axis_info!=None):
+    #     print(new_axis_info)
+    #     axis_name=new_axis_info[0]
+    #     try:
+    #         axis=i07_nxs.instrument[f'{axis_name}'].value_set.nxdata
+    #     except:
+    #         axis=i07_nxs.instrument[f'{axis_name}'].value.nxdata
+
+    #     new_type=new_axis_info[1] 
+    #     if new_type== 'q':
+    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+    #                     q_vectors=axis)
+    #     elif new_type  == 'th':
+    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+    #                     theta=axis)
+    #     elif new_type  == 'tth':
+    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
+    #                     theta=axis/2)
+    #     else:
+    #         raise NotImplementedError(
+    #             f"{new_type} is not a supported axis type. Axis name={axis_name}")
+    
+    # else:
+    #     # We have to load the Data according to what our independent variable is.
+    #     if i07_nxs.default_axis_type == 'q':
+    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+    #                     q_vectors=axis)
+    #     elif i07_nxs.default_axis_type == 'th':
+    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
+    #                     theta=axis)
+    #     elif i07_nxs.default_axis_type == 'tth':
+    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
+    #                     theta=axis/2)
+    #     else:
+    #         raise NotImplementedError(
+    #             f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
 
     # Returns the Scan2D object
     return Scan2D(data, i07_nxs, images, remove_indices)

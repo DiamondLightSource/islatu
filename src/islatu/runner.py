@@ -9,7 +9,7 @@ from os import path
 import os
 from datetime import datetime
 from ast import literal_eval as make_tuple
-
+from types import SimpleNamespace
 
 try:
     from yaml import CLoader as Loader
@@ -27,6 +27,7 @@ from islatu.region import Region
 from islatu.io import i07_dat_to_dict_dataframe
 from islatu.refl_profile import Profile
 from islatu.debug import debug
+from islatu.config_loader import check_config_schema
 
 
 # This could be done by reflection, but it feels slightly less arcane to use
@@ -225,6 +226,8 @@ class Foreperson:
         This is a McClusky special. I inherited it, and it works.
         Don't ask questions.
         """
+        check_config_schema(recipe)
+
         keys = recipe.keys()
         # Populate information from the visit section
         if 'visit' in keys:
@@ -267,10 +270,15 @@ class Foreperson:
             self.reduction.normalisation=recipe['normalisation']['maxnorm']
             
         if 'adjustments'  in keys:
-            if 'new_axis_name' in recipe['adjustments'].keys():
-                self.reduction.new_axis_name=recipe['adjustments']['new_axis_name']
-            if 'new_axis_type' in recipe['adjustments'].keys():
-                self.reduction.new_axis_type=recipe['adjustments']['new_axis_type']
+            if recipe['adjustments'] is not None:
+                log_processing_stage("Setting adjustments")
+                self.reduction.adjustments=SimpleNamespace(**recipe['adjustments'])
+                for key,val in vars(self.reduction.adjustments).items():
+                    debug.log(f'            {key} = {val}')
+            # if 'new_axis_name' in recipe['adjustments'].keys():
+            #     self.reduction.new_axis_name=recipe['adjustments']['new_axis_name']
+            # if 'new_axis_type' in recipe['adjustments'].keys():
+            #     self.reduction.new_axis_type=recipe['adjustments']['new_axis_type']
         # Populate the setup information
         if 'setup' in keys:
             if 'dcd normalisation' in recipe['setup'].keys():
@@ -389,8 +397,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     log_processing_stage("File parsing")
     #return the_boss,files_to_reduce
-    if the_boss.reduction.new_axis_name is not None:
-        refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,[the_boss.reduction.new_axis_name,the_boss.reduction.new_axis_type])
+    if hasattr(the_boss.reduction,"adjustments"):
+        refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser,adjustments=the_boss.reduction.adjustments)
     else:
         refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
 
@@ -525,6 +533,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Work out where to save the file.
     datetime_str = datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
+    run_numbers.sort()
     dat_filename = 'XRR_{}_'.format(
         run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
