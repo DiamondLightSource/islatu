@@ -14,3 +14,21 @@
     color: #000000;
 }
 
+
+
+
+
+div.highlight pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-x: hidden !important;
+}
+
+div.highlight-bash div.highlight pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-x: hidden !important;
+}
+
+
+

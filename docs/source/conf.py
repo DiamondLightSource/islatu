@@ -23,9 +23,9 @@ project = 'islatu'
 copyright = '2020-2025, Diamond Light Source Ltd'
 author = 'Philip Mousley'
 
-version = '1.0.9'
+version = '1.2.0'
 # The full version, including alpha/beta/rc tags
-release = '1.0.9'
+release = '1.2.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -117,7 +117,7 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
+html_css_files = ['custom.css']
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
@@ -216,8 +216,8 @@ todo_include_todos = True
 #html_theme_options = {"logo_only": True}
 
 
-def setup(app):
-    app.add_css_file('custom.css')
+# def setup(app):
+#     app.add_css_file('custom.css')
 
 
 # Looks for objects in external projects

@@ -4,75 +4,24 @@ The command line interface
 Introduction
 ----------------
 
-This page contains some simple instructions on how to use the process_xrr CLI.
+This page contains some simple instructions on how to use the Islatu command line interface (CLI).
 
-Typing `process_xrr.py -h` should give an overview of how it can be used. 
+Typing the following help command will give an overview of how to interact with the CLI. 
 
-
-Creating a .yaml file
-----------------------
-
-Before
-starting, you should create a .yaml file that contains some details pertaining
-to your experiment.
-
-An example of the .yaml file could be something like
+.. code-block:: bash
+  
+  process_xrr.py -h` 
 
 
-.. code-block:: yaml 
-
-    instrument: 'i07'
-    visit:
-      local contact: "Firstname Lastname"
-      user: 'Firstname Lastname'
-      user affiliation: 'InstitutionName'
-      visit id: 'experimentID'
-      date: 2021-08-06
-    setup:
-      # ====(sample_length, sample_width) in m
-      # ====...where the "length" direction is parallel to the wavevector of the
-      # ====incident light for |q|=0.
-      sample size: (200e-3, 10e-3)
-
-      # ====Beam FWHM in m
-      beam width: 100e-6
-
-      #==== /path/to/normalization/file  comment this line out if not using dcd normalisation
-      #=== Outside of diamond, this might look like, for example:
-      # ====/Users/richardbrearton/Documents/Data/si28707-1/404863.dat
-      dcd normalisation: /dls/i07/data/2021/si28707-1/404863.dat 
-
-    crop:
-      # currently only one cropping method is available
-      method: crop
-      # comment out kwargs to crop to ROI_1 from nexus data file, as specified in GDA.
-      # leave kwargs uncommented  to manually crop to a specified cropping region.
-      kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
-      
-    background:
-      # The most reliable method that one can use to subtract background is
-      # roi_subtraction. We strongly recommend that this option is used.
-      method: roi_subtraction
-      # comment out kwargs to use ROI_2 from nexus data file as background region.
-      # leave uncommented kwargs to manually select a specified background region.
-      kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
-
-    normalisation:
-      #choose whether to normalise the final intensity profile by the maximum value
-      maxnorm: True
-      
-    adjustments:
-      #use this section to define adjusments needed for specific cases, for example here to instruct islatu to use the delta angle for the theta calculations. 
-      new_axis_name: 'diff1delta'
-      new_axis_type: 'tth'
-
-    rebin:
-      # Number of bins to place q-vectors into. These bins are linearly spaced in q
-      # by default.
-      n qvectors: 5000
+The first step is to create a .yaml file containing important information about your experiental setup and data processing options.
+Following the yaml creation guide below for instructions on making a yaml file.
 
 
-If the roi_subtraction option for background subtraction method is not suitable, more information on the alternative options can be found in the `API documentation`_.
+.. toctree::
+   :maxdepth: 1
+
+   yaml_creation
+
 
 Processing with process_xrr.py
 ------------------------------------
@@ -127,4 +76,7 @@ Now, later on in the same experiment you want to process another reflectivity cu
 
     process_xrr.py -d /dls/i07/data/2021/si28979-1/ -y /home/xrr12345/Documents/Recipes/DCD_si28979_1.yaml -o /home/xrr12345/Documents/Data/ -N 817241 817242 817243 817244 817245 817247 817248 817250 817251`
 
-.. _API documentation: ./apidocs/background/background.html
+
+
+.. _how to create a yaml file: ./yaml_creation.html
+
