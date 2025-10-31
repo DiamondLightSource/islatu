@@ -5,7 +5,7 @@ import copy
 from schema import SchemaError
 import pytest
 from pytest_lazyfixture import lazy_fixture as lazy
-from islatu.config_loader import check_config_schema,validate_new_axis
+from islatu.config_loader import check_config_schema,validate_new_axis,validate_new_type
 
 
 
@@ -66,5 +66,5 @@ def test_validate_new_type_invalid():
     """
     with pytest.raises(ValueError) as excinfo:
         validate_new_type('invalid_type')
-    assert "type invalid_type not in valid types list" in str(excinfo
+    assert "type invalid_type not in valid types list" in str(excinfo)
 
