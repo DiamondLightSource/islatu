@@ -65,8 +65,28 @@ def path_to_yaml(path_to_resources):
 
 @pytest.fixture
 def example_recipe_dcd_01(path_to_yaml):
+    """
+    read in processing recipe dcd1
+    """
 
     with open(path_to_yaml, 'r', encoding='utf-8') as y_file:
+        recipe = load(y_file, Loader=Loader)
+    return recipe
+
+@pytest.fixture
+def path_to_adjust_yaml(path_to_resources):
+    """
+    returns the path to the example yaml file. 
+    """
+    return os.path.join(path_to_resources,"dcd_adjustments.yaml")
+
+@pytest.fixture
+def example_recipe_dcd_02(path_to_adjust_yaml):
+    """
+    read in processing recipe dcd2
+    """
+
+    with open(path_to_adjust_yaml, 'r', encoding='utf-8') as y_file:
         recipe = load(y_file, Loader=Loader)
     return recipe
 
