@@ -30,17 +30,41 @@ def test_config_schema(recipe):
 
     with pytest.raises(SchemaError):
         check_config_schema(testrecipe)
-    
-    testrecipe =copy.deepcopy(recipe)
+
+
 
 
 
 def test_validate_new_axis_valid():
+    """
+    test valid new_axis names
+    """
     assert validate_new_axis('diff1chi') is True
     assert validate_new_axis('diff1delta') is True
     assert validate_new_axis('diff2alpha') is True
 
 def test_validate_new_axis_invalid():
+    """
+    test invalid axis name
+    """
     with pytest.raises(ValueError) as excinfo:
         validate_new_axis('invalid_axis')
     assert "axis name invalid_axis not in valid new axis list" in str(excinfo.value)
+
+
+def test_validate_new_type_valid():
+    """
+    test valid axis types
+    """
+    assert validate_new_type('th') is True
+    assert validate_new_type('tth') is True
+    assert validate_new_type('q') is True
+
+def test_validate_new_type_invalid():
+    """
+    test and invalid axis type
+    """
+    with pytest.raises(ValueError) as excinfo:
+        validate_new_type('invalid_type')
+    assert "type invalid_type not in valid types list" in str(excinfo
+
