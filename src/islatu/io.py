@@ -607,8 +607,8 @@ def i07_nxs_parser(file_path: str,remove_indices=None,adjustments=None):
     axis = i07_nxs.default_axis
     axis_type = i07_nxs.default_axis_type
     theta_offset=0
+    q_offset=0
 
-    
     if hasattr(adjustments,'new_axis_name'):
         axis_name=adjustments.new_axis_name
         if hasattr(i07_nxs.instrument[f'{axis_name}'],"value_set"):
@@ -619,13 +619,15 @@ def i07_nxs_parser(file_path: str,remove_indices=None,adjustments=None):
         axis_type=adjustments.new_axis_type
     if hasattr(adjustments,'theta_offset'):
         theta_offset=adjustments.theta_offset
+    if hasattr(adjustments,'q_offset'):
+        q_offset=adjustments.q_offset
 
     if axis_type== 'q':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                    q_vectors=axis-theta_offset)
+                    q_vectors=axis-q_offset)
     elif axis_type  == 'th':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-                    theta=axis-(2*theta_offset))
+                    theta=axis-theta_offset)
     elif axis_type  == 'tth':
         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
                     theta=(axis/2-theta_offset))
