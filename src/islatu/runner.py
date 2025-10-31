@@ -27,6 +27,7 @@ from islatu.region import Region
 from islatu.io import i07_dat_to_dict_dataframe
 from islatu.refl_profile import Profile
 from islatu.debug import debug
+from islatu.config_loader import check_config_schema
 
 
 # This could be done by reflection, but it feels slightly less arcane to use
@@ -225,6 +226,8 @@ class Foreperson:
         This is a McClusky special. I inherited it, and it works.
         Don't ask questions.
         """
+        check_config_schema(recipe)
+
         keys = recipe.keys()
         # Populate information from the visit section
         if 'visit' in keys:
@@ -530,6 +533,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Work out where to save the file.
     datetime_str = datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
+    run_numbers.sort()
     dat_filename = 'XRR_{}_'.format(
         run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
