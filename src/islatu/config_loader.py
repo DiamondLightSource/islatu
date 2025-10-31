@@ -108,6 +108,7 @@ adjust_schema=Schema({
     Optional("new_axis_name"):And(str,validate_new_axis),
     Optional("new_axis_type"): And(str,validate_new_type),
     Optional("theta_offset"):float,
+    Optional("q_offset"):float,
 
 })
 
