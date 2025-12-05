@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 
-
-"Command line interface for the Islatu library."
+"""Command line interface for the Islatu library."""
 
 import argparse
 import os
