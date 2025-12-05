@@ -8,6 +8,9 @@ import subprocess
 import time
 import re
 
+version_path=__file__.split('islatu/CLI')[0]
+python_version=version_path+'/conda_env/bin/python'
+
 if __name__ == "__main__":
     # First deal with the parsing of the command line arguments using the
     # argparse library.
@@ -283,7 +286,7 @@ if __name__ == "__main__":
         f.close()
             
         #load in template mapscript, new paths
-        f=open('/dls_sw/apps/islatu/testing/islatu/CLI/islatuscript_template.sh')
+        f=open(f'{version_path}/islatu/CLI/islatuscript_template.sh')
         lines=f.readlines()
         f.close()
         jobfile=f'{islatufolder}//jobscript.sh'
