@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 
-
-"Command line interface for the Islatu library."
+"""Command line interface for the Islatu library."""
 
 import argparse
 import os
@@ -9,6 +7,9 @@ from pathlib import Path
 import subprocess
 import time
 import re
+
+version_path=__file__.split('islatu/CLI')[0]
+python_version=version_path+'/conda_env/bin/python'
 
 if __name__ == "__main__":
     # First deal with the parsing of the command line arguments using the
@@ -285,23 +286,23 @@ if __name__ == "__main__":
         f.close()
             
         #load in template mapscript, new paths
-        f=open('/dls_sw/apps/islatu/testing/islatu/CLI/islatuscript_template.sh')
-        lines=f.readlines()
-        f.close()
+        with open(f'{version_path}/islatu/CLI/islatuscript_template.sh') as f:
+            lines=f.readlines()
+
         jobfile=f'{islatufolder}//jobscript.sh'
         if os.path.exists(jobfile):
             f=open(jobfile,'w')
         else:
             f=open(jobfile,'x')
         for line in lines:
-            if '$' in line:
-                phrase=line[line.find('$'):line.find('}')+1]
+            phrase_matches=list(re.finditer(r'\${[^}]+\}',line))
+            phrase_positions=[(match.start(),match.end()) for match in phrase_matches]
+            outline=line
+            for pos in phrase_positions:
+                phrase=line[pos[0]:pos[1]]
                 outphrase=phrase.strip('$').strip('{').strip('}')
-                outline=line.replace(phrase,str(locals()[f'{outphrase}']))
-                #print(outline)
-                f.write(outline)
-            else:
-                f.write(line)
+                outline=outline.replace(phrase,str(locals()[f'{outphrase}']))
+            f.write(outline)
         f.close()
         
         #get list of slurm out files in home directory
