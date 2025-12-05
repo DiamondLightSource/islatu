@@ -5,4 +5,4 @@
 #SBATCH --mem-per-cpu=2000 
 #SBATCH --job-name=isaltu
  
-${python_path} ${save_path}
+${python_version} ${save_path}
