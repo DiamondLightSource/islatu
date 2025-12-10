@@ -29,7 +29,7 @@ REQUIREMENTS = [
 
 setup(
     name='islatu',
-    version='1.2.0',
+    version='1.3.0',
     license='MIT',
     description='A package for the reduction of reflectometry data.',
     author='Philip Mousley',
