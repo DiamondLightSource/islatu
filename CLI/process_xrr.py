@@ -2,7 +2,7 @@
 """Command line interface for the Islatu library."""
 
 import argparse
-
+from islatu.runner import parse_and_reduce
 
 version_path=__file__.split('islatu/CLI',maxsplit=1)[0]
 python_version=version_path+'/conda_env/bin/python'
@@ -102,4 +102,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.version_path=version_path
     args.python_version=python_version
+    # args.jobfile_template=f'{args.version_path}/islatu/CLI/islatuscript_template.sh'
+    # args.jobfile_name='jobscript.sh'
+    args.jobfile_template='/dls/science/users/rpy65944/I07_work/dev_islatu/testing_scripts/islatuscriptlocal_template.sh'
+    args.jobfile_name='jobscript_local.sh'
     parse_and_reduce(args)
