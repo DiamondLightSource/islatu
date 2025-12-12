@@ -166,7 +166,7 @@ class ProcessArgs:
         self.version_path = Path(self.version_path)
         self.data_path = Path(self.data_path)
         self.yaml_path = Path(self.yaml_path)
-        self.output = Path(self.output or self.islatufolder / "processed")
+        self.output = Path(self.output or self.data_path / "processed")
         self.jobfile_template = Path(self.jobfile_template or self.version_path / "template.sh")
         self.jobfile_name = self.jobfile_name or "jobscript_local.sh"
         self.processing_path = self.data_path / "processing"
