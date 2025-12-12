@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 
 """Command line interface for the Islatu library."""
 
 import argparse
-from islatu.runner import parse_and_reduce
+from islatu.runner import ProcessArgs
 
 version_path=__file__.split('islatu/CLI',maxsplit=1)[0]
 python_version=version_path+'/conda_env/bin/python'
@@ -84,7 +85,9 @@ if __name__ == "__main__":
         number 413248. As implied in the example, a value of 0 indicates
         "no lower limit" and a value of inf indicates "no upper limit". In
         general, the numbers "413243" etc. given above must be unique to the
-        name of the file from which the scan was parsed.
+        name of the file from which the scan was parse
+import sys
+print(sys.executable)d.
         """
     )
     parser.add_argument("-Q", "--limit_q",
@@ -102,8 +105,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.version_path=version_path
     args.python_version=python_version
-    # args.jobfile_template=f'{args.version_path}/islatu/CLI/islatuscript_template.sh'
-    # args.jobfile_name='jobscript.sh'
+
     args.jobfile_template='/dls/science/users/rpy65944/I07_work/dev_islatu/testing_scripts/islatuscriptlocal_template.sh'
     args.jobfile_name='jobscript_local.sh'
-    parse_and_reduce(args)
+
+    process_args = ProcessArgs(**vars(args))
+    process_args.parse_and_reduce()
