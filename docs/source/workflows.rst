@@ -37,7 +37,7 @@ Working from command line interface (process_xrr.py) on Diamond system
 
    .. code-block:: bash 
 
-      process_xrr.py -h
+      process_xrr -h
 
    To start you will need to create a **.yaml file** that contains some details pertaining to your experiment.
 
@@ -53,7 +53,7 @@ Working from command line interface (process_xrr.py) on Diamond system
 
    .. code-block:: bash
       
-      process_xrr.py  -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/output_directory/ -l lower_number -u upper_number -c
+      process_xrr  -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/output_directory/ -l lower_number -u upper_number -c
 
 
 
