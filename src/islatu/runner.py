@@ -688,7 +688,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         the_boss = Foreperson(run_numbers, yaml_file, directory, title)
 
         # Necessary to distnguish the same data processed by different pipelines.
-        yaml_pipeline_name = yaml_file.split(os.sep)[-1][:-5]
+        yaml_pipeline_name = str(yaml_file).split(os.sep)[-1][:-5]
 
     files_to_reduce = the_boss.reduction.input_files
 
