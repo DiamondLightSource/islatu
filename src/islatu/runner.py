@@ -423,7 +423,7 @@ class ProcessArgs:
         self.parse_scan_numbers()
         self.parse_q_limits()
         if not self.cluster:
-            i07reduce(self.scan_numbers, self.yaml_path, self.data_path,
+            i07reduce(self.scan_numbers, self.yaml_path, directory=self.data_path,
                 filename=self.output, q_subsample_dicts=self.limit_q)
         else:
             self.run_cluster_job()
@@ -683,12 +683,12 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     """
 
     # Make sure the directory is properly formatted.
-if not str(directory).endswith(os.sep):
-    directory = str(directory) + os.sep
-    the_boss = Foreperson(run_numbers, yaml_file, directory, title)
+    if not str(directory).endswith(os.sep):
+        directory = str(directory) + os.sep
+        the_boss = Foreperson(run_numbers, yaml_file, directory, title)
 
-    # Necessary to distnguish the same data processed by different pipelines.
-    yaml_pipeline_name = yaml_file.split(os.sep)[-1][:-5]
+        # Necessary to distnguish the same data processed by different pipelines.
+        yaml_pipeline_name = yaml_file.split(os.sep)[-1][:-5]
 
     files_to_reduce = the_boss.reduction.input_files
 
