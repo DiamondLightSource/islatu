@@ -683,8 +683,8 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     """
 
     # Make sure the directory is properly formatted.
-    if not str(directory).endswith(os.sep):
-        directory = directory + os.sep
+if not str(directory).endswith(os.sep):
+    directory = str(directory) + os.sep
     the_boss = Foreperson(run_numbers, yaml_file, directory, title)
 
     # Necessary to distnguish the same data processed by different pipelines.
