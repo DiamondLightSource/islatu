@@ -38,9 +38,7 @@ if __name__ == "__main__":
 
     HELP_STR = (
         "Use this flag if you are on site in diamond and would like your " +
-        "data to be processed on a cluster. (19/10/2021) Note: this is " +
-        "currently finicky; if you *need* to get this to work email " +
-        "richard.brearton@diamond.ac.uk"
+        "data to be processed on a cluster."
     )
     parser.add_argument("-c", "--cluster", help=HELP_STR, action="store_true")
 
