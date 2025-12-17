@@ -847,7 +847,7 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         # It's possible we were given a directory in which to save the created
         # file. In this case, use the filename variable as a directory and add
         # our auto generated filename to it.
-        filename = str(filename)+ dat_filename
+        filename = os.path.join(str(filename), dat_filename)
 
     # Write the data.
     np.savetxt(
