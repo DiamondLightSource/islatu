@@ -713,7 +713,11 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     # the first (and likely only) signal region.
     if (the_boss.reduction.crop_function is cropping.crop_to_region and
             the_boss.reduction.crop_kwargs is None):
-        roi = refl.scans[0].metadata.signal_regions[0]
+        try:
+            roi = refl.scans[0].metadata.signal_regions[0]
+        except IndexError:
+            debug.log("No valid signal region found, regions will need to be defined in yaml settings file")
+            return
         the_boss.reduction.crop_kwargs = {'region': roi}
         debug.log(f"Crop ROI '{str(roi)}' generated from the .nxs file.")
     elif 'x_end' in the_boss.reduction.crop_kwargs:

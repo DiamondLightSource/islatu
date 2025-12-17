@@ -255,7 +255,7 @@ class I07Nexus(NexusBase):
             roi_dict = json.loads(json_str)
             return [Region.from_dict(roi_dict['Region_1'])]
         except JSONDecodeError:
-            debug.log("region list from nexus file not in valid JSON format, signal and background regions will need to be defined in yaml settings file")
+            debug.log("region list from nexus file not in valid JSON format")
             return []
     @property
     def signal_regions(self) -> List[Region]:
