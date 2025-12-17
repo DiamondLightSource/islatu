@@ -15,7 +15,7 @@ import json
 import os
 from typing import List
 from abc import abstractmethod
-
+from json import JSONDecodeError
 
 import nexusformat.nexus.tree as nx
 from nexusformat.nexus import nxload
@@ -239,6 +239,24 @@ class I07Nexus(NexusBase):
         y_2 = self.detector[self._get_region_bounds_key(i, 'Height')][0] + y_1
         return Region(x_1, x_2, y_1, y_2)
 
+    def get_string_for_json(self,instrument_string):
+        try:
+            json_str = self.instrument[
+                instrument_string]._value.decode("utf-8")
+        except AttributeError:
+            json_str = self.instrument[
+                instrument_string]._value
+        return json_str
+    
+    def region_from_json(self,json_str):
+        json_str = json_str.replace('u', '')
+        json_str = json_str.replace("'", '"')
+        try:
+            roi_dict = json.loads(json_str)
+            return [Region.from_dict(roi_dict['Region_1'])]
+        except JSONDecodeError:
+            debug.log("region list from nexus file not in valid JSON format, signal and background regions will need to be defined in yaml settings file")
+            return []
     @property
     def signal_regions(self) -> List[Region]:
         """
@@ -249,33 +267,14 @@ class I07Nexus(NexusBase):
         if self.detector_name == I07Nexus.excalibur_detector_2021:
             return [self._get_ith_region(i=1)]
         excaliburlist=[I07Nexus.excalibur_04_2022,I07Nexus.excalibur_08_2024]
+
         if self.detector_name in excaliburlist:
-            # Make sure our code executes for bytes and strings.
-            try:
-                json_str = self.instrument[
-                    "ex_rois/excalibur_ROIs"]._value.decode("utf-8")
-            except AttributeError:
-                json_str = self.instrument[
-                    "ex_rois/excalibur_ROIs"]._value
+            json_str=self.get_string_for_json("ex_rois/excalibur_ROIs")
+            return self.region_from_json(json_str)
 
-            # This is badly formatted and cant be loaded by the json lib. We
-            # need to make a series of modifications.
-            json_str = json_str.replace('u', '')
-            json_str = json_str.replace("'", '"')
-
-            roi_dict = json.loads(json_str)
-            return [Region.from_dict(roi_dict['Region_1'])]
-        #add in similar option for pilatus option
         if self.detector_name== I07Nexus.pilatus_02_2024:
-            try: 
-                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value.decode("utf-8")
-            except AttributeError:
-                json_str=self.instrument["p3_rois/pilatus3_ROIs"]._value
-            json_str = json_str.replace('u', '')
-            json_str = json_str.replace("'", '"')
-
-            roi_dict = json.loads(json_str)
-            return [Region.from_dict(roi_dict['Region_1'])]
+            json_str=self.get_string_for_json("p3_rois/pilatus3_ROIs")
+            return self.region_from_json(json_str)
 
         raise NotImplementedError()
 
@@ -635,44 +634,6 @@ def i07_nxs_parser(file_path: str,remove_indices=None,adjustments=None):
         raise NotImplementedError(
             f"{axis_type} is not a supported axis type. Axis name={axis_name}")
 
-
-
-    # if (new_axis_info!=None):
-    #     print(new_axis_info)
-    #     axis_name=new_axis_info[0]
-    #     try:
-    #         axis=i07_nxs.instrument[f'{axis_name}'].value_set.nxdata
-    #     except:
-    #         axis=i07_nxs.instrument[f'{axis_name}'].value.nxdata
-
-    #     new_type=new_axis_info[1] 
-    #     if new_type== 'q':
-    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-    #                     q_vectors=axis)
-    #     elif new_type  == 'th':
-    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-    #                     theta=axis)
-    #     elif new_type  == 'tth':
-    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
-    #                     theta=axis/2)
-    #     else:
-    #         raise NotImplementedError(
-    #             f"{new_type} is not a supported axis type. Axis name={axis_name}")
-    
-    # else:
-    #     # We have to load the Data according to what our independent variable is.
-    #     if i07_nxs.default_axis_type == 'q':
-    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-    #                     q_vectors=axis)
-    #     elif i07_nxs.default_axis_type == 'th':
-    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,
-    #                     theta=axis)
-    #     elif i07_nxs.default_axis_type == 'tth':
-    #         data = Data(rough_intensity, rough_intensity_e, i07_nxs.probe_energy,                
-    #                     theta=axis/2)
-    #     else:
-    #         raise NotImplementedError(
-    #             f"{i07_nxs.default_axis_type} is not a supported axis type. Axis name={i07_nxs.default_axis_name}")
 
     # Returns the Scan2D object
     return Scan2D(data, i07_nxs, images, remove_indices)
