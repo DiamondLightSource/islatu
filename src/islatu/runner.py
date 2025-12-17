@@ -847,11 +847,11 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
         # It's possible we were given a directory in which to save the created
         # file. In this case, use the filename variable as a directory and add
         # our auto generated filename to it.
-        filename = filename / dat_filename
+        filename = str(filename)+ dat_filename
 
     # Write the data.
     np.savetxt(
-        str(filename), data, header=f"{dump(vars(the_boss))}\n Q(1/Å)\tR\tR_error"
+        filename, data, header=f"{dump(vars(the_boss))}\n Q(1/Å)\tR\tR_error"
     )
 
     debug.log("-" * 10)
