@@ -36,7 +36,7 @@ def validate_background_method(method):
     """
     check background method is from allowed types
     """
-    valid_methods=['roi_subtraction']
+    valid_methods=['roi_subtraction','None','none']
     if method not in valid_methods:
         raise ValueError(f"method {method} not in valid background method list {valid_methods}")
     return True
@@ -83,22 +83,29 @@ visit_schema=Schema({
 
 })
 
-region_schema=Schema({
+region_schema1=Schema({
    "x_start": int,
    "x_end": int,
    "y_start": int,
    "y_end": int,
 })
 
+region_schema2=Schema({
+   "x": int,
+   "width": int,
+   "y": int,
+   "height": int,
+})
+
 crop_schema=Schema({
   "method": And(str,validate_crop_method),
-  Optional("kwargs"): And(dict,region_schema),
+  Optional("kwargs"): And(dict,Or(region_schema1,region_schema2)),
 
 })
 
 background_schema=Schema({
   "method": And(str,validate_background_method),
-  Optional("kwargs"): And(dict,region_schema),
+  Optional("kwargs"): And(dict,Or(region_schema1,region_schema2)),
 
 })
 

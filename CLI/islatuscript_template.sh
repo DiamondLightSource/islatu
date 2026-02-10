@@ -5,4 +5,4 @@
 #SBATCH --mem-per-cpu=2000 
 #SBATCH --job-name=isaltu
  
-/dls_sw/apps/islatu/testing/conda_env/bin/python ${save_path}
+${python_version} ${save_path}

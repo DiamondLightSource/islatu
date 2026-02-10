@@ -130,11 +130,12 @@ This section provides details on selecting a signal region of interest (ROI)
 background
 -----------
 
-This section provides details on how to perform the background subtraction
+This section provides details on how to perform the background subtraction.
 
     .. confval:: method
 
-        defines the method used for the background subtraction, currently only reliable method is roi_subtraction. If the roi_subtraction option for background subtraction method is not suitable, more information on the alternative options can be found in the `API documentation`_.
+        defines the method used for the background subtraction, currently only reliable method is roi_subtraction.  
+        If the roi_subtraction option for background subtraction method is not suitable, more information on the alternative options can be found in the `API documentation`_.
     
     .. confval:: kwargs (Optional)
 
@@ -147,12 +148,28 @@ This section provides details on how to perform the background subtraction
         If region is not specified the processing will default to using ROI 2 as set during the expeirent.
 
 .. code-block:: yaml
-    :caption: example background section
+    :caption: example background section with roi_subtraction
 
     background:
       method: roi_subtraction
       kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
 
+To skip the background subtraction step  you can set the method to None or none, and or simply comment out the background section of the yaml file
+
+.. code-block:: yaml
+    :caption: example background sections for skipping background removal
+
+    background:
+      method: None
+      kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+
+    background:
+      method: none
+      kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
+
+    #background:
+    #  method: None
+    #  kwargs: {'x_start': 1050, 'x_end': 1150, 'y_start': 190, 'y_end': 211}
 
 adjustments (Optional)
 -------------------------
