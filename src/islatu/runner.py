@@ -749,12 +749,13 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             the_boss.reduction.bkg_kwargs = {
                 'list_of_regions': Region.from_dict(region_dict=the_boss.reduction.bkg_kwargs)
             }
-    else:
-        print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
-    if the_boss.reduction.bkg_function is not None:
+        
         refl.bkg_sub(the_boss.reduction.bkg_function,
                       **the_boss.reduction.bkg_kwargs)
         the_boss.reduction.data_state.background = 'corrected'
+    else:
+        print("===== could not find suitable background settings so skipping step")
+    
 
 
 
