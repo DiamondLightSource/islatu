@@ -83,22 +83,29 @@ visit_schema=Schema({
 
 })
 
-region_schema=Schema({
+region_schema1=Schema({
    "x_start": int,
    "x_end": int,
    "y_start": int,
    "y_end": int,
 })
 
+region_schema2=Schema({
+   "x": int,
+   "width": int,
+   "y": int,
+   "height": int,
+})
+
 crop_schema=Schema({
   "method": And(str,validate_crop_method),
-  Optional("kwargs"): And(dict,region_schema),
+  Optional("kwargs"): And(dict,Or(region_schema1,region_schema2)),
 
 })
 
 background_schema=Schema({
   "method": And(str,validate_background_method),
-  Optional("kwargs"): And(dict,region_schema),
+  Optional("kwargs"): And(dict,Or(region_schema1,region_schema2)),
 
 })
 

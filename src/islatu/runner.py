@@ -10,7 +10,11 @@ import os
 from datetime import datetime
 from ast import literal_eval as make_tuple
 from types import SimpleNamespace
-
+import os
+from pathlib import Path
+import subprocess
+import time
+import re
 try:
     from yaml import CLoader as Loader
 except ImportError:
@@ -18,6 +22,7 @@ except ImportError:
 from yaml import load, dump
 import numpy as np
 
+from islatu.debug import debug
 import islatu
 import islatu.background as background
 import islatu.corrections as corrections
@@ -129,6 +134,299 @@ class DataState:
     transmission = None
     intensity = None
     rebinned = None
+
+@dataclass
+class ProcessArgs:
+    """
+    a class to hold all information about the processing settings requested, and provide parsing checks, then job submission    
+    """
+
+    data_path: str
+    yaml_path: str
+    version_path: str
+    python_version: str
+    cluster: str | None = None
+    lower_bound: int | None = None
+    upper_bound: int | None = None
+    scan_numbers: list[int] | None = None
+    output: str | None = None
+    limit_q: list[str] = None
+    verbose: int = 0
+    islatufolder= str = None
+    jobfile_template: str = None
+    jobfile_name: str = None
+
+
+
+    def resolve_defaults(self):
+        """
+        cast all string paths into proper path objects
+        """
+        self.islatufolder = Path(self.islatufolder or Path.home() / "islatu")
+        self.version_path = Path(self.version_path)
+        self.data_path = Path(self.data_path)
+        self.yaml_path = Path(self.yaml_path)
+        self.output = Path(self.output or self.data_path / "processed")
+        self.jobfile_template = Path(self.jobfile_template or self.version_path / "template.sh")
+        self.jobfile_name = self.jobfile_name or "jobscript_local.sh"
+        self.processing_path = self.data_path / "processing"
+
+    def set_logging(self):
+
+        if self.verbose is None:
+            self.verbose = 0
+
+        # Set islatu's logger to requested verbosity.
+        debug.logging_lvl = self.verbose
+
+    def parse_yaml(self):
+        # If execution reaches here, we're processing the scan locally. First look
+        # for the .yaml file if we weren't explicitly told where it is.
+        if self.yaml_path is not None:
+            return self
+        debug.log("Searching for .yaml files in '" + self.data_path +
+                    "' and '" + self.processing_path + "'.")
+
+        # Search in both the processing directory and the data directory.
+        files = []
+
+        # Only check in the processing directory if it actually exists.
+        if os.path.exists(self.processing_path):
+            files.extend([self.processing_path + x
+                            for x in os.listdir(self.processing_path)])
+
+        # The data_path should definitely exist. If it doesn't, we shouldn't be
+        # unhappy about an error being raised at this point.
+        files.extend(os.listdir(self.data_path))
+
+        # Work out which of these files are .yaml files.
+        yaml_files = [x for x in files if x.endswith(".yaml")]
+        debug.log(".yaml files found: " + str(yaml_files))
+
+        # If we didn't find exactly one .yaml file, complain.
+        if len(yaml_files) != 1:
+            generic_err_str = (
+                "Could not uniquely determine location of .yaml file.\n" +
+                "Searched directories " + self.processing_path + " and " +
+                self.data_path + ".\n" + "Hoped to find exactly one file, " +
+                "but found " + str(len(yaml_files)) + ". "
+            )
+            if len(yaml_files) > 1:
+                generic_err_str += "Names of found files are: " + \
+                    str(yaml_files) + "."
+            raise FileNotFoundError(generic_err_str)
+        else:
+            # We only found one .yaml, so that's our guy.
+            self.yaml_path = yaml_files[0]
+
+    def parse_scan_numbers(self):
+
+        # Default to smallest possible scan number (0).
+        if self.lower_bound is None:
+            self.lower_bound = 0
+
+        # Make a number that will always be bigger than all other numbers.
+        if self.upper_bound is None:
+            self.upper_bound = float('inf')
+
+
+
+        # If execution reaches here, we've successfully found the .yaml file.
+        # Next lets try to work out what scan numbers are in the data directory if
+        # we weren't told explicitly which scan numbers we should be looking at.
+        if self.scan_numbers is None:
+            debug.log(
+                "Scan numbers not explicitly given. Searching for scans " +
+                "in directory " + str(self.data_path) + "."
+            )
+            # Grab every valid looking nexus file in the directory.
+            nexus_files = [x for x in os.listdir(
+                self.data_path) if x.endswith(".nxs")]
+
+            # Make noise if we didn't find any .nxs files.
+            generic_cant_find_nxs = (
+                "Couldn't find any nexus (.nxs) files in the data directory '" +
+                str(self.data_path)
+            )
+            if len(nexus_files) == 0:
+                raise FileNotFoundError(
+                    generic_cant_find_nxs + "'."
+                )
+
+            # So, we found some .nxs files. Now lets grab the scan numbers from
+            # these files.
+            debug.log("Scans located: " + str(nexus_files))
+            nexus_files = [int(x.replace(".nxs", '').replace("i07-", ''))
+                        for x in nexus_files]
+
+            # Now select the subset of these scan numbers that lies within the
+            # closed interval [self.lower_bound, self.upper_bound].
+            self.scan_numbers = [x for x in nexus_files if
+                                x >= self.lower_bound and x <= self.upper_bound]
+            self.scan_numbers.sort()
+            debug.log("Scan numbers found: " + str(self.scan_numbers) + ".")
+
+            # Make sure we found some scans.
+            if len(self.scan_numbers) == 0:
+                raise FileNotFoundError(
+                    generic_cant_find_nxs +
+                    " whose scan numbers were greater than or equal to " +
+                    str(self.lower_bound) +
+                    " and less than or equal to " + str(self.upper_bound) + "."
+                )
+
+    def parse_q_limits(self):
+        if self.limit_q is not None:
+            if len(self.limit_q) % 3 != 0:
+                raise ValueError(
+                    f"""
+                    --limit_q must have a number of arguments passed to it that is
+                    a multiple of three. Instead, {len(self.limit_q)} arguments were
+                    found. Please use the pattern:
+                        -L N1 qmin1 qmax1 N2 qmin2 qmax2 ...
+                    where N1 is a scan number, qmin1 is the minimum q for the
+                    scan with scan number N1, and qmax1 is the maximum acceptable q
+                    for the scan with scan number N1, etc.. Please refer to the
+                    --help for more information.
+                    """
+                )
+            # Okay, this is presumably properly formatted. Lets turn this into a
+            # list of dictionaries that we can pass directly to the
+            # profile.subsample_q method.
+            q_subsample_dicts = []
+            for i, _ in enumerate(self.limit_q):
+                if i % 3 == 0:
+                    # We're on a new scan, so we'll need a new subsample dict.
+                    q_subsample_dicts.append({})
+
+                    # Now grab that dict we just created and give it our new scan
+                    # index. Note that if i%3 != 0, then we can skip the creation
+                    # of a new dictionary.
+                    q_subsample_dicts[-1]['scan_ID'] = self.limit_q[i]
+                elif i % 3 == 1:
+                    # Convert every 2nd and 3rd value to a float – these will be
+                    # our q limits.
+                    self.limit_q[i] = float(self.limit_q[i])
+                    q_subsample_dicts[-1]['q_min'] = self.limit_q[i]
+                elif i % 3 == 2:
+                    # Convert every 2nd and 3rd value to a float – these will be
+                    # our q limits.
+                    self.limit_q[i] = float(self.limit_q[i])
+                    q_subsample_dicts[-1]['q_max'] = self.limit_q[i]
+            self.limit_q = q_subsample_dicts
+
+    def create_jobscript(self):
+        self.islatufolder=f'{Path.home()}/islatu'
+        if not os.path.exists(self.islatufolder):
+            os.makedirs(self.islatufolder)
+        i=1
+        self.save_path=f'{self.islatufolder}/jobscript_{i}.py'
+        while (os.path.exists(str(self.save_path))):
+            i += 1
+            save_file_name = f'{self.islatufolder}/jobscript_{i}.py'
+            self.save_path = Path(save_file_name)
+            if i > 1e7:
+                raise ValueError(
+                    "naming counter hit limit therefore exiting ")   
+        with open(self.save_path,'x') as f:
+            f.write("from islatu.runner import i07reduce\n")
+            f.write(f"scans = {self.scan_numbers}\nyamlpath='{self.yaml_path}'\ndatapath='{self.data_path}'\noutfile='{self.output}'\nqsubdict={self.limit_q}\n")
+            f.write("i07reduce(scans, yamlpath, datapath,filename=outfile, q_subsample_dicts=qsubdict)")
+        #f.write(f"i07reduce({self.scan_numbers}, {self.yaml_path}, {self.data_path},\
+        #      filename={self.output}, q_subsample_dicts={self.limit_q})")
+
+    def create_jobfile(self):
+        if self.jobfile_template is None:
+            self.jobfile_template: str = Path(f'{self.version_path}/islatu/CLI/islatuscript_template.sh')
+        if self.jobfile_name is None:
+            self.jobfile_name: str = 'jobscript_local.sh'
+        #load in template mapscript, new paths
+        with open(self.jobfile_template) as f:
+            lines=f.readlines()
+
+        self.jobfile=f'{self.islatufolder}//{self.jobfile_name}'
+        if os.path.exists(self.jobfile):
+            f=open(self.jobfile,'w')
+        else:
+            f=open(self.jobfile,'x')
+        save_path=self.save_path
+        for line in lines:
+            phrase_matches=list(re.finditer(r'\${[^}]+\}',line))
+            phrase_positions=[(match.start(),match.end()) for match in phrase_matches]
+            outline=line
+            for pos in phrase_positions:
+                phrase=line[pos[0]:pos[1]]
+                outphrase=phrase.strip('$').strip('{').strip('}')
+                outline=outline.replace(phrase,str(locals()[f'{outphrase}']))
+            f.write(outline)
+        f.close()
+
+    def check_slurmfiles(self):
+        files=os.listdir(f'{Path.home()}/islatu')
+        slurms=[x for x in files if '.out' in x]
+        slurms.append(files[0])
+        slurms.sort(key=lambda x: os.path.getmtime(f'{Path.home()}/islatu/{x}'))
+        return slurms
+
+    def run_cluster_job(self):
+
+        self.create_jobscript()
+        self.create_jobfile()
+
+        startslurms=self.check_slurmfiles()
+        endslurms=self.check_slurmfiles()
+        count=0
+        limit=0
+
+        #call subprocess to submit job using wilson
+        subprocess.run(["ssh","wilson",f"cd islatu \nsbatch {self.jobfile_name}"])
+        while endslurms[-1]==startslurms[-1]:
+            endslurms=self.check_slurmfiles()
+            if count >50:
+                limit=1
+                break
+            print(f'Job submitted, waiting for SLURM output.  Timer={5*count}',end="\r")
+            time.sleep(5)
+            count+=1
+        if limit==1:
+            print('Timer limit reached before new slurm ouput file found')
+        else:
+            print(f'Slurm output file: {Path.home()}/islatu//{endslurms[-1]}\n')
+            breakerline='*'*35
+            monitoring_line=f"\n{breakerline}\n ***STARTING TO MONITOR TAIL END OF FILE, TO EXIT THIS VIEW PRESS ANY LETTER FOLLOWED BY ENTER**** \n{breakerline} \n"
+            print(monitoring_line)
+            process = subprocess.Popen(["tail","-f",f"{Path.home()}/islatu//{endslurms[-1]}"], stdout=subprocess.PIPE, text=True)
+            target_phrase="Reduced data stored"
+            try:
+                for line in process.stdout:
+                    if "Loading images" in line:
+                        print(line.strip(),'\n')
+                    elif"Currently loaded" in line:
+                        print(f"\r{line.strip()}", end='')
+                    else:
+                        print(line.strip())  # Print each line of output
+                    if re.search(target_phrase, line):
+                        print(f"Target phrase '{target_phrase}' found. Closing tail.")
+                        break
+                    if( "Errno" in line) or ("error" in line) or ("Error" in line):
+                        print("error found. closing tail")
+                        break
+            finally:
+                process.terminate()
+                process.wait()
+        print("Python script on cluster completed successfully")
+
+    def parse_and_reduce(self):
+
+        self.resolve_defaults()
+        self.parse_yaml()
+        self.parse_scan_numbers()
+        self.parse_q_limits()
+        if not self.cluster:
+            i07reduce(self.scan_numbers, self.yaml_path, directory=self.data_path,
+                filename=self.output, q_subsample_dicts=self.limit_q)
+        else:
+            self.run_cluster_job()
 
 
 class Reduction:
@@ -361,8 +659,7 @@ def log_processing_stage(processing_stage):
 
 
 def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
-              title='Unknown', filename=None,
-              q_subsample_dicts=None):
+              title='Unknown', filename=None, q_subsample_dicts=None):
     """
     The runner that parses the yaml file and performs the data reduction.
 
@@ -387,11 +684,11 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
 
     # Make sure the directory is properly formatted.
     if not str(directory).endswith(os.sep):
-        directory = directory + os.sep
-    the_boss = Foreperson(run_numbers, yaml_file, directory, title)
+        directory = str(directory) + os.sep
+        the_boss = Foreperson(run_numbers, yaml_file, directory, title)
 
-    # Necessary to distnguish the same data processed by different pipelines.
-    yaml_pipeline_name = yaml_file.split(os.sep)[-1][:-5]
+        # Necessary to distnguish the same data processed by different pipelines.
+        yaml_pipeline_name = str(yaml_file).split(os.sep)[-1][:-5]
 
     files_to_reduce = the_boss.reduction.input_files
 
@@ -416,7 +713,11 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
     # the first (and likely only) signal region.
     if (the_boss.reduction.crop_function is cropping.crop_to_region and
             the_boss.reduction.crop_kwargs is None):
-        roi = refl.scans[0].metadata.signal_regions[0]
+        try:
+            roi = refl.scans[0].metadata.signal_regions[0]
+        except IndexError:
+            debug.log("No valid signal region found, regions will need to be defined in yaml settings file")
+            return
         the_boss.reduction.crop_kwargs = {'region': roi}
         debug.log(f"Crop ROI '{str(roi)}' generated from the .nxs file.")
     elif 'x_end' in the_boss.reduction.crop_kwargs:
@@ -448,12 +749,13 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             the_boss.reduction.bkg_kwargs = {
                 'list_of_regions': Region.from_dict(region_dict=the_boss.reduction.bkg_kwargs)
             }
-    else:
-        print("COULD NOT SUBTRACT BACKGROUND. SKIPPING...")
-    if the_boss.reduction.bkg_function is not None:
+        
         refl.bkg_sub(the_boss.reduction.bkg_function,
                       **the_boss.reduction.bkg_kwargs)
         the_boss.reduction.data_state.background = 'corrected'
+    else:
+        print("===== could not find suitable background settings so skipping step")
+    
 
 
 
@@ -543,11 +845,14 @@ def i07reduce(run_numbers, yaml_file, directory='/dls/{}/data/{}/{}/',
             os.makedirs(processing_path)
         # Now prepare the full path to the file
         filename = (processing_path + dat_filename)
-    elif os.path.isdir(filename):
+    if str(filename).endswith('processed'):
+        if not os.path.exists(str(filename)):
+            os.makedirs(str(filename)+'/')
+    if os.path.isdir(str(filename)):
         # It's possible we were given a directory in which to save the created
         # file. In this case, use the filename variable as a directory and add
         # our auto generated filename to it.
-        filename = os.path.join(filename, dat_filename)
+        filename = os.path.join(str(filename), dat_filename)
 
     # Write the data.
     np.savetxt(

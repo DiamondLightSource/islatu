@@ -10,7 +10,7 @@ Typing the following help command will give an overview of how to interact with 
 
 .. code-block:: bash
   
-  process_xrr.py -h` 
+  process_xrr -h` 
 
 
 The first step is to create a .yaml file containing important information about your experiental setup and data processing options.
@@ -30,7 +30,7 @@ So, you have your data files stored in /path/.../to/data/ , your .yaml file at /
 
 .. code-block:: bash
 
-    process_xrr.py -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/xrr_curve.dat
+    process_xrr -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/xrr_curve.dat
 
 So, after writing -d you need to tell process_xrr where to find your data, after writing -y you need to tell process_xrr where to find your .yaml file, and after writing -o you need to tell process_xrr where to save your data.
 
@@ -38,7 +38,7 @@ If you don't want to come up with a new name for the final processed output each
 
 .. code-block:: bash
 
-    process_xrr.py -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/output_directory/
+    process_xrr -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/output_directory/
 
 Then your output XRR curve will live in /path/.../to/output_directory/generated_name.dat . These names are generated from your .yaml file and your scan numbers, so will be unique for different analyses.
 
@@ -48,7 +48,7 @@ So, if your scan numbers of interest start at lower_number and end at upper_numb
 
 .. code-block:: bash
 
-    process_xrr.py  -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/output_directory/ -l lower_number -u upper_number`
+    process_xrr  -d /path/.../to/data/ -y /path/.../to/yaml_file.yaml -o /path/.../to/output_directory/ -l lower_number -u upper_number`
 
 *Practical example 1*
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -65,7 +65,7 @@ If this field is not filled out correctly, the Islatu package will raise an erro
 
 .. code-block:: bash
 
-    process_xrr.py -d /dls/i07/data/2021/si28979-1/ -y /home/xrr12345/Documents/Recipes/DCD_si28979_1.yaml -o /home/xrr12345/Documents/Data/ -l 817220 -u 817229`
+    process_xrr -d /dls/i07/data/2021/si28979-1/ -y /home/xrr12345/Documents/Recipes/DCD_si28979_1.yaml -o /home/xrr12345/Documents/Data/ -l 817220 -u 817229`
 
 *Practical example 2*
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -74,7 +74,7 @@ Now, later on in the same experiment you want to process another reflectivity cu
 
 .. code-block:: bash
 
-    process_xrr.py -d /dls/i07/data/2021/si28979-1/ -y /home/xrr12345/Documents/Recipes/DCD_si28979_1.yaml -o /home/xrr12345/Documents/Data/ -N 817241 817242 817243 817244 817245 817247 817248 817250 817251`
+    process_xrr -d /dls/i07/data/2021/si28979-1/ -y /home/xrr12345/Documents/Recipes/DCD_si28979_1.yaml -o /home/xrr12345/Documents/Data/ -N 817241 817242 817243 817244 817245 817247 817248 817250 817251`
 
 
 
