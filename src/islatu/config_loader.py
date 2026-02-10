@@ -36,7 +36,7 @@ def validate_background_method(method):
     """
     check background method is from allowed types
     """
-    valid_methods=['roi_subtraction']
+    valid_methods=['roi_subtraction','None','none']
     if method not in valid_methods:
         raise ValueError(f"method {method} not in valid background method list {valid_methods}")
     return True
