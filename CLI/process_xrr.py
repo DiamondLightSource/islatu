@@ -104,7 +104,7 @@ print(sys.executable)d.
     args.version_path=version_path
     args.python_version=python_version
 
-    args.jobfile_template='/dls/science/users/rpy65944/I07_work/dev_islatu/testing_scripts/islatuscriptlocal_template.sh'
+    args.jobfile_template=f'{version_path}/islatu/CLI/islatuscript_template.sh'
     args.jobfile_name='jobscript_local.sh'
 
     process_args = ProcessArgs(**vars(args))
