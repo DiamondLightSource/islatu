@@ -105,7 +105,7 @@ print(sys.executable)d.
     args.python_version=python_version
 
     args.jobfile_template=f'{version_path}/islatu/CLI/islatuscript_template.sh'
-    args.jobfile_name='jobscript.sh'
+    args.jobfile_name='jobscript_local.sh'
 
     process_args = ProcessArgs(**vars(args))
     process_args.parse_and_reduce()
