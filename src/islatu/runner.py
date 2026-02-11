@@ -343,17 +343,19 @@ class ProcessArgs:
         #load in template mapscript, new paths
         with open(self.jobfile_template) as f:
             lines=f.readlines()
-
+        
         self.jobfile=f'{self.islatufolder}//{self.jobfile_name}'
         if os.path.exists(self.jobfile):
             f=open(self.jobfile,'w')
         else:
             f=open(self.jobfile,'x')
         save_path=self.save_path
+        python_version=self.python_version
         for line in lines:
             phrase_matches=list(re.finditer(r'\${[^}]+\}',line))
             phrase_positions=[(match.start(),match.end()) for match in phrase_matches]
             outline=line
+            
             for pos in phrase_positions:
                 phrase=line[pos[0]:pos[1]]
                 outphrase=phrase.strip('$').strip('{').strip('}')
