@@ -23,9 +23,9 @@ project = 'islatu'
 copyright = '2020-2025, Diamond Light Source Ltd'
 author = 'Philip Mousley'
 
-version = '1.3.0'
+version = '1.3.1'
 # The full version, including alpha/beta/rc tags
-release = '1.3.0'
+release = '1.3.1'
 
 
 # -- General configuration ---------------------------------------------------
