@@ -22,7 +22,6 @@
 project = 'islatu'
 copyright = '2020-2025, Diamond Light Source Ltd'
 author = 'Philip Mousley'
-
 version = '1.3.1'
 # The full version, including alpha/beta/rc tags
 release = '1.3.1'
@@ -108,9 +107,9 @@ html_theme ='sphinx_rtd_theme'# 'alabaster'
 #
 # html_theme_options = {}
 html_theme_options = {
-    'page_width': '1200px',
+    #'page_width': '1200px',
     'body_max_width': 'none',
-    'sidebar_width': '300px'
+    #'sidebar_width': '300px'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
