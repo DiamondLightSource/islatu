@@ -57,7 +57,6 @@ We acknowledge the support of the Ada Lovelace Centre – a joint initiative bet
 
    installation
    workflows
-   process_xrr
    apidocs/index
 
 
