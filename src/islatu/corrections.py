@@ -1,13 +1,12 @@
 """
 Reflectometry data must be corrected as a part of reduction.
 These functions facilitate this, including the footprint and
-DCD q-variance corrections.
+DCD q-variance corrections .
 """
 
-
 import numpy as np
-from scipy.stats import norm
 from scipy.interpolate import splrep
+from scipy.stats import norm
 
 
 def footprint_correction(beam_width, sample_size, theta):
@@ -26,19 +25,19 @@ def footprint_correction(beam_width, sample_size, theta):
         Array of correction factors.
     """
     # Deal with the [trivial] theta=0 case.
-    theta = np.array([10**(-3) if t == 0 else t for t in theta])
+    theta = np.array([10 ** (-3) if t == 0 else t for t in theta])
 
     beam_sd = beam_width / 2 / np.sqrt(2 * np.log(2))
     projected_beam_sd = beam_sd / np.sin(np.radians(theta))
-    frac_of_beam_sampled = (
-        norm.cdf(sample_size/2, 0, projected_beam_sd) -
-        norm.cdf(-sample_size/2, 0, projected_beam_sd)
+    frac_of_beam_sampled = norm.cdf(sample_size / 2, 0, projected_beam_sd) - norm.cdf(
+        -sample_size / 2, 0, projected_beam_sd
     )
     return frac_of_beam_sampled
 
 
 def get_interpolator(
-        file_path, parser, q_axis_name="qdcd_", intensity_axis_name="adc2"):
+    file_path, parser, q_axis_name="qdcd_", intensity_axis_name="adc2"
+):
     """
     Get an interpolator object from scipy, this is useful for the DCD q-normalisation step.
 
@@ -54,7 +53,7 @@ def get_interpolator(
             - :py:attr:`array_like`: B-spline coefficients.
             - :py:attr:`int`: Degree of spline.
     """
-    normalisation_data = parser(file_path)[1].sort_values(by='qdcd_')
+    normalisation_data = parser(file_path)[1].sort_values(by="qdcd_")
     return splrep(
-        normalisation_data[q_axis_name],
-        normalisation_data[intensity_axis_name])
+        normalisation_data[q_axis_name], normalisation_data[intensity_axis_name]
+    )

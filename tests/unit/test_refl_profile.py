@@ -1,15 +1,13 @@
 """
-This module tests the islatu.refl_profile module's Profile class.
+This module tests the islatu.refl_profile module's Profile class .
 """
 
-
 import numpy as np
-from numpy.testing import assert_allclose
-
-from islatu.refl_profile import Profile
-from islatu.cropping import crop_to_region
 from islatu.background import roi_subtraction
+from islatu.cropping import crop_to_region
+from islatu.refl_profile import Profile
 from islatu.scan import Scan2D
+from numpy.testing import assert_allclose
 
 
 def test_profile_data(profile_01: Profile, scan2d_from_nxs_01: Scan2D):
@@ -43,8 +41,7 @@ def test_profile_bkg_sub(profile_01: Profile, scan2d_from_nxs_01: Scan2D):
     profile_01.bkg_sub(roi_subtraction, list_of_regions=[bkg_region])
     scan2d_from_nxs_01.bkg_sub(roi_subtraction, list_of_regions=[bkg_region])
 
-    assert_allclose(profile_01.intensity_e,
-                    scan2d_from_nxs_01.intensity_e, 1e-4)
+    assert_allclose(profile_01.intensity_e, scan2d_from_nxs_01.intensity_e, 1e-4)
     assert_allclose(profile_01.intensity, scan2d_from_nxs_01.intensity, 1e-4)
 
 
@@ -122,7 +119,8 @@ def test_profile_footprint_correction(profile_01: Profile, scan2d_from_nxs_01):
 
 
 def test_profile_transmission_normalisation(
-        profile_01: Profile, scan2d_from_nxs_01: Scan2D):
+    profile_01: Profile, scan2d_from_nxs_01: Scan2D
+):
     """
     Assert that carrying out a transmission normalisation on an instance of
     Profile is the same thing as doing it on each of its constituent scans.
@@ -135,7 +133,8 @@ def test_profile_transmission_normalisation(
 
 
 def test_profile_qdcd_normalisation(
-        profile_01: Profile, scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev):
+    profile_01: Profile, scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev
+):
     """
     Assert that carrying out the qdcd correction on an instance of Profile is
     the same thing as doing it on each of its constituent scans.

@@ -1,5 +1,5 @@
 """
-This file contains a suite of tests for the islatu.io module.
+This file contains a suite of tests for the islatu.io module .
 """
 
 # The following is necessary to use classes to share parameters using
@@ -13,18 +13,17 @@ This file contains a suite of tests for the islatu.io module.
 # The following is to stop pylint from complaining about protected member tests.
 # pylint: disable=protected-access
 
-import pytest
-import numpy as np
 import nexusformat.nexus.tree as nx
-from pytest_lazyfixture import lazy_fixture as lazy
-
+import numpy as np
+import pytest
 from islatu.io import I07Nexus
 from islatu.region import Region
+from pytest_lazyfixture import lazy_fixture as lazy
 
 
 @pytest.mark.parametrize(
-    'nexus_base',
-    [lazy('nexus_base_object_01'), lazy('i07_nexus_object_01')])
+    "nexus_base", [lazy("nexus_base_object_01"), lazy("i07_nexus_object_01")]
+)
 class TestNexusBaseAttrTypes:
     """
     This class checks that the types of each of the fixtures that inherits from
@@ -90,11 +89,11 @@ class TestNexusBaseAttrTypes:
 
 
 @pytest.mark.parametrize(
-    'nexus_base, path',
+    "nexus_base, path",
     [
-        (lazy('nexus_base_object_01'), lazy('path_to_i07_nxs_01')),
-        (lazy('i07_nexus_object_01'), lazy('path_to_i07_nxs_01'))
-    ]
+        (lazy("nexus_base_object_01"), lazy("path_to_i07_nxs_01")),
+        (lazy("i07_nexus_object_01"), lazy("path_to_i07_nxs_01")),
+    ],
 )
 def test_local_path(nexus_base, path):
     """
@@ -105,13 +104,11 @@ def test_local_path(nexus_base, path):
 
 
 @pytest.mark.parametrize(
-    'nexus_base, path',
+    "nexus_base, path",
     [
-        (lazy('nexus_base_object_01'),
-        '/dls/i07/data/2021/si28707-1/i07-404876.nxs'),
-        (lazy('i07_nexus_object_01'),
-         '/dls/i07/data/2021/si28707-1/i07-404876.nxs')
-    ]
+        (lazy("nexus_base_object_01"), "/dls/i07/data/2021/si28707-1/i07-404876.nxs"),
+        (lazy("i07_nexus_object_01"), "/dls/i07/data/2021/si28707-1/i07-404876.nxs"),
+    ],
 )
 def test_src_path(nexus_base, path):
     """
@@ -124,12 +121,11 @@ def test_src_path(nexus_base, path):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, path',
+    "i07_nexus, path",
     [
-        (lazy('i07_nexus_object_01'),
-        lazy('path_to_i07_h5_01'))
+        (lazy("i07_nexus_object_01"), lazy("path_to_i07_h5_01"))
         # '/dls/i07/data/2021/si28707-1/excaliburScan404876_000001.h5')
-    ]
+    ],
 )
 def test_src_data_path(i07_nexus: I07Nexus, path):
     """
@@ -139,15 +135,12 @@ def test_src_data_path(i07_nexus: I07Nexus, path):
     edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
     only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
-    path_without_start=i07_nexus._src_data_path[0].split('islatu/')[-1]
+    path_without_start = i07_nexus._src_data_path[0].split("islatu/")[-1]
     assert path_without_start == path
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, path',
-    [
-        (lazy('i07_nexus_object_01'), lazy('path_to_i07_h5_01'))
-    ]
+    "i07_nexus, path", [(lazy("i07_nexus_object_01"), lazy("path_to_i07_h5_01"))]
 )
 def test_local_data_path(i07_nexus: I07Nexus, path):
     """
@@ -160,14 +153,11 @@ def test_local_data_path(i07_nexus: I07Nexus, path):
     edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
     only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
-    path_without_start=i07_nexus.local_data_path.split('islatu/')[-1]
+    path_without_start = i07_nexus.local_data_path.split("islatu/")[-1]
     assert path_without_start == path
 
 
-@pytest.mark.parametrize(
-    'i07_nexus, correct_num',
-    [(lazy('i07_nexus_object_01'), 3)]
-)
+@pytest.mark.parametrize("i07_nexus, correct_num", [(lazy("i07_nexus_object_01"), 3)])
 def test_number_of_regions(i07_nexus: I07Nexus, correct_num):
     """
     Makes sure that we can correctly determine the number of regions of
@@ -177,18 +167,17 @@ def test_number_of_regions(i07_nexus: I07Nexus, correct_num):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, region_number, kind, result',
+    "i07_nexus, region_number, kind, result",
     [
-        (lazy('i07_nexus_object_01'), 1, 'x_1', 'Region_1_X'),
-        (lazy('i07_nexus_object_01'), 1, 'x_start', 'Region_1_X'),
-        (lazy('i07_nexus_object_01'), 17, 'Height', 'Region_17_Height'),
-        (lazy('i07_nexus_object_01'), 9917, 'y_1', 'Region_9917_Y'),
-        (lazy('i07_nexus_object_01'), 6, 'Width', 'Region_6_Width'),
-        (lazy('i07_nexus_object_01'), 4, 'y_start', 'Region_4_Y')
-    ]
+        (lazy("i07_nexus_object_01"), 1, "x_1", "Region_1_X"),
+        (lazy("i07_nexus_object_01"), 1, "x_start", "Region_1_X"),
+        (lazy("i07_nexus_object_01"), 17, "Height", "Region_17_Height"),
+        (lazy("i07_nexus_object_01"), 9917, "y_1", "Region_9917_Y"),
+        (lazy("i07_nexus_object_01"), 6, "Width", "Region_6_Width"),
+        (lazy("i07_nexus_object_01"), 4, "y_start", "Region_4_Y"),
+    ],
 )
-def test_region_bounds_keys(i07_nexus: I07Nexus,
-                            region_number, kind, result):
+def test_region_bounds_keys(i07_nexus: I07Nexus, region_number, kind, result):
     """
     Makes sure that region bounds keys are being generated correctly.
     """
@@ -196,10 +185,7 @@ def test_region_bounds_keys(i07_nexus: I07Nexus,
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, regions',
-    [
-        (lazy('i07_nexus_object_01'), lazy('signal_regions_01'))
-    ]
+    "i07_nexus, regions", [(lazy("i07_nexus_object_01"), lazy("signal_regions_01"))]
 )
 def test_signal_regions_len(i07_nexus, regions):
     """
@@ -209,10 +195,7 @@ def test_signal_regions_len(i07_nexus, regions):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, regions',
-    [
-        (lazy('i07_nexus_object_01'), lazy('signal_regions_01'))
-    ]
+    "i07_nexus, regions", [(lazy("i07_nexus_object_01"), lazy("signal_regions_01"))]
 )
 def test_signal_regions(i07_nexus: I07Nexus, regions):
     """
@@ -224,10 +207,7 @@ def test_signal_regions(i07_nexus: I07Nexus, regions):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, regions',
-    [
-        (lazy('i07_nexus_object_01'), lazy('bkg_regions_01'))
-    ]
+    "i07_nexus, regions", [(lazy("i07_nexus_object_01"), lazy("bkg_regions_01"))]
 )
 def test_bkg_regions_len(i07_nexus: I07Nexus, regions):
     """
@@ -238,10 +218,7 @@ def test_bkg_regions_len(i07_nexus: I07Nexus, regions):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, regions',
-    [
-        (lazy('i07_nexus_object_01'), lazy('bkg_regions_01'))
-    ]
+    "i07_nexus, regions", [(lazy("i07_nexus_object_01"), lazy("bkg_regions_01"))]
 )
 def test_bkg_regions(i07_nexus: I07Nexus, regions):
     """
@@ -253,8 +230,8 @@ def test_bkg_regions(i07_nexus: I07Nexus, regions):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, transmission',
-    [(lazy('i07_nexus_object_01'), 0.000448426658633058)])
+    "i07_nexus, transmission", [(lazy("i07_nexus_object_01"), 0.000448426658633058)]
+)
 def test_transmission(i07_nexus: I07Nexus, transmission):
     """
     Make sure we can correctly parse the transmission coefficient.
@@ -263,8 +240,7 @@ def test_transmission(i07_nexus: I07Nexus, transmission):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, probe_energy',
-    [(lazy('i07_nexus_object_01'), 12.5)]
+    "i07_nexus, probe_energy", [(lazy("i07_nexus_object_01"), 12.5)]
 )
 def test_probe_energy(i07_nexus: I07Nexus, probe_energy):
     """
@@ -275,8 +251,7 @@ def test_probe_energy(i07_nexus: I07Nexus, probe_energy):
 
 
 @pytest.mark.parametrize(
-    'i07_nexus, detector_distance',
-    [(lazy('i07_nexus_object_01'), 1.1155)]
+    "i07_nexus, detector_distance", [(lazy("i07_nexus_object_01"), 1.1155)]
 )
 def test_detector_distance(i07_nexus: I07Nexus, detector_distance):
     """
@@ -285,10 +260,7 @@ def test_detector_distance(i07_nexus: I07Nexus, detector_distance):
     assert i07_nexus.detector_distance == detector_distance
 
 
-@pytest.mark.parametrize(
-    'i07_nexus, description',
-    [(lazy('i07_nexus_object_01'), 'q')]
-)
+@pytest.mark.parametrize("i07_nexus, description", [(lazy("i07_nexus_object_01"), "q")])
 def test_default_axis_type(i07_nexus: I07Nexus, description):
     """
     Make sure that we are correctly identifying the kind of axis data
@@ -298,15 +270,14 @@ def test_default_axis_type(i07_nexus: I07Nexus, description):
 
 
 @pytest.mark.parametrize(
-    'i, ith_region',
+    "i, ith_region",
     [
-        (1, Region(1208, 1208+50, 206, 206+18)),
-        (2, Region(1258, 1258+50, 206, 206+18)),
-        (3, Region(1208, 1208+50, 188, 188+18))
-    ]
+        (1, Region(1208, 1208 + 50, 206, 206 + 18)),
+        (2, Region(1258, 1258 + 50, 206, 206 + 18)),
+        (3, Region(1208, 1208 + 50, 188, 188 + 18)),
+    ],
 )
-def test_ith_region_nxs_01(i07_nexus_object_01: I07Nexus,
-                           i, ith_region):
+def test_ith_region_nxs_01(i07_nexus_object_01: I07Nexus, i, ith_region):
     """
     Make sure that we can extract the ith region from i07_nexus_object_01.
     """

@@ -1,5 +1,5 @@
 """
-This module contains a couple of simple tests for Islatu's debugger.
+This module contains a couple of simple tests for Islatu's debugger .
 """
 
 from islatu.debug import debug

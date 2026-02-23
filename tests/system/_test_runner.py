@@ -1,11 +1,10 @@
 """
-This module tests the islatu.runner module's processing capabilities.
+This module tests the islatu.runner module's processing capabilities .
 """
 
 import os
 
 import numpy as np
-
 from islatu.runner import i07reduce
 
 

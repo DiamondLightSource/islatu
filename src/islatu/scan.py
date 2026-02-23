@@ -7,7 +7,7 @@ and the like.
 A Scan2D is a Scan whose Data object's intensity values are computed from an
 image captured by an area detector. Many of Scan's methods are overloaded to
 make use of the additional information provided by the area detector, and extra
-image manipulation methods are included in Scan2D.
+image manipulation methods are included in Scan2D .
 """
 
 from typing import List
@@ -16,9 +16,9 @@ import numpy as np
 from scipy.interpolate import splev
 
 import islatu.corrections as corrections
-from islatu.metadata import Metadata
 from islatu.data import Data, MeasurementBase
 from islatu.image import Image
+from islatu.metadata import Metadata
 
 
 class Scan(MeasurementBase):
@@ -29,10 +29,11 @@ class Scan(MeasurementBase):
     def __init__(self, data: Data, metadata: Metadata) -> None:
         # Initialize the MeasurementBase from Data. This is much simpler than
         # passing a million arguments directly to the scan.
-        super().__init__(data.intensity, data.intensity_e, data.energy,
-                         metadata, data.theta)
+        super().__init__(
+            data.intensity, data.intensity_e, data.energy, metadata, data.theta
+        )
 
-    def subsample_q(self, q_min=0, q_max=float('inf')):
+    def subsample_q(self, q_min=0, q_max=float("inf")):
         """
         Delete data points less than q_min and more than q_max.
 
@@ -52,20 +53,20 @@ class Scan(MeasurementBase):
 
         # Now remove all data points at these qs.
         self.remove_data_points(illegal_q_indices)
-    
-    def transmission_normalisation(self,overwrite_transmission=None):
+
+    def transmission_normalisation(self, overwrite_transmission=None):
         """
         Perform the transmission correction.
         """
-        
+
         if overwrite_transmission is not None:
-            transmissionvalue=overwrite_transmission
-        elif 'transmissions' in dir(self.metadata):
-            transmissionvalue=self.metadata.transmissions
+            transmissionvalue = overwrite_transmission
+        elif "transmissions" in dir(self.metadata):
+            transmissionvalue = self.metadata.transmissions
         else:
-            transmissionvalue=self.metadata.transmission
-            
-        if np.size(np.array(transmissionvalue))==1:
+            transmissionvalue = self.metadata.transmission
+
+        if np.size(np.array(transmissionvalue)) == 1:
             self.intensity /= float(transmissionvalue)
             self.intensity_e /= float(transmissionvalue)
         else:
@@ -95,7 +96,8 @@ class Scan(MeasurementBase):
             theta (:py:attr:`float`): Incident angle, in degrees.
         """
         frac_of_beam_sampled = corrections.footprint_correction(
-            beam_width, sample_size, self.theta)
+            beam_width, sample_size, self.theta
+        )
         self.intensity /= frac_of_beam_sampled
         self.intensity_e /= frac_of_beam_sampled
 
@@ -111,22 +113,32 @@ class Scan2D(Scan):
             The detector images in the given scan.
     """
 
-    def __init__(self, data: Data, metadata: Metadata, images: List[Image],remove_indices=None) \
-            -> None:
+    def __init__(
+        self, data: Data, metadata: Metadata, images: List[Image], remove_indices=None
+    ) -> None:
         super().__init__(data, metadata)
         self.images = images
-        self.detname=self.metadata.detector_name
-        if 'attenuation_filters_moving' in self.metadata.entry[f'{self.detname}'].keys():
+        self.detname = self.metadata.detector_name
+        if (
+            "attenuation_filters_moving"
+            in self.metadata.entry[f"{self.detname}"].keys()
+        ):
             try:
-                filterslist=self.metadata.entry[f'{self.detname}/attenuation_filters_moving'].nxdata
-            except (AttributeError,TypeError):
-                filterslist=[]
-            if len(filterslist) >1:
-                self.metadata.transmissionsraw=self.metadata.entry[f'{self.detname}_transmission/transmission'].nxdata
-                self.metadata.transmissions=np.delete(np.insert(self.metadata.transmissionsraw,0,1e-9),-1)
+                filterslist = self.metadata.entry[
+                    f"{self.detname}/attenuation_filters_moving"
+                ].nxdata
+            except (AttributeError, TypeError):
+                filterslist = []
+            if len(filterslist) > 1:
+                self.metadata.transmissionsraw = self.metadata.entry[
+                    f"{self.detname}_transmission/transmission"
+                ].nxdata
+                self.metadata.transmissions = np.delete(
+                    np.insert(self.metadata.transmissionsraw, 0, 1e-9), -1
+                )
         if remove_indices is not None:
             self.remove_data_points(remove_indices)
-            
+
     def crop(self, crop_function, **kwargs):
         """
         Crop every image in images according to crop_function.
@@ -142,8 +154,7 @@ class Scan2D(Scan):
                 Defaults to :py:attr:`True`.
         """
 
-        (vals, stdevs) = (np.zeros(len(self.intensity)),
-                          np.zeros(len(self.intensity)))
+        (vals, stdevs) = (np.zeros(len(self.intensity)), np.zeros(len(self.intensity)))
         for i, image in enumerate(self.images):
             image.crop(crop_function, **kwargs)
             vals[i], stdevs[i] = self.images[i].sum()
@@ -165,8 +176,7 @@ class Scan2D(Scan):
                 Requires the :py:mod:`tqdm` package. Defaults
                 to :py:attr:`True`.
         """
-        vals, stdevs = np.zeros(
-            len(self.intensity)), np.zeros(len(self.intensity))
+        vals, stdevs = np.zeros(len(self.intensity)), np.zeros(len(self.intensity))
 
         # We keep track of the bkg_sub_infos for meta-analyses.
         bkg_sub_info = [
@@ -195,8 +205,10 @@ class Scan2D(Scan):
                 The indices to be removed.
         """
         super().remove_data_points(indices)
-        if 'transmissions' in dir(self.metadata):
-            self.metadata.transmissions =np.delete(self.metadata.transmissions,indices)
+        if "transmissions" in dir(self.metadata):
+            self.metadata.transmissions = np.delete(
+                self.metadata.transmissions, indices
+            )
 
         # Delete images in reverse order if you don't like errors.
         for idx in sorted(indices, reverse=True):

@@ -1,6 +1,6 @@
 """
 Background substraction is a necessary component of reflectometry reduction,
-where the background scattering is removed from the reflected intensity.
+where the background scattering is removed from the reflected intensity .
 
 Herein are some functions to enable that for a two-dimensional detector image,
 as well as simple dataclasses in which we can store some information relating to
@@ -11,11 +11,11 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 import numpy as np
-from scipy.stats import norm
 from scipy.optimize import curve_fit
+from scipy.stats import norm
 
-from islatu.region import Region
 from islatu.image import Image
+from islatu.region import Region
 
 
 @dataclass
@@ -24,6 +24,7 @@ class FitInfo:
     A simple dataclass in which we can store data relating to the quality of a
     fit.
     """
+
     popt: np.ndarray
     pcov: np.ndarray
     fit_function: Callable
@@ -35,6 +36,7 @@ class BkgSubInfo:
     A simple data class in which we can store information relating to a
     background subtraction.
     """
+
     bkg: float
     bkg_e: float
     bkg_sub_function: Callable
@@ -70,8 +72,8 @@ def roi_subtraction(image, list_of_regions: List[Region]):
         # the intensity measured in all the background regions so far.
         sum_of_bkg_areas += np.sum(
             image.array_original[
-                int(region.y_start):int(region.y_end),
-                int(region.x_start):int(region.x_end)
+                int(region.y_start) : int(region.y_end),
+                int(region.x_start) : int(region.x_end),
             ]
         )
         # Add the number of pixels in this background ROI to the total number of
@@ -159,14 +161,21 @@ def fit_gaussian_1d(image: Image, params_0=None, bounds=None, axis=0):
         scale0 = arr.max()
         params_0 = [mean0, sdev0, offset0, scale0]
     if bounds is None:
-        bounds = ([0, 0, 0, 0],
-                  [ordinate.shape[0], ordinate.shape[0], scale0, scale0 * 10])
+        bounds = (
+            [0, 0, 0, 0],
+            [ordinate.shape[0], ordinate.shape[0], scale0, scale0 * 10],
+        )
 
     # Perform the fitting.
     fit_popt_pcov = curve_fit(
         univariate_normal,
-        np.arange(0, ordinate.shape[0], 1), ordinate, bounds=bounds,
-        sigma=ordinate_e, p0=params_0, maxfev=2000 * (len(params_0) + 1))
+        np.arange(0, ordinate.shape[0], 1),
+        ordinate,
+        bounds=bounds,
+        sigma=ordinate_e,
+        p0=params_0,
+        maxfev=2000 * (len(params_0) + 1),
+    )
 
     fit_info = FitInfo(fit_popt_pcov[0], fit_popt_pcov[1], univariate_normal)
 

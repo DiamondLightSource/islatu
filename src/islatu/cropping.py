@@ -1,8 +1,7 @@
 """
 Often the detector is a lot larger than the reflected intensity peak, so it
-makes sense to crop the image to the peak.
+makes sense to crop the image to the peak .
 """
-
 
 import numpy as np
 
@@ -19,4 +18,4 @@ def crop_to_region(array: np.ndarray, region: Region):
         region:
             The instance of Region to crop to.
     """
-    return array[region.y_start:region.y_end,region.x_start:region.x_end]
+    return array[region.y_start : region.y_end, region.x_start : region.x_end]

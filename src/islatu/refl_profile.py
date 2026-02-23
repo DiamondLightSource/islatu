@@ -1,14 +1,14 @@
 """
 A profile is a measurement resulting from a scan, or a series of scans. Profiles
 are the central objects in the islatu library, containing the total reflected
-intensity as a function of scattering vector data.
+intensity as a function of scattering vector data .
 """
 
 from typing import List
 
+from islatu.data import Data
 from islatu.scan import Scan
 from islatu.stitching import concatenate, rebin
-from islatu.data import Data
 
 
 class Profile(Data):
@@ -18,12 +18,11 @@ class Profile(Data):
     """
 
     def __init__(self, data: Data, scans: List[Scan]) -> None:
-        super().__init__(data.intensity, data.intensity_e, data.energy,
-                         data.theta)
+        super().__init__(data.intensity, data.intensity_e, data.energy, data.theta)
         self.scans = scans
 
     @classmethod
-    def fromfilenames(cls, filenames, parser,adjustments=None):
+    def fromfilenames(cls, filenames, parser, adjustments=None):
         """
         Instantiate a profile from a list of scan filenames.
 
@@ -36,10 +35,12 @@ class Profile(Data):
         """
 
         # Load the scans, specifying the scan axis name if necessary.
-        if adjustments==None:
+        if adjustments == None:
             scans = [parser(filename) for filename in filenames]
         else:
-            scans = [parser(filename,adjustments=adjustments) for filename in filenames]
+            scans = [
+                parser(filename, adjustments=adjustments) for filename in filenames
+            ]
 
         # Now that the individual scans have been loaded, data needs to be
         # constructed. The simplest way to do this is by concatenating the
@@ -87,15 +88,14 @@ class Profile(Data):
         # Now just iterate over all of the scans in the profile and subtract the
         # background, storing the return values in bkg_sub_info.
         for scan in self.scans:
-            bkg_sub_info.append(scan.bkg_sub(
-                bkg_sub_function, **kwargs))
+            bkg_sub_info.append(scan.bkg_sub(bkg_sub_function, **kwargs))
 
         self.concatenate()
 
         # Expose the optimized fit parameters for meta-analysis.
         return bkg_sub_info
 
-    def subsample_q(self, scan_identifier, q_min=0, q_max=float('inf')):
+    def subsample_q(self, scan_identifier, q_min=0, q_max=float("inf")):
         """
         For the scan with identifier scan_identifier, delete all data points for
         which q < q_min or q > q_max.
@@ -163,8 +163,7 @@ class Profile(Data):
         """
         Class method for :func:`~islatu.stitching.concatenate`.
         """
-        self.q_vectors, self.intensity, self.intensity_e = \
-            concatenate(self.scans)
+        self.q_vectors, self.intensity, self.intensity_e = concatenate(self.scans)
 
     def rebin(self, new_q=None, rebin_as="linear", number_of_q_vectors=5000):
         """
@@ -184,5 +183,9 @@ class Profile(Data):
                 rebinning of the data. Defaults to :py:attr:`400`.
         """
         self.q_vectors, self.intensity, self.intensity_e = rebin(
-            self.q_vectors, (self.intensity, self.intensity_e), new_q,
-            rebin_as=rebin_as, number_of_q_vectors=number_of_q_vectors)
+            self.q_vectors,
+            (self.intensity, self.intensity_e),
+            new_q,
+            rebin_as=rebin_as,
+            number_of_q_vectors=number_of_q_vectors,
+        )

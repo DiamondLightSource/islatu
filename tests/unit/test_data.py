@@ -1,23 +1,19 @@
 """
-Module for testing the Data class, and the MeasurementBase class.
+Module for testing the Data class, and the MeasurementBase class .
 """
 
-import pytest
-from pytest_lazyfixture import lazy_fixture as lazy
 import numpy as np
-
+import pytest
 from islatu.data import Data, MeasurementBase
 from islatu.io import I07Nexus
 from islatu.scan import Scan2D
+from pytest_lazyfixture import lazy_fixture as lazy
 
 # Fairly obvious disable for testing: we also need to test protected attrs.
 # pylint: disable=protected-access
 
 
-@pytest.mark.parametrize(
-    'data',
-    [lazy('generic_data_01'), lazy('generic_data_02')]
-)
+@pytest.mark.parametrize("data", [lazy("generic_data_01"), lazy("generic_data_02")])
 class TestDataSimple:
     """
     Simple tests for the Data class that don't require any additional fixtures.
@@ -31,9 +27,11 @@ class TestDataSimple:
 
 
 @pytest.mark.parametrize(
-    'data, correct_intensity',
-    [(lazy('generic_data_01'), np.arange(1100, 300, -45)[:10]),
-     (lazy('generic_data_02'), (np.arange(11100012, 0, -12938)[:6]))]
+    "data, correct_intensity",
+    [
+        (lazy("generic_data_01"), np.arange(1100, 300, -45)[:10]),
+        (lazy("generic_data_02"), (np.arange(11100012, 0, -12938)[:6])),
+    ],
 )
 def test_intensity_access(data, correct_intensity):
     """
@@ -43,20 +41,23 @@ def test_intensity_access(data, correct_intensity):
 
 
 @pytest.mark.parametrize(
-    'data, correct_intensity_e',
-    [(lazy('generic_data_01'), np.sqrt(np.arange(1100, 300, -45)[:10])),
-     (lazy('generic_data_02'), np.sqrt(np.arange(11100012, 0, -12938)[:6]))]
+    "data, correct_intensity_e",
+    [
+        (lazy("generic_data_01"), np.sqrt(np.arange(1100, 300, -45)[:10])),
+        (lazy("generic_data_02"), np.sqrt(np.arange(11100012, 0, -12938)[:6])),
+    ],
 )
 def test_intensity_e_access(data, correct_intensity_e):
     """
     Make sure we can access the I_e attribute.
     """
-    assert(data.intensity_e == correct_intensity_e).all()
+    assert (data.intensity_e == correct_intensity_e).all()
 
 
 @pytest.mark.parametrize(
-    'data,correct_energy',
-    [(lazy('generic_data_01'), 12.5), (lazy('generic_data_02'), 8.04)])
+    "data,correct_energy",
+    [(lazy("generic_data_01"), 12.5), (lazy("generic_data_02"), 8.04)],
+)
 def test_energy_access(data: Data, correct_energy):
     """
     Make sure we can access the data.energy attribute, and that it has the
@@ -66,8 +67,8 @@ def test_energy_access(data: Data, correct_energy):
 
 
 @pytest.mark.parametrize(
-    'data, correct__theta',
-    [(lazy('generic_data_01'), None), (lazy('generic_data_02'), np.arange(6))]
+    "data, correct__theta",
+    [(lazy("generic_data_01"), None), (lazy("generic_data_02"), np.arange(6))],
 )
 def test__theta_access(data: Data, correct__theta):
     """
@@ -81,11 +82,8 @@ def test__theta_access(data: Data, correct__theta):
 
 
 @pytest.mark.parametrize(
-    'data, correct__q',
-    [
-        (lazy('generic_data_01'), np.arange(10)/10),
-        (lazy('generic_data_02'), None)
-    ]
+    "data, correct__q",
+    [(lazy("generic_data_01"), np.arange(10) / 10), (lazy("generic_data_02"), None)],
 )
 def test__q_access(data: Data, correct__q):
     """
@@ -120,9 +118,8 @@ def test_conversion_to_th(generic_data_01: Data):
 
 
 @pytest.mark.parametrize(
-    'data',
-    [lazy('generic_data_01'), lazy('generic_data_02'),
-     lazy('scan2d_from_nxs_01')]
+    "data",
+    [lazy("generic_data_01"), lazy("generic_data_02"), lazy("scan2d_from_nxs_01")],
 )
 def test_remove_data_points_01(data: Data):
     """
@@ -131,14 +128,16 @@ def test_remove_data_points_01(data: Data):
     # Make a deep copy of data. Worth noting that this copy won't quite be
     # precise if our generic_data was defined using q values, hence the need for
     # pytest.approx later.
-    data_copy = Data(np.copy(data.intensity),
-                     np.copy(data.intensity_e),
-                     data.energy, np.copy(data.theta))
+    data_copy = Data(
+        np.copy(data.intensity),
+        np.copy(data.intensity_e),
+        data.energy,
+        np.copy(data.theta),
+    )
 
     # If our data is a Scan2D, we need to construct it slightly differently.
     if isinstance(data, Scan2D):
-        data_copy = Scan2D(data_copy, data.metadata,
-                           list(np.copy(data.images)))
+        data_copy = Scan2D(data_copy, data.metadata, list(np.copy(data.images)))
     data.remove_data_points([1])
 
     assert len(data.intensity) + 1 == len(data_copy.intensity)
@@ -160,9 +159,8 @@ def test_remove_data_points_01(data: Data):
 
 
 @pytest.mark.parametrize(
-    'data',
-    [lazy('generic_data_01'), lazy('generic_data_02'),
-     lazy('scan2d_from_nxs_01')]
+    "data",
+    [lazy("generic_data_01"), lazy("generic_data_02"), lazy("scan2d_from_nxs_01")],
 )
 def test_remove_data_points_02(data: Data):
     """
@@ -175,13 +173,15 @@ def test_remove_data_points_02(data: Data):
     leaves room for error, which defeats the point of testing.
     """
     # Make a deep copy of data.
-    data_copy = Data(np.copy(data.intensity),
-                     np.copy(data.intensity_e),
-                     data.energy, np.copy(data.theta))
+    data_copy = Data(
+        np.copy(data.intensity),
+        np.copy(data.intensity_e),
+        data.energy,
+        np.copy(data.theta),
+    )
     # If our data is a Scan2D, we need to construct it slightly differently.
     if isinstance(data, Scan2D):
-        data_copy = Scan2D(data_copy, data.metadata,
-                           list(np.copy(data.images)))
+        data_copy = Scan2D(data_copy, data.metadata, list(np.copy(data.images)))
     data.remove_data_points([1, 2, 4])
 
     assert len(data.intensity) + 3 == len(data_copy.intensity)
@@ -217,8 +217,7 @@ def test_measurement_base_metadata_type(measurement_base_01):
     assert isinstance(measurement_base_01.metadata, I07Nexus)
 
 
-def test_measurement_base_metadata_path(measurement_base_01,
-                                        path_to_i07_nxs_01):
+def test_measurement_base_metadata_path(measurement_base_01, path_to_i07_nxs_01):
     """
     Make sure that we can access the metadata, and that its local_path is good.
     """
@@ -232,8 +231,9 @@ def test_measurement_base_metadata_energy(measurement_base_01):
     assert measurement_base_01.metadata.probe_energy == 12.5
 
 
-def test_measurement_base_underlying_data(measurement_base_01: MeasurementBase,
-                                          generic_data_01: Data):
+def test_measurement_base_underlying_data(
+    measurement_base_01: MeasurementBase, generic_data_01: Data
+):
     """
     Make sure that the instance of MeasurementBase has the same values of
     q, theta, intensity etc. as the instance of Data from which it was
@@ -247,10 +247,7 @@ def test_measurement_base_underlying_data(measurement_base_01: MeasurementBase,
     assert measurement_base_01._theta == generic_data_01._theta
     assert (measurement_base_01.q_vectors == generic_data_01.q_vectors).all()
     assert (measurement_base_01.intensity == generic_data_01.intensity).all()
-    assert (measurement_base_01.intensity_e ==
-            generic_data_01.intensity_e).all()
+    assert (measurement_base_01.intensity_e == generic_data_01.intensity_e).all()
     assert measurement_base_01.energy == generic_data_01.energy
-    assert (measurement_base_01.reflectivity ==
-            generic_data_01.reflectivity).all()
-    assert (measurement_base_01.reflectivity_e ==
-            generic_data_01.reflectivity_e).all()
+    assert (measurement_base_01.reflectivity == generic_data_01.reflectivity).all()
+    assert (measurement_base_01.reflectivity_e == generic_data_01.reflectivity_e).all()

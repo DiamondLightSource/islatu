@@ -4,7 +4,6 @@ The purpose of the Image class stored in this module is the investigation
 and manipulation of these images.
 """
 
-
 import numpy as np
 
 
@@ -29,7 +28,7 @@ class Image:
     Args:
         file_path (:py:attr:`str`): The file path for the image.
         data (:py:class:`pandas.DataFrame`, optional): Experimental data about the measurement. Defaults to :py:attr:`None`.
-        transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False`.
+        transpose (:py:attr:`bool`, optional): Should the data be rotated by 90 degrees? Defaults to :py:attr:`False` .
     """
 
     def __init__(self, array: np.ndarray, transpose: bool = False):
@@ -106,8 +105,7 @@ class Image:
         self.array = crop_function(self.array, **kwargs)
         self.array_e = crop_function(self.array_e, **kwargs)
 
-    def background_subtraction(self, background_subtraction_function,
-                               **kwargs):
+    def background_subtraction(self, background_subtraction_function, **kwargs):
         """
         Perform a background subtraction based on some function.
 
@@ -116,9 +114,7 @@ class Image:
             **kwargs (:py:attr:`dict`): The background substraction function keyword arguments.
         """
 
-        bkg_sub_info = background_subtraction_function(
-            self, **kwargs
-        )
+        bkg_sub_info = background_subtraction_function(self, **kwargs)
         # Store the calculated background, and its error.
         self.bkg, self.bkg_e = bkg_sub_info.bkg, bkg_sub_info.bkg_e
 

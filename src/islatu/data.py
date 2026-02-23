@@ -4,7 +4,7 @@ In a reflectometry measurement, the experimental data corresponds to the
 reflected intensity as a function of scattering vector Q. In a typical
 diffractometer, Q is a virtual axis, calculated geometrically from various motor
 positions. The Data class takes care of these conversions, exposing q, theta,
-intensity, reflectivity, and energy.
+intensity, reflectivity, and energy .
 
 The MeasurementBase class defines a simple class that is Data, but that also has
 metadata.
@@ -16,42 +16,41 @@ from scipy.constants import physical_constants
 
 class Data:
     """
-        The base class of all Islatu objects that contain data.
+    The base class of all Islatu objects that contain data.
 
-        Attributes:
-            intensity:
-                A numpy array containing intensities in this dataset.
-            intensity_e:
-                A numpy array containing the corresponding errors in intensity.
-            theta:
-                A numpy array containing the probe particle's angle of
-                incidence at each intensity.
-            q_vectors:
-                A numpy array containing the magnitude of the probe particle's
-                scattering vector for each intensity value.
-            energy:
-                The energy of the probe particle used to acquire this data. This
-                is necessary to swap between theta and q.
+    Attributes:
+        intensity:
+            A numpy array containing intensities in this dataset.
+        intensity_e:
+            A numpy array containing the corresponding errors in intensity.
+        theta:
+            A numpy array containing the probe particle's angle of
+            incidence at each intensity.
+        q_vectors:
+            A numpy array containing the magnitude of the probe particle's
+            scattering vector for each intensity value.
+        energy:
+            The energy of the probe particle used to acquire this data. This
+            is necessary to swap between theta and q.
 
-        Args:
-            intensity:
-                A numpy array of the intensities in this dataset.
-            intensity_e:
-                The errors on the intensities.
-            energy:
-                The energy of the probe particle used to acquire this data.
-            theta:
-                A numpy array containing the probe particle's angle of
-                incidence at each intensity. NOTE: only one of theta/q needs to
-                be provided.
-            q_vectors:
-                A numpy array containing the magnitude of the probe particle's
-                scattering vector for each intensity value. NOTE: only one of
-                theta/q needs to be provided.
-        """
+    Args:
+        intensity:
+            A numpy array of the intensities in this dataset.
+        intensity_e:
+            The errors on the intensities.
+        energy:
+            The energy of the probe particle used to acquire this data.
+        theta:
+            A numpy array containing the probe particle's angle of
+            incidence at each intensity. NOTE: only one of theta/q needs to
+            be provided.
+        q_vectors:
+            A numpy array containing the magnitude of the probe particle's
+            scattering vector for each intensity value. NOTE: only one of
+            theta/q needs to be provided.
+    """
 
-    def __init__(self, intensity, intensity_e, energy, theta=None,
-                 q_vectors=None):
+    def __init__(self, intensity, intensity_e, energy, theta=None, q_vectors=None):
 
         self.intensity = intensity
         self.intensity_e = intensity_e
@@ -72,7 +71,7 @@ class Data:
         Returns the intensity, normalized such that the maximum value of the
         intensity is equal to 1. To acquire
         """
-        return self.intensity/np.amax(self.intensity)
+        return self.intensity / np.amax(self.intensity)
 
     @property
     def reflectivity_e(self) -> np.array:
@@ -80,7 +79,8 @@ class Data:
         Returns the errors on the intensity, divided by the maximum value of the
         intensity array.
         """
-        return self.intensity_e/np.amax(self.intensity)
+        return self.intensity_e / np.amax(self.intensity)
+
     @property
     def reflectivity_nonorm(self) -> np.array:
         """
@@ -139,8 +139,7 @@ class Data:
                 Energy of the incident probe particle.
         """
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
-        speed_of_light = physical_constants[
-            "speed of light in vacuum"][0] * 1e10
+        speed_of_light = physical_constants["speed of light in vacuum"][0] * 1e10
         q_values = np.sin(np.radians(theta)) / (planck * speed_of_light)
 
         q_values *= energy * 4.0 * np.pi
@@ -157,12 +156,12 @@ class Data:
                 Energy of the incident probe particle.
         """
         planck = physical_constants["Planck constant in eV s"][0] * 1e-3
-        speed_of_light = physical_constants[
-            "speed of light in vacuum"][0] * 1e10
-        theta_values = planck * speed_of_light * \
-            np.arcsin(q_values / (energy * 4 * np.pi))
+        speed_of_light = physical_constants["speed of light in vacuum"][0] * 1e10
+        theta_values = (
+            planck * speed_of_light * np.arcsin(q_values / (energy * 4 * np.pi))
+        )
 
-        theta_values = theta_values*180/np.pi
+        theta_values = theta_values * 180 / np.pi
 
         return theta_values
 
@@ -193,8 +192,9 @@ class MeasurementBase(Data):
             The metadata relevant to this measurement.
     """
 
-    def __init__(self, intensity, intensity_e, energy, metadata, theta=None,
-                 q=None) -> None:
+    def __init__(
+        self, intensity, intensity_e, energy, metadata, theta=None, q=None
+    ) -> None:
         # Initialize the Data.
         super().__init__(intensity, intensity_e, energy, theta, q)
         # Store the metadata.

@@ -1,5 +1,5 @@
 """
-This module contains fixture definitions used when testing the islatu module.
+This module contains fixture definitions used when testing the islatu module .
 """
 
 # The following pylint rule is, unfortunately, necessary due to how pytest works
@@ -11,18 +11,20 @@ This module contains fixture definitions used when testing the islatu module.
 # pylint: disable=protected-access
 
 import os
-import pytest
+
 import numpy as np
+import pytest
+
 try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
-from yaml import load, dump
-from islatu.io import I07Nexus, i07_nxs_parser, i07_dat_to_dict_dataframe
 from islatu.corrections import get_interpolator
 from islatu.data import Data, MeasurementBase
-from islatu.region import Region
+from islatu.io import I07Nexus, i07_dat_to_dict_dataframe, i07_nxs_parser
 from islatu.refl_profile import Profile
+from islatu.region import Region
+from yaml import load
 
 
 @pytest.fixture
@@ -35,9 +37,9 @@ def path_to_resources():
     if os.path.isdir("tests") and os.path.isdir("src"):
         return "tests" + os.sep + "resources" + os.sep
     raise FileNotFoundError(
-        "Couldn't locate the tests/resources directory. Make sure that " +
-        "the pytest command is run from within the base islatu directory" +
-        ", or from within the tests directory."
+        "Couldn't locate the tests/resources directory. Make sure that "
+        + "the pytest command is run from within the base islatu directory"
+        + ", or from within the tests directory."
     )
 
 
@@ -56,12 +58,14 @@ def path_to_i07_nxs_02(path_to_resources):
     """
     return os.path.join(path_to_resources, "i07-404877.nxs")
 
+
 @pytest.fixture
 def path_to_yaml(path_to_resources):
     """
-    returns the path to the example yaml file. 
+    returns the path to the example yaml file.
     """
-    return os.path.join(path_to_resources,"dcd.yaml")
+    return os.path.join(path_to_resources, "dcd.yaml")
+
 
 @pytest.fixture
 def example_recipe_dcd_01(path_to_yaml):
@@ -69,16 +73,18 @@ def example_recipe_dcd_01(path_to_yaml):
     read in processing recipe dcd1
     """
 
-    with open(path_to_yaml, 'r', encoding='utf-8') as y_file:
+    with open(path_to_yaml, "r", encoding="utf-8") as y_file:
         recipe = load(y_file, Loader=Loader)
     return recipe
+
 
 @pytest.fixture
 def path_to_adjust_yaml(path_to_resources):
     """
-    returns the path to the example yaml file. 
+    returns the path to the example yaml file.
     """
-    return os.path.join(path_to_resources,"dcd_adjustments.yaml")
+    return os.path.join(path_to_resources, "dcd_adjustments.yaml")
+
 
 @pytest.fixture
 def example_recipe_dcd_02(path_to_adjust_yaml):
@@ -86,9 +92,10 @@ def example_recipe_dcd_02(path_to_adjust_yaml):
     read in processing recipe dcd2
     """
 
-    with open(path_to_adjust_yaml, 'r', encoding='utf-8') as y_file:
+    with open(path_to_adjust_yaml, "r", encoding="utf-8") as y_file:
         recipe = load(y_file, Loader=Loader)
     return recipe
+
 
 @pytest.fixture
 def path_to_dcd_normalisation_01(path_to_resources):
@@ -112,8 +119,7 @@ def dcd_norm_01_splev(path_to_dcd_normalisation_01):
     """
     Returns the scipy splev corresponding to the first dcd normalisation file.
     """
-    return get_interpolator(path_to_dcd_normalisation_01,
-                            i07_dat_to_dict_dataframe)
+    return get_interpolator(path_to_dcd_normalisation_01, i07_dat_to_dict_dataframe)
 
 
 @pytest.fixture
@@ -145,7 +151,7 @@ def signal_regions_01():
     """
     Returns the list of signal regions recorded in i07_nexus_object_01.
     """
-    return [Region(1208, 1208+50, 206, 206+18)]
+    return [Region(1208, 1208 + 50, 206, 206 + 18)]
 
 
 @pytest.fixture
@@ -153,8 +159,10 @@ def bkg_regions_01():
     """
     Returns the list of signal regions recorded in i07_nexus_object_01.
     """
-    return [Region(1258, 1258+50, 206, 206+18),
-            Region(1208, 1208+50, 188, 188+18)]
+    return [
+        Region(1258, 1258 + 50, 206, 206 + 18),
+        Region(1208, 1208 + 50, 188, 188 + 18),
+    ]
 
 
 @pytest.fixture
@@ -196,7 +204,7 @@ def generic_data_01():
     Constructs a generic, valid, Data instance.
     """
     # Some meaningless values.
-    q_vecs = np.arange(10)/10
+    q_vecs = np.arange(10) / 10
     intensities = np.arange(1100, 300, -45)[:10]
 
     # A realistic value (in keV)
@@ -229,9 +237,13 @@ def measurement_base_01(path_to_i07_nxs_01, generic_data_01: Data):
     parsing a nxs file.
     """
     i07_nxs_metadata = I07Nexus(path_to_i07_nxs_01)
-    return MeasurementBase(generic_data_01.intensity,
-                           generic_data_01.intensity_e, generic_data_01.energy,
-                           i07_nxs_metadata, q=generic_data_01._q)
+    return MeasurementBase(
+        generic_data_01.intensity,
+        generic_data_01.intensity_e,
+        generic_data_01.energy,
+        i07_nxs_metadata,
+        q=generic_data_01._q,
+    )
 
 
 @pytest.fixture
@@ -241,13 +253,15 @@ def region_01():
     """
     return Region(x_start=1056, x_end=1124, y_start=150, y_end=250)
 
+
 @pytest.fixture
 def region_02():
     """
-    Returns a fairly generic instance of islatu.region's Region class, but loaded from dict 
+    Returns a fairly generic instance of islatu.region's Region class, but loaded from dict
     """
-    return Region.from_dict({'x': 1056, 'width': 1124-1056, 'y': 150, 'height': 250-150})
-    
+    return Region.from_dict(
+        {"x": 1056, "width": 1124 - 1056, "y": 150, "height": 250 - 150}
+    )
 
 
 @pytest.fixture
@@ -263,8 +277,9 @@ def profile_0102(path_to_i07_nxs_01, path_to_i07_nxs_02):
     """
     Returns an instance of the Profile class that contains scan_01 and scan_02.
     """
-    return Profile.fromfilenames([path_to_i07_nxs_01, path_to_i07_nxs_02],
-                                 i07_nxs_parser)
+    return Profile.fromfilenames(
+        [path_to_i07_nxs_01, path_to_i07_nxs_02], i07_nxs_parser
+    )
 
 
 @pytest.fixture
@@ -274,8 +289,11 @@ def old_dcd_data(path_to_resources):
     substantial refactor. This old DCD data was confirmed to be correctly
     reduced by beamline staff.
     """
-    return np.loadtxt(os.path.join(
-        path_to_resources, "XRR_404875_dcd_template2021-11-01_15h35m02s.dat"))
+    return np.loadtxt(
+        os.path.join(
+            path_to_resources, "XRR_404875_dcd_template2021-11-01_15h35m02s.dat"
+        )
+    )
 
 
 @pytest.fixture
@@ -283,6 +301,4 @@ def process_xrr_path(path_to_resources):
     """
     Uses relative pathfinding to return a valid path to process_xrr.py
     """
-    return os.path.join(
-        path_to_resources, '../../CLI/process_xrr.py'
-    )
+    return os.path.join(path_to_resources, "../../CLI/process_xrr.py")

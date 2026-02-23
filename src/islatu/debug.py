@@ -1,5 +1,5 @@
 """
-Islatu's simple Debug class.
+Islatu's simple Debug class .
 """
 
 DEFAULT_LOG_LEVEL = 1

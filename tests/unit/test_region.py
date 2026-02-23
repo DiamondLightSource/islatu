@@ -1,5 +1,5 @@
 """
-This module tests the simple islatu.region module's Region class.
+This module tests the simple islatu.region module's Region class .
 """
 
 from islatu.region import Region
@@ -40,7 +40,7 @@ def test_region_num_pixels(region_01: Region):
     Make sure that regions are correctly calculating the number of pixels
     contained in them.
     """
-    assert region_01.num_pixels == (1124 - 1056)*(250 - 150)
+    assert region_01.num_pixels == (1124 - 1056) * (250 - 150)
 
 
 def test_region_equality(region_01: Region):
@@ -49,8 +49,9 @@ def test_region_equality(region_01: Region):
     """
     assert Region(1056, 1124, 150, 250) == region_01
 
-def test_region_from_dict(region_01:Region, region_02:Region):
+
+def test_region_from_dict(region_01: Region, region_02: Region):
     """
     make sure loading from_dict gives same region
     """
-    assert region_01==region_02
+    assert region_01 == region_02

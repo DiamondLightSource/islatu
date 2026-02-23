@@ -1,6 +1,6 @@
 """
 As reflectometry measurements typically consist of multiple scans at different
-attenutation, we must stitch these together.
+attenutation, we must stitch these together .
 """
 
 from typing import List
@@ -35,8 +35,13 @@ def concatenate(scan_list: List[Scan]):
     return q_vectors, intensity, intensity_e
 
 
-def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
-          number_of_q_vectors=5000):
+def rebin(
+    q_vectors,
+    reflected_intensity,
+    new_q=None,
+    rebin_as="linear",
+    number_of_q_vectors=5000,
+):
     """
     Rebin the data on a linear or logarithmic q-scale.
 
@@ -74,23 +79,22 @@ def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
         # Our new q vectors have not been specified, so we should generate some.
         if rebin_as == "log":
             new_q = np.logspace(
-                np.log10(q[0]),
-                np.log10(q[-1] + epsilon), number_of_q_vectors)
+                np.log10(q[0]), np.log10(q[-1] + epsilon), number_of_q_vectors
+            )
         elif rebin_as == "linear":
-            new_q = np.linspace(q.min(), q.max() + epsilon,
-                                number_of_q_vectors)
+            new_q = np.linspace(q.min(), q.max() + epsilon, number_of_q_vectors)
 
     binned_q = np.zeros_like(new_q)
     binned_R = np.zeros_like(new_q)
     binned_R_e = np.zeros_like(new_q)
 
-    for i in range(len(new_q)-1):
+    for i in range(len(new_q) - 1):
         indices = []
         inverse_var = []
         for j in range(len(q)):
             if new_q[i] <= q[j] < new_q[i + 1]:
                 indices.append(j)
-                inverse_var.append(1/float(R_e[j]**2))
+                inverse_var.append(1 / float(R_e[j] ** 2))
 
         # Don't bother doing maths if there were no recorded q-values between
         # the two bin points we were looking at.
@@ -104,15 +108,15 @@ def rebin(q_vectors, reflected_intensity, new_q=None, rebin_as="linear",
         # If we measured multiple qs between these bin locations, then average
         # the data, weighting by inverse variance.
         for j in indices:
-            binned_R[i] += R[j]/(R_e[j]**2)
-            binned_q[i] += q[j]/(R_e[j]**2)
+            binned_R[i] += R[j] / (R_e[j] ** 2)
+            binned_q[i] += q[j] / (R_e[j] ** 2)
 
         # Divide by the sum of the weights.
         binned_R[i] /= sum_of_inverse_var
         binned_q[i] /= sum_of_inverse_var
 
         # The stddev of an inverse variance weighted mean is always:
-        binned_R_e[i] = np.sqrt(1/sum_of_inverse_var)
+        binned_R_e[i] = np.sqrt(1 / sum_of_inverse_var)
 
     # Get rid of any empty, unused elements of the array.
     cleaned_q = np.delete(binned_q, np.argwhere(binned_R == 0))

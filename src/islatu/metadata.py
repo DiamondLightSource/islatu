@@ -2,7 +2,7 @@
 This module contains the Metadata class, returned by parser methods in the
 islatu.io module. This class provides a consistent way to refer to metadata
 returned by different detectors/instruments, and also contains a dictionary
-of all of the metadata as scraped from the parsed file.
+of all of the metadata as scraped from the parsed file .
 """
 
 from abc import abstractmethod

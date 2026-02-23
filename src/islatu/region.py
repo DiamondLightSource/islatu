@@ -1,6 +1,6 @@
 """
 This module defines the Region object, whose instances define regions of
-interest in images.
+interest in images .
 """
 
 
@@ -55,10 +55,10 @@ class Region:
         json.loads on the NXcollections found in I07 nexus files as of
         27/04/2022.
         """
-        x_start = int(region_dict['x'])
-        y_start = int(region_dict['y'])
-        x_end = x_start + int(region_dict['width'])
-        y_end = y_start + int(region_dict['height'])
+        x_start = int(region_dict["x"])
+        y_start = int(region_dict["y"])
+        x_end = x_start + int(region_dict["width"])
+        y_end = y_start + int(region_dict["height"])
         return cls(x_start, x_end, y_start, y_end)
 
     def __eq__(self, other):
@@ -68,9 +68,15 @@ class Region:
         if not isinstance(other, Region):
             return False
 
-        return self.x_start == other.x_start and self.x_end == other.x_end \
-            and self.y_start == other.y_start and self.y_end == other.y_end
+        return (
+            self.x_start == other.x_start
+            and self.x_end == other.x_end
+            and self.y_start == other.y_start
+            and self.y_end == other.y_end
+        )
 
     def __str__(self):
-        return f"x_start: {self.x_start}, x_end: {self.x_end}, " + \
-            f"y_start: {self.y_start}, y_end: {self.y_end}."
+        return (
+            f"x_start: {self.x_start}, x_end: {self.x_end}, "
+            + f"y_start: {self.y_start}, y_end: {self.y_end}."
+        )

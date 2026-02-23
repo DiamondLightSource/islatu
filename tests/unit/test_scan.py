@@ -1,18 +1,15 @@
 """
-This module tests the central islatu.scan module's Scan and Scan2D classes.
+This module tests the central islatu.scan module's Scan and Scan2D classes .
 """
 
-
-import pytest
-from pytest_lazyfixture import lazy_fixture as lazy
 import numpy as np
-from scipy.interpolate import interp1d
-
-
-from islatu.background import roi_subtraction, fit_gaussian_1d
+import pytest
+from islatu.background import fit_gaussian_1d, roi_subtraction
 from islatu.cropping import crop_to_region
-from islatu.scan import Scan2D
 from islatu.region import Region
+from islatu.scan import Scan2D
+from pytest_lazyfixture import lazy_fixture as lazy
+from scipy.interpolate import interp1d
 
 
 def test_subsample_q_01(scan2d_from_nxs_01: Scan2D):
@@ -67,10 +64,7 @@ def test_subsample_q_04(scan2d_from_nxs_01: Scan2D):
 
 
 @pytest.mark.parametrize(
-    'scan, transmission',
-    [
-        (lazy('scan2d_from_nxs_01'), 0.000448426658633058)
-    ]
+    "scan, transmission", [(lazy("scan2d_from_nxs_01"), 0.000448426658633058)]
 )
 def test_transmission_normalisation_intensities(scan: Scan2D, transmission):
     """
@@ -81,14 +75,11 @@ def test_transmission_normalisation_intensities(scan: Scan2D, transmission):
     scan.transmission_normalisation()
 
     for i, intensity in enumerate(scan.intensity):
-        assert intensity == intensity_0[i]/transmission
+        assert intensity == intensity_0[i] / transmission
 
 
 @pytest.mark.parametrize(
-    'scan, transmission',
-    [
-        (lazy('scan2d_from_nxs_01'), 0.000448426658633058)
-    ]
+    "scan, transmission", [(lazy("scan2d_from_nxs_01"), 0.000448426658633058)]
 )
 def test_transmission_normalisation_errors(scan: Scan2D, transmission):
     """
@@ -100,7 +91,7 @@ def test_transmission_normalisation_errors(scan: Scan2D, transmission):
     scan.transmission_normalisation()
 
     for i, intensity_e in enumerate(scan.intensity_e):
-        assert intensity_e == intensity_e_0[i]/transmission
+        assert intensity_e == intensity_e_0[i] / transmission
 
 
 def test_qdcd_name_assumes(parsed_dcd_normalisation_01):
@@ -128,8 +119,9 @@ def test_qdcd_normalisation_01(scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev):
     assert (intensities_e_0 != scan2d_from_nxs_01.intensity_e).all()
 
 
-def test_qdcd_normalisation_02(scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev,
-                               parsed_dcd_normalisation_01):
+def test_qdcd_normalisation_02(
+    scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev, parsed_dcd_normalisation_01
+):
     """
     Make sure that our nice splev normalisation does something similar to what
     would be achieved using a simple cubic scipy.interpolate.interp1D.
@@ -141,7 +133,7 @@ def test_qdcd_normalisation_02(scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev,
 
     _, dataframe = parsed_dcd_normalisation_01
 
-    interp = interp1d(dataframe["qdcd_"], dataframe['adc2'], kind='cubic')
+    interp = interp1d(dataframe["qdcd_"], dataframe["adc2"], kind="cubic")
 
     test_intensities = intensities_0 / interp(scan2d_from_nxs_01.q_vectors)
     test_intensities_e = intensities_e_0 / interp(scan2d_from_nxs_01.q_vectors)
@@ -152,12 +144,14 @@ def test_qdcd_normalisation_02(scan2d_from_nxs_01: Scan2D, dcd_norm_01_splev,
     # These interpolation methods could be decently different, but lets enforce
     # that our values are the same to within 1%.
     for i, test_intensity in enumerate(test_intensities):
-        assert test_intensity == pytest.approx(scan2d_from_nxs_01.intensity[i],
-                                               rel=0.01)
+        assert test_intensity == pytest.approx(
+            scan2d_from_nxs_01.intensity[i], rel=0.01
+        )
 
     for i, test_inten_e in enumerate(test_intensities_e):
-        assert test_inten_e == pytest.approx(scan2d_from_nxs_01.intensity_e[i],
-                                             rel=0.01)
+        assert test_inten_e == pytest.approx(
+            scan2d_from_nxs_01.intensity_e[i], rel=0.01
+        )
 
 
 def test_footprint_correction_01(scan2d_from_nxs_01: Scan2D):
@@ -192,22 +186,19 @@ def test_footprint_correction_02(scan2d_from_nxs_01: Scan2D):
     intensities_0 = np.copy(scan2d_from_nxs_01.intensity)
     intensities_e_0 = np.copy(scan2d_from_nxs_01.intensity_e)
 
-    beam_size_on_sample = beam_width / \
-        np.sin(np.radians(scan2d_from_nxs_01.theta))
+    beam_size_on_sample = beam_width / np.sin(np.radians(scan2d_from_nxs_01.theta))
 
     incident_beam_fraction = sample_size / beam_size_on_sample
 
-    test_intensities = intensities_0/incident_beam_fraction
-    test_intensities_e = intensities_e_0/incident_beam_fraction
+    test_intensities = intensities_0 / incident_beam_fraction
+    test_intensities_e = intensities_e_0 / incident_beam_fraction
 
     scan2d_from_nxs_01.footprint_correction(beam_width, sample_size)
     for i, test_intensity in enumerate(test_intensities):
-        assert test_intensity == pytest.approx(
-            scan2d_from_nxs_01.intensity[i], 0.1)
+        assert test_intensity == pytest.approx(scan2d_from_nxs_01.intensity[i], 0.1)
 
     for i, test_intensity_e in enumerate(test_intensities_e):
-        assert test_intensity_e == pytest.approx(
-            scan2d_from_nxs_01.intensity_e[i], 0.1)
+        assert test_intensity_e == pytest.approx(scan2d_from_nxs_01.intensity_e[i], 0.1)
 
 
 def test_crop_01(scan2d_from_nxs_01: Scan2D, region_01):
@@ -226,8 +217,9 @@ def test_crop_02(scan2d_from_nxs_01: Scan2D, region_01: Region):
     Make sure that our cropped region has the correct size.
     """
     scan2d_from_nxs_01.crop(crop_to_region, region=region_01)
-    assert (scan2d_from_nxs_01.images[0].shape[0]
-            * scan2d_from_nxs_01.images[0].shape[1]) == region_01.num_pixels
+    assert (
+        scan2d_from_nxs_01.images[0].shape[0] * scan2d_from_nxs_01.images[0].shape[1]
+    ) == region_01.num_pixels
 
 
 def test_crop_03(scan2d_from_nxs_01: Scan2D, region_01: Region):
@@ -262,9 +254,10 @@ def test_bkg_sub_03(scan2d_from_nxs_01: Scan2D):
     """
     Make sure that the background subtraction decreases our intensity.
     """
-    vals, stdevs = (np.zeros(
-        len(scan2d_from_nxs_01.intensity)),
-        np.zeros(len(scan2d_from_nxs_01.intensity)))
+    vals, stdevs = (
+        np.zeros(len(scan2d_from_nxs_01.intensity)),
+        np.zeros(len(scan2d_from_nxs_01.intensity)),
+    )
 
     # Also update the image intensities & errors.
     for i, image in enumerate(scan2d_from_nxs_01.images):
@@ -280,18 +273,19 @@ def test_bkg_sub_03(scan2d_from_nxs_01: Scan2D):
     assert (vals > scan2d_from_nxs_01.intensity).all()
 
 
-def test_bkg_sub_04(scan2d_from_nxs_01: Scan2D, scan2d_from_nxs_01_copy,
-                    custom_bkg_region_01):
+def test_bkg_sub_04(
+    scan2d_from_nxs_01: Scan2D, scan2d_from_nxs_01_copy, custom_bkg_region_01
+):
     """
     Make sure that using two background regions yields a lower uncertainty
     measurement of the background than using just one background region.
     """
     regions_1 = [scan2d_from_nxs_01.metadata.background_regions[0]]
     regions_2 = [scan2d_from_nxs_01.metadata.background_regions[0]] + [
-        custom_bkg_region_01]
+        custom_bkg_region_01
+    ]
     scan2d_from_nxs_01.bkg_sub(roi_subtraction, list_of_regions=regions_1)
-    scan2d_from_nxs_01_copy.bkg_sub(
-        roi_subtraction, list_of_regions=regions_2)
+    scan2d_from_nxs_01_copy.bkg_sub(roi_subtraction, list_of_regions=regions_2)
 
     for i, image_1 in enumerate(scan2d_from_nxs_01.images):
         image_2 = scan2d_from_nxs_01_copy.images[i]
