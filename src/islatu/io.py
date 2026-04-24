@@ -27,7 +27,7 @@ from islatu.debug import debug
 from islatu.image import Image
 from islatu.metadata import Metadata
 from islatu.region import Region
-from islatu.scan import Scan2D
+from islatu.scan import Scan2D, Scan2D_noload
 
 
 class NexusBase(Metadata):
@@ -576,6 +576,22 @@ def i07_dat_to_dict_dataframe(file_path):
     return metadata_dict, pd.DataFrame(data_dict)
 
 
+def load_ind_image_from_h5(h5_file_path, datanxfilepath, ind, transpose=False):
+    internal_data_path = datanxfilepath  #'data'
+    debug.log("Loading images from file " + h5_file_path, unimportance=0)
+    with h5py.File(h5_file_path, "r") as file_handle:
+        dataset = file_handle[internal_data_path]  # [()]
+        image= Image(dataset[ind], transpose=transpose)
+    return image
+
+def check_total_images_in_h5(h5_file_path, datanxfilepath):
+    internal_data_path = datanxfilepath  #'data'
+    debug.log("Counting images from file " + h5_file_path, unimportance=0)
+    with h5py.File(h5_file_path, "r") as file_handle:
+        dataset = file_handle[internal_data_path]  # [()]
+        num_images = dataset.shape[0]
+    return num_images
+
 def load_images_from_h5(h5_file_path, datanxfilepath, transpose=False):
     """
     Loads images from a .h5 file.
@@ -603,6 +619,108 @@ def load_images_from_h5(h5_file_path, datanxfilepath, transpose=False):
         debug.log(f"Loaded all {num_images} images.", unimportance=2)
 
     return images
+
+
+def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None):
+    """
+    Parses a .nxs file acquired from the I07 beamline at diamond, returning an
+    instance of Scan2D. This process involves loading the images contained in
+    the .h5 file pointed at by the .nxs file, as well as retrieving the metadata
+    from the .nxs file that is relevant for XRR reduction.
+
+    Args:
+        file_path:
+            Path to the .nxs file.
+
+    Returns:
+        An initialized Scan2D object containing all loaded detector frames, as
+        well as the relevant metadata from the .nxs file.
+    """
+    # Use the magical parser class that does everything for us.
+    i07_nxs = I07Nexus(file_path)
+    detname = i07_nxs.detector_name
+    if "attenuation_filters_moving" in i07_nxs.entry[f"{detname}"].keys():
+        try:
+            attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"].nxdata
+            movingfilters = [
+                0 if attenuationvalues[i] == attenuationvalues[i - 1] else 1
+                for i in np.arange(1, len(attenuationvalues[0:5]))
+            ]
+        except (AttributeError, TypeError):
+            debug.log(
+                "unable to read in attenuation information, possible missing attenuation h5 file. Will assume no moving attenuation.",
+                unimportance=2,
+            )
+            attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"]
+            movingfilters = []
+        remove_indices = np.where(movingfilters)[0]
+        # remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        remove_indices += 1
+    # # Load the images, taking a transpose if necessary (because which axis is
+    # # x and which is why is determined by fast vs slow detector axes in memory).
+    # if i07_nxs.detector_name in [
+    #     I07Nexus.excalibur_detector_2021,
+    #     I07Nexus.excalibur_04_2022,
+    #     I07Nexus.pilatus_2022,
+    #     I07Nexus.excalibur_2022_fscan,
+    #     I07Nexus.pilatus_eh2_scan,
+    # ]:
+    #     images = load_images_from_h5(
+    #         i07_nxs.local_data_path, i07_nxs._src_data_path[1], transpose=False
+    #     )
+    image_paths=[i07_nxs.local_data_path, i07_nxs._src_data_path[1]]
+    total_images=check_total_images_in_h5(image_paths[0], image_paths[1])
+    # The dependent variable.
+    rough_intensity = i07_nxs.default_signal
+    rough_intensity_e = np.sqrt(rough_intensity)
+
+    # The independent variable.
+    axis = i07_nxs.default_axis
+    axis_type = i07_nxs.default_axis_type
+    theta_offset = 0
+    q_offset = 0
+
+    if hasattr(adjustments, "new_axis_name"):
+        axis_name = adjustments.new_axis_name
+        if hasattr(i07_nxs.instrument[f"{axis_name}"], "value_set"):
+            axis = i07_nxs.instrument[f"{axis_name}"].value_set.nxdata
+        else:
+            axis = i07_nxs.instrument[f"{axis_name}"].value.nxdata
+    if hasattr(adjustments, "new_axis_type"):
+        axis_type = adjustments.new_axis_type
+    if hasattr(adjustments, "theta_offset"):
+        theta_offset = adjustments.theta_offset
+    if hasattr(adjustments, "q_offset"):
+        q_offset = adjustments.q_offset
+
+    if axis_type == "q":
+        data = Data(
+            rough_intensity,
+            rough_intensity_e,
+            i07_nxs.probe_energy,
+            q_vectors=axis - q_offset,
+        )
+    elif axis_type == "th":
+        data = Data(
+            rough_intensity,
+            rough_intensity_e,
+            i07_nxs.probe_energy,
+            theta=axis - theta_offset,
+        )
+    elif axis_type == "tth":
+        data = Data(
+            rough_intensity,
+            rough_intensity_e,
+            i07_nxs.probe_energy,
+            theta=(axis / 2 - theta_offset),
+        )
+    else:
+        raise NotImplementedError(
+            f"{axis_type} is not a supported axis type. Axis name={axis_name}"
+        )
+    # Returns the Scan2D object
+    return Scan2D_noload(data, i07_nxs,load_ind_image_from_h5, image_paths=image_paths,num_imgs=total_images,remove_indices=remove_indices)
+
 
 
 def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):

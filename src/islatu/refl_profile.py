@@ -53,6 +53,11 @@ class Profile(Data):
         data = Data(intensity, intensity_e, energy, q_vectors=q_vectors)
 
         return cls(data, scans)
+    
+    def bkg_sub_and_crop(self,crop_function,crop_kwargs,bkg_sub_function,bkg_kwargs):
+        for scan in self.scans:
+            scan.background_and_crop(crop_function,crop_kwargs,bkg_sub_function,bkg_kwargs)
+        self.concatenate()
 
     def crop(self, crop_function, **kwargs):
         """
