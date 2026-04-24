@@ -104,6 +104,7 @@ class Scan(MeasurementBase):
 
 class Scan2D_noload(Scan):
     """
+    copy of scan2d that doesnt load all images at the start - only loads images when needed
     Attributes:
         data (:py:attr:`islatu.data.Data`):
             The intensity as a function of Q data for this scan.
@@ -113,12 +114,12 @@ class Scan2D_noload(Scan):
             The detector images in the given scan.
     """
 
-    def __init__(self, data: Data, metadata: Metadata,  image_loader: Callable ,image_paths=list,num_imgs = int, remove_indices=None) \
+    def __init__(self, data: Data, metadata: Metadata,  image_loader: Callable ,image_paths=list, remove_indices=None) \
             -> None:
         super().__init__(data, metadata)
-        self.num_images=num_imgs
         self.image_paths=image_paths
         self.image_loader = image_loader
+        self.remove_indices =np.array([]) if remove_indices is None else remove_indices
         self.detname=self.metadata.detector_name
         if 'attenuation_filters_moving' in self.metadata.entry[f'{self.detname}'].keys():
             try:
@@ -136,8 +137,10 @@ class Scan2D_noload(Scan):
             len(self.intensity)), np.zeros(len(self.intensity))
         with h5py.File(self.image_paths[0], "r") as file_handle:
             dataset = file_handle[self.image_paths[1]]  # [()]
-            for i in np.arange(self.num_images):
-                image= Image(dataset[i], transpose=False)
+            num_images = dataset.shape[0]
+            valid_images = [val for val in np.arange(num_images) if val not in self.remove_indices]
+            for i,num in enumerate(valid_images):
+                image= Image(dataset[num], transpose=False)
                 #image = self.image_loader(self.image_paths[0],self.image_paths[1], i)
                 if bkg_sub_function:
                     image.background_subtraction(bkg_sub_function, **bkg_kwargs)
@@ -147,7 +150,7 @@ class Scan2D_noload(Scan):
 
         # This line is necessary to prevent overwriting due to end="\r".
         debug.log("")
-        debug.log(f"Applied bkg and cropping to all {self.num_images} images.", unimportance=2)
+        debug.log(f"Applied bkg and cropping to all {num_images} images.", unimportance=2)
         self.intensity = np.array(vals)
         self.intensity_e = np.array(stdevs)
 
@@ -226,9 +229,9 @@ class Scan2D_noload(Scan):
         if 'transmissions' in dir(self.metadata):
             self.metadata.transmissions =np.delete(self.metadata.transmissions,indices)
 
-        # Delete images in reverse order if you don't like errors.
-        for idx in sorted(indices, reverse=True):
-            del self.images[idx]
+        # # Delete images in reverse order if you don't like errors.
+        # for idx in sorted(indices, reverse=True):
+        #self.image_nums=np.delete(self.image_nums,indices)
 
 
 class Scan2D(Scan):
