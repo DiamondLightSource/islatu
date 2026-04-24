@@ -611,7 +611,7 @@ class Foreperson:
         # Populate informatio from the information section
         if "instrument" in keys:
             self.data_source.experiment.instrument = recipe["instrument"]
-            self.reduction.parser = function_map[recipe["instrument"]]
+            #self.reduction.parser = function_map[recipe["instrument"]]
         # Populate cropping information
         if "crop" in keys:
             self.reduction.crop_function = function_map[recipe["crop"]["method"]]
@@ -983,11 +983,10 @@ def i07reduce_noload(
         )
     else:
         refl = Profile.fromfilenames(files_to_reduce, the_boss.reduction.parser)
-
     # Set the energy correctly.
     the_boss.data_source.experiment.energy = refl.energy
 
-    log_processing_stage("setting up background subtraction and cropping")
+    log_processing_stage("Setting up background subtraction and cropping")
 
     # Currently, only crop_to_region is implemented.
     if (
@@ -1041,7 +1040,7 @@ def i07reduce_noload(
                 )
             }
 
-    log_processing_stage(f"run background subtraction and cropping with: cropfunc {the_boss.reduction.crop_function.__name__} and bkgfunc {the_boss.reduction.bkg_function}")
+    log_processing_stage(f"Run background subtraction and cropping with: cropfunc {the_boss.reduction.crop_function.__name__} and bkgfunc {the_boss.reduction.bkg_function}")
     refl.bkg_sub_and_crop(the_boss.reduction.crop_function, the_boss.reduction.crop_kwargs,the_boss.reduction.bkg_function,the_boss.reduction.bkg_kwargs)
     
 
@@ -1115,7 +1114,7 @@ def i07reduce_noload(
         str(refl.q_vectors.max()),
     ]
     the_boss.data.n_qvectors = str(len(refl.reflectivity))
-
+    
     # Prepare the data array.
     if the_boss.reduction.normalisation:
         data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T

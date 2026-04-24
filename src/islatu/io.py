@@ -623,6 +623,7 @@ def load_images_from_h5(h5_file_path, datanxfilepath, transpose=False):
 
 def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None):
     """
+    copy of i07_nxs_parser  that doesnt load all images at the start - only loads images when needed
     Parses a .nxs file acquired from the I07 beamline at diamond, returning an
     instance of Scan2D. This process involves loading the images contained in
     the .h5 file pointed at by the .nxs file, as well as retrieving the metadata
@@ -656,20 +657,8 @@ def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None)
         remove_indices = np.where(movingfilters)[0]
         # remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
         remove_indices += 1
-    # # Load the images, taking a transpose if necessary (because which axis is
-    # # x and which is why is determined by fast vs slow detector axes in memory).
-    # if i07_nxs.detector_name in [
-    #     I07Nexus.excalibur_detector_2021,
-    #     I07Nexus.excalibur_04_2022,
-    #     I07Nexus.pilatus_2022,
-    #     I07Nexus.excalibur_2022_fscan,
-    #     I07Nexus.pilatus_eh2_scan,
-    # ]:
-    #     images = load_images_from_h5(
-    #         i07_nxs.local_data_path, i07_nxs._src_data_path[1], transpose=False
-    #     )
+
     image_paths=[i07_nxs.local_data_path, i07_nxs._src_data_path[1]]
-    total_images=check_total_images_in_h5(image_paths[0], image_paths[1])
     # The dependent variable.
     rough_intensity = i07_nxs.default_signal
     rough_intensity_e = np.sqrt(rough_intensity)
@@ -719,7 +708,7 @@ def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None)
             f"{axis_type} is not a supported axis type. Axis name={axis_name}"
         )
     # Returns the Scan2D object
-    return Scan2D_noload(data, i07_nxs,load_ind_image_from_h5, image_paths=image_paths,num_imgs=total_images,remove_indices=remove_indices)
+    return Scan2D_noload(data, i07_nxs,load_ind_image_from_h5, image_paths=image_paths,remove_indices=remove_indices)
 
 
 
