@@ -153,10 +153,10 @@ class ProcessArgs:
     upper_bound: int | None = None
     scan_numbers: list[int] | None = None
     output: str | None = None
-    limit_q: list[str] | None= None
+    limit_q: list[str] | None = None
     verbose: int = 0
     islatufolder: str | None = None
-    jobfile_template: str| None = None
+    jobfile_template: str | None = None
     jobfile_name: str | None = None
 
     def resolve_defaults(self):
@@ -553,7 +553,14 @@ class Foreperson:
     one big ball of yaml-able information.
     """
 
-    def __init__(self, run_numbers, yaml_file, directory, title,reduction_parser=io.i07_nxs_parser):
+    def __init__(
+        self,
+        run_numbers,
+        yaml_file,
+        directory,
+        title,
+        reduction_parser=io.i07_nxs_parser,
+    ):
         self.creator = Creator()
         self.data_source = DataSource(title)
         self.reduction = Reduction(parser=reduction_parser)
@@ -611,7 +618,7 @@ class Foreperson:
         # Populate informatio from the information section
         if "instrument" in keys:
             self.data_source.experiment.instrument = recipe["instrument"]
-            #self.reduction.parser = function_map[recipe["instrument"]]
+            # self.reduction.parser = function_map[recipe["instrument"]]
         # Populate cropping information
         if "crop" in keys:
             self.reduction.crop_function = function_map[recipe["crop"]["method"]]
@@ -839,8 +846,7 @@ def i07reduce(
     else:
         print("===== could not find suitable background settings so skipping step")
 
-
-    #full profile stages
+    # full profile stages
 
     log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
@@ -949,7 +955,6 @@ def i07reduce(
     debug.log("-" * 10)
 
 
-
 def i07reduce_noload(
     run_numbers,
     yaml_file,
@@ -961,17 +966,20 @@ def i07reduce_noload(
     # copy of i07reduce but altered to not load all images at once
     # Make sure the directory is properly formatted.
 
-
     if not str(directory).endswith(os.sep):
         directory = str(directory) + os.sep
-        the_boss = Foreperson(run_numbers, yaml_file, directory, title, reduction_parser=io.i07_nxs_parser_noload)
+        the_boss = Foreperson(
+            run_numbers,
+            yaml_file,
+            directory,
+            title,
+            reduction_parser=io.i07_nxs_parser_noload_diff,
+        )
 
         # Necessary to distnguish the same data processed by different pipelines.
         yaml_pipeline_name = str(yaml_file).split(os.sep)[-1][:-5]
 
     files_to_reduce = the_boss.reduction.input_files
-
-
 
     log_processing_stage("File parsing")
     # return the_boss,files_to_reduce
@@ -1040,12 +1048,17 @@ def i07reduce_noload(
                 )
             }
 
-    log_processing_stage(f"Run background subtraction and cropping with: cropfunc {the_boss.reduction.crop_function.__name__} and bkgfunc {the_boss.reduction.bkg_function}")
-    refl.bkg_sub_and_crop(the_boss.reduction.crop_function, the_boss.reduction.crop_kwargs,the_boss.reduction.bkg_function,the_boss.reduction.bkg_kwargs)
-    
+    log_processing_stage(
+        f"Run background subtraction and cropping with: cropfunc {the_boss.reduction.crop_function.__name__} and bkgfunc {the_boss.reduction.bkg_function}"
+    )
+    refl.bkg_sub_and_crop(
+        the_boss.reduction.crop_function,
+        the_boss.reduction.crop_kwargs,
+        the_boss.reduction.bkg_function,
+        the_boss.reduction.bkg_kwargs,
+    )
 
-
-    #===can continue same processing from here on full profile
+    # ===can continue same processing from here on full profile
 
     log_processing_stage("Performing data corrections...")
     if the_boss.reduction.dcd_normalisation is not None:
@@ -1114,7 +1127,7 @@ def i07reduce_noload(
         str(refl.q_vectors.max()),
     ]
     the_boss.data.n_qvectors = str(len(refl.reflectivity))
-    
+
     # Prepare the data array.
     if the_boss.reduction.normalisation:
         data = np.array([refl.q_vectors, refl.reflectivity, refl.reflectivity_e]).T
@@ -1152,5 +1165,3 @@ def i07reduce_noload(
     debug.log("-" * 10)
     debug.log(f"Reduced data stored at {filename}", unimportance=0)
     debug.log("-" * 10)
-
-
