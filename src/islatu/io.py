@@ -219,7 +219,7 @@ def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None)
     """
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
-    detname = i07_nxs.detector_name
+    detname = i07_nxs.detector_info.name
     if "attenuation_filters_moving" in i07_nxs.entry[f"{detname}"].keys():
         try:
             attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"].nxdata
@@ -276,7 +276,7 @@ def i07_nxs_parser_noload_diff(file_path: str, remove_indices=None, adjustments=
     """
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
-    detname = i07_nxs.detector_name
+    detname = i07_nxs.detector_info.name
     if "attenuation_filters_moving" in i07_nxs.nx_entry[f"{detname}"].keys():
         try:
             attenuationvalues = i07_nxs.nx_entry[f"{detname}/attenuation_value"].nxdata
@@ -340,7 +340,7 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
     """
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
-    detname = i07_nxs.detector_name
+    detname = i07_nxs.detector_info.name
     if "attenuation_filters_moving" in i07_nxs.entry[f"{detname}"].keys():
         try:
             attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"].nxdata
@@ -361,7 +361,7 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
 
     # Load the images, taking a transpose if necessary (because which axis is
     # x and which is why is determined by fast vs slow detector axes in memory).
-    if i07_nxs.detector_name in [
+    if i07_nxs.detector_info.name in [
         I07Nexus.excalibur_detector_2021,
         I07Nexus.excalibur_04_2022,
         I07Nexus.pilatus_2022,

@@ -123,7 +123,7 @@ class Scan2D_noload_diff(Scan):
         super().__init__(data, metadata)
         self.image_paths = image_paths
         self.remove_indices = np.array([]) if remove_indices is None else remove_indices
-        self.detname = self.metadata.detector_name
+        self.detname = self.metadata.detector_info.name
         if (
             "attenuation_filters_moving"
             in self.metadata.nx_entry[f"{self.detname}"].keys()
@@ -267,7 +267,7 @@ class Scan2D_noload(Scan):
         super().__init__(data, metadata)
         self.image_paths = image_paths
         self.remove_indices = np.array([]) if remove_indices is None else remove_indices
-        self.detname = self.metadata.detector_name
+        self.detname = self.metadata.detector_info.name
         if (
             "attenuation_filters_moving"
             in self.metadata.entry[f"{self.detname}"].keys()
@@ -409,7 +409,7 @@ class Scan2D(Scan):
     ) -> None:
         super().__init__(data, metadata)
         self.images = images
-        self.detname = self.metadata.detector_name
+        self.detname = self.metadata.detector_info.name
         if (
             "attenuation_filters_moving"
             in self.metadata.entry[f"{self.detname}"].keys()
