@@ -270,16 +270,16 @@ class Scan2D_noload(Scan):
         self.detname = self.metadata.detector_info.name
         if (
             "attenuation_filters_moving"
-            in self.metadata.entry[f"{self.detname}"].keys()
+            in self.metadata.nx_entry[f"{self.detname}"].keys()
         ):
             try:
-                filterslist = self.metadata.entry[
+                filterslist = self.metadata.nx_entry[
                     f"{self.detname}/attenuation_filters_moving"
                 ].nxdata
             except (AttributeError, TypeError):
                 filterslist = []
             if len(filterslist) > 1:
-                self.metadata.transmissionsraw = self.metadata.entry[
+                self.metadata.transmissionsraw = self.metadata.nx_entry[
                     f"{self.detname}_transmission/transmission"
                 ].nxdata
                 self.metadata.transmissions = np.delete(
@@ -412,16 +412,16 @@ class Scan2D(Scan):
         self.detname = self.metadata.detector_info.name
         if (
             "attenuation_filters_moving"
-            in self.metadata.entry[f"{self.detname}"].keys()
+            in self.metadata.nx_entry[f"{self.detname}"].keys()
         ):
             try:
-                filterslist = self.metadata.entry[
+                filterslist = self.metadata.nx_entry[
                     f"{self.detname}/attenuation_filters_moving"
                 ].nxdata
             except (AttributeError, TypeError):
                 filterslist = []
             if len(filterslist) > 1:
-                self.metadata.transmissionsraw = self.metadata.entry[
+                self.metadata.transmissionsraw = self.metadata.nx_entry[
                     f"{self.detname}_transmission/transmission"
                 ].nxdata
                 self.metadata.transmissions = np.delete(

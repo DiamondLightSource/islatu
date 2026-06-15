@@ -118,8 +118,8 @@ class Profile(Data):
                 The largest acceptable value of q. Defaults to inf Å.
         """
         for scan in self.scans:
-            print(scan_identifier, scan.metadata.src_path)
-            if scan_identifier in scan.metadata.src_path:
+            print(scan_identifier, scan.metadata.local_path)
+            if scan_identifier in scan.metadata.local_path:
                 scan.subsample_q(q_min, q_max)
         self.concatenate()
 

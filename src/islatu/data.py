@@ -64,6 +64,10 @@ class Data:
         # When using properties, it wont matter which of these ends up as None.
         self._theta = theta
         self._q = q_vectors
+        if self._theta is None:
+            self._theta = self._q_to_theta(self._q, self.energy)
+        elif self._q is None:
+            self._q  = self._theta_to_q(self._theta, self.energy)
 
     @property
     def reflectivity(self) -> np.array:

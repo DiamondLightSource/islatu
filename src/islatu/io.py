@@ -12,7 +12,7 @@ class and its children.
 
 import os
 from typing import List
-
+from pathlib import Path
 import h5py
 import numpy as np
 import pandas as pd
@@ -220,9 +220,9 @@ def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None)
     # Use the magical parser class that does everything for us.
     i07_nxs = I07Nexus(file_path)
     detname = i07_nxs.detector_info.name
-    if "attenuation_filters_moving" in i07_nxs.entry[f"{detname}"].keys():
+    if "attenuation_filters_moving" in i07_nxs.nx_entry[f"{detname}"].keys():
         try:
-            attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"].nxdata
+            attenuationvalues = i07_nxs.nx_entry[f"{detname}/attenuation_value"].nxdata
             movingfilters = [
                 0 if attenuationvalues[i] == attenuationvalues[i - 1] else 1
                 for i in np.arange(1, len(attenuationvalues[0:5]))
@@ -232,10 +232,10 @@ def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None)
                 "unable to read in attenuation information, possible missing attenuation h5 file. Will assume no moving attenuation.",
                 unimportance=2,
             )
-            attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"]
+            attenuationvalues = i07_nxs.nx_entry[f"{detname}/attenuation_value"]
             movingfilters = []
         remove_indices = np.where(movingfilters)[0]
-        # remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        # remove_indices=np.where(np.array(i07_nxs.nx_entry[f'{detname}/attenuation_filters_moving']))[0]
         remove_indices += 1
 
     image_paths = [i07_nxs.local_data_path, i07_nxs._src_data_path[1]]
@@ -292,7 +292,7 @@ def i07_nxs_parser_noload_diff(file_path: str, remove_indices=None, adjustments=
             attenuationvalues = i07_nxs.nx_entry[f"{detname}/attenuation_value"]
             movingfilters = []
         remove_indices = np.where(movingfilters)[0]
-        # remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        # remove_indices=np.where(np.array(i07_nxs.nx_entry[f'{detname}/attenuation_filters_moving']))[0]
         remove_indices += 1
 
     internal_path = i07_nxs._parse_hdf5_internal_path()
@@ -339,11 +339,12 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
         well as the relevant metadata from the .nxs file.
     """
     # Use the magical parser class that does everything for us.
-    i07_nxs = I07Nexus(file_path)
+    readpath= Path(file_path)
+    i07_nxs = I07Nexus(str(readpath),str(readpath.parent))
     detname = i07_nxs.detector_info.name
-    if "attenuation_filters_moving" in i07_nxs.entry[f"{detname}"].keys():
+    if "attenuation_filters_moving" in i07_nxs.nx_entry[f"{detname}"].keys():
         try:
-            attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"].nxdata
+            attenuationvalues = i07_nxs.nx_entry[f"{detname}/attenuation_value"].nxdata
             movingfilters = [
                 0 if attenuationvalues[i] == attenuationvalues[i - 1] else 1
                 for i in np.arange(1, len(attenuationvalues[0:5]))
@@ -353,25 +354,28 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
                 "unable to read in attenuation information, possible missing attenuation h5 file. Will assume no moving attenuation.",
                 unimportance=2,
             )
-            attenuationvalues = i07_nxs.entry[f"{detname}/attenuation_value"]
+            attenuationvalues = i07_nxs.nx_entry[f"{detname}/attenuation_value"]
             movingfilters = []
         remove_indices = np.where(movingfilters)[0]
-        # remove_indices=np.where(np.array(i07_nxs.entry[f'{detname}/attenuation_filters_moving']))[0]
+        # remove_indices=np.where(np.array(i07_nxs.nx_entry[f'{detname}/attenuation_filters_moving']))[0]
         remove_indices += 1
 
     # Load the images, taking a transpose if necessary (because which axis is
     # x and which is why is determined by fast vs slow detector axes in memory).
-    if i07_nxs.detector_info.name in [
-        I07Nexus.excalibur_detector_2021,
-        I07Nexus.excalibur_04_2022,
-        I07Nexus.pilatus_2022,
-        I07Nexus.excalibur_2022_fscan,
-        I07Nexus.pilatus_eh2_scan,
-    ]:
-        images = load_images_from_h5(
-            i07_nxs.local_data_path, i07_nxs._src_data_path[1], transpose=False
-        )
+    # if i07_nxs.detector_info.name in [
+    #     I07Nexus.excalibur_08_2023_roi,
+    #     I07Nexus.excalibur_04_2022,
+    #     I07Nexus.pilatus_2022,
+    #     I07Nexus.excalibur_2022_fscan,
+    #     I07Nexus.pilatus_eh2_scan,
+    # ]:
+    #     use_transpose = False
+    # else:
+    use_transpose = False
 
+    images = load_images_from_h5(
+        i07_nxs.local_data_path +'/' +i07_nxs.raw_hdf5_path, i07_nxs.hdf5_internal_path, transpose=use_transpose
+        )
     # The dependent variable.
     rough_intensity = i07_nxs.default_signal
     rough_intensity_e = np.sqrt(rough_intensity)
