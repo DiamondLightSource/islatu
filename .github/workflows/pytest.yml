@@ -11,8 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-
-
       # Checkout repo2
       - name: Checkout diffraction_utils
         uses: actions/checkout@v4
