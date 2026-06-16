@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: DiamondLightSource/diffraction_utils
-          path: diffraction_utils
+          path: ../diffraction_utils
           ref: ${{ github.ref_name }}
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -25,8 +25,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r diffraction_utils/requirements.txt
-          pip install -e diffraction_utils
+          pip install -r ../diffraction_utils/requirements.txt
+          pip install -e ../diffraction_utils
           if [ -f requirements.txt ]; then pip install --only-binary=:all: -r requirements.txt; fi
           pip install -e .
       - name: Analysing the code with pylint
