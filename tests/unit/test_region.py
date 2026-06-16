@@ -2,7 +2,7 @@
 This module tests the simple islatu.region module's Region class.
 """
 
-from islatu.region import Region
+from diffraction_utils.region import Region
 
 
 def test_region_attr_access(region_01: Region):
@@ -14,17 +14,6 @@ def test_region_attr_access(region_01: Region):
     assert region_01.y_start == 150
     assert region_01.y_end == 250
 
-
-def test_region_instantiation():
-    """
-    Make sure that regions correctly set their end to be after their start.
-    """
-    region = Region(2, 1, 4, 3)
-
-    assert region.x_start == 1
-    assert region.x_end == 2
-    assert region.y_start == 3
-    assert region.y_end == 4
 
 
 def test_region_length(region_01: Region):

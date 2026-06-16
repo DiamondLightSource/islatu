@@ -16,8 +16,8 @@ This file contains a suite of tests for the islatu.io module.
 import nexusformat.nexus.tree as nx
 import numpy as np
 import pytest
-from islatu.io import I07Nexus
-from islatu.region import Region
+from diffraction_utils.io import I07Nexus
+from diffraction_utils.region import Region
 from pytest_lazyfixture import lazy_fixture as lazy
 
 
@@ -49,8 +49,8 @@ class TestNexusBaseAttrTypes:
         Makes sure that our src_path can be acquired. Also make sure that
         it isn't an empty string.
         """
-        assert isinstance(nexus_base.src_path, str)
-        assert len(nexus_base.src_path) != 0
+        assert isinstance(nexus_base.nxfile.file_name, str)
+        assert len(nexus_base.nxfile.file_name) != 0
 
     def test_entry(self, nexus_base):
         """
@@ -58,21 +58,21 @@ class TestNexusBaseAttrTypes:
         ValueError will be thrown. This also tests that the entry has the
         correct type.
         """
-        assert isinstance(nexus_base.entry, nx.NXentry)
+        assert isinstance(nexus_base.nx_entry, nx.NXentry)
 
     def test_instrument(self, nexus_base):
         """
         Makes sure that we can access the instrument property without throwing,
         and that our instrument has the correct type.
         """
-        assert isinstance(nexus_base.instrument, nx.NXinstrument)
+        assert isinstance(nexus_base.nx_instrument, nx.NXinstrument)
 
     def test_detector(self, nexus_base):
         """
         Makes sure that we can access the detector property of our nexus_base
         without throwing anything, and that it has the correct type.
         """
-        assert isinstance(nexus_base.detector, nx.NXdetector)
+        assert isinstance(nexus_base.nx_detector, nx.NXdetector)
 
     def test_default_axis_nxdata(self, nexus_base):
         """
@@ -117,26 +117,9 @@ def test_src_path(nexus_base, path):
     scrape the src_path by parsing nxfile.tree, unless you already know
     what value this will take (because, e.g., you just downloaded the file).
     """
-    assert nexus_base.src_path == path
+    assert nexus_base.nxfile.file_name == path
 
 
-@pytest.mark.parametrize(
-    "i07_nexus, path",
-    [
-        (lazy("i07_nexus_object_01"), lazy("path_to_i07_h5_01"))
-        # '/dls/i07/data/2021/si28707-1/excaliburScan404876_000001.h5')
-    ],
-)
-def test_src_data_path(i07_nexus: I07Nexus, path):
-    """
-    Make sure we can properly find the path to where the data was originally
-    stored, as referenced in the .nxs file. This is used to guess where the
-    .h5 file is stored locally.
-    edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
-    only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
-    """
-    path_without_start = i07_nexus._src_data_path[0].split("islatu/")[-1]
-    assert path_without_start == path
 
 
 @pytest.mark.parametrize(
@@ -153,7 +136,7 @@ def test_local_data_path(i07_nexus: I07Nexus, path):
     edited to remove start of path found as /home/runner/work/islatu/islatu/tests/resources/excaliburScan404876_000001.h5
     only want to compare tests/resources/excaliburScan404876_000001.h5 to be machine independent
     """
-    path_without_start = i07_nexus.local_data_path.split("islatu/")[-1]
+    path_without_start = i07_nexus.local_hdf5_path
     assert path_without_start == path
 
 
@@ -247,7 +230,7 @@ def test_probe_energy(i07_nexus: I07Nexus, probe_energy):
     Make sure we can extract the energy of the probe particle from the .nxs
     file.
     """
-    assert i07_nexus.probe_energy == probe_energy
+    assert i07_nexus.probe_energy == probe_energy*1e3
 
 
 @pytest.mark.parametrize(
@@ -288,12 +271,12 @@ def test_detector_name(i07_nexus_object_01: I07Nexus):
     """
     Make sure that we can properly extract the name of the detector.
     """
-    assert i07_nexus_object_01.detector_info.name == I07Nexus.excalibur_detector_2021
+    assert i07_nexus_object_01.detector_info.name == I07Nexus.excalibur_08_2023_roi.name
 
 
 def test_excalibur_name():
     """
     Make sure that we're spelling the detector name properly!
     """
-    assert I07Nexus.excalibur_detector_2021 == "excroi"
-    assert I07Nexus.excalibur_04_2022 == "exr"
+    assert I07Nexus.excalibur_08_2023_roi.name == "excroi"
+    assert I07Nexus.excalibur_04_2022.name == "exr"

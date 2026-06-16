@@ -7,7 +7,7 @@ from pytest_lazyfixture import lazy_fixture as lazy
 import numpy as np
 
 from islatu.data import Data, MeasurementBase
-from islatu.io import I07Nexus
+from diffraction_utils.io import I07Nexus
 from islatu.scan import Scan2D
 
 # Fairly obvious disable for testing: we also need to test protected attrs.

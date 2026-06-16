@@ -18,10 +18,11 @@ try:
 except ImportError:
     from yaml import Loader
 from yaml import load, dump
-from islatu.io import I07Nexus, i07_nxs_parser, i07_dat_to_dict_dataframe
+from diffraction_utils.io import I07Nexus
+from islatu.io import i07_nxs_parser, i07_dat_to_dict_dataframe
 from islatu.corrections import get_interpolator
 from islatu.data import Data, MeasurementBase
-from islatu.region import Region
+from diffraction_utils.region import Region
 from islatu.refl_profile import Profile
 
 
@@ -140,7 +141,7 @@ def i07_nexus_object_01(path_to_i07_nxs_01):
     """
     Returns the path's corresponding i07 nexus object.
     """
-    return I07Nexus(path_to_i07_nxs_01)
+    return I07Nexus(path_to_i07_nxs_01, detector_distance=1.1155)
 
 
 @pytest.fixture

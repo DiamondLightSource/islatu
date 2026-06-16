@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 from islatu.background import roi_subtraction, fit_gaussian_1d
 from islatu.cropping import crop_to_region
 from islatu.scan import Scan2D
-from islatu.region import Region
+from diffraction_utils.region import Region
 
 
 def test_subsample_q_01(scan2d_from_nxs_01: Scan2D):
