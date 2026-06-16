@@ -83,12 +83,18 @@ visit_schema=Schema({
 
 })
 
-region_schema1=Schema({
-   "x_start": int,
-   "x_end": int,
-   "y_start": int,
-   "y_end": int,
-})
+
+region_schema1 = Schema(
+    And(
+        {
+            "x_start": int,
+            "x_end": int,
+            "y_start": int,
+            "y_end": int,
+        },
+        lambda d: d["x_start"] < d["x_end"] and d["y_start"] < d["y_end"]
+    )
+)
 
 region_schema2=Schema({
    "x": int,
