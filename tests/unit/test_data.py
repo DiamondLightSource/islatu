@@ -77,7 +77,7 @@ def test__theta_access(data: Data, correct__theta):
     if correct__theta is not None:
         assert (data._theta == correct__theta).all()
     else:
-        assert data._theta is correct__theta
+        assert (data._theta == data._q_to_theta(data._q,data.energy)).all()
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ def test__q_access(data: Data, correct__q):
     if correct__q is not None:
         assert (data._q == correct__q).all()
     else:
-        assert correct__q is data._q
+        assert (data._q == data._theta_to_q(data._theta,data.energy)).all()
 
 
 def test_conversion_to_q(generic_data_02: Data):
@@ -105,7 +105,7 @@ def test_conversion_to_q(generic_data_02: Data):
     just re-implement the function I'm trying to test. So, I used a random
     online calculator to check the value against my function.
     """
-    assert generic_data_02.q_vectors[1] == pytest.approx(0.142217, rel=1e-5)
+    assert generic_data_02.q_vectors[1]*1e3 == pytest.approx(0.142217, rel=1e-5)
 
 
 def test_conversion_to_th(generic_data_01: Data):
@@ -116,7 +116,7 @@ def test_conversion_to_th(generic_data_01: Data):
     """
     # Online calculator derped for these numbers so rel is small. These things
     # are dumb and throw away significant figures just for kicks.
-    assert generic_data_01.theta[1] == pytest.approx(0.4525, rel=1e-3)
+    assert generic_data_01.theta[1]*1e-3 == pytest.approx(0.4525, rel=1e-3)
 
 
 @pytest.mark.parametrize(
@@ -133,7 +133,7 @@ def test_remove_data_points_01(data: Data):
     # pytest.approx later.
     data_copy = Data(np.copy(data.intensity),
                      np.copy(data.intensity_e),
-                     data.energy, np.copy(data.theta))
+                     data.energy, q_vectors= np.copy(data.q_vectors))
 
     # If our data is a Scan2D, we need to construct it slightly differently.
     if isinstance(data, Scan2D):
@@ -177,7 +177,7 @@ def test_remove_data_points_02(data: Data):
     # Make a deep copy of data.
     data_copy = Data(np.copy(data.intensity),
                      np.copy(data.intensity_e),
-                     data.energy, np.copy(data.theta))
+                     data.energy, q_vectors= np.copy(data.q_vectors), theta = np.copy(data.theta))
     # If our data is a Scan2D, we need to construct it slightly differently.
     if isinstance(data, Scan2D):
         data_copy = Scan2D(data_copy, data.metadata,
@@ -229,7 +229,7 @@ def test_measurement_base_metadata_energy(measurement_base_01):
     """
     Check that the metadata has the correct energy. The I07Nexus class
     """
-    assert measurement_base_01.metadata.probe_energy == 12.5
+    assert measurement_base_01.metadata.probe_energy*1e-3 == 12.5
 
 
 def test_measurement_base_underlying_data(measurement_base_01: MeasurementBase,
@@ -244,7 +244,7 @@ def test_measurement_base_underlying_data(measurement_base_01: MeasurementBase,
     # of parent and child for the subset of child that should be the same as
     # parent.
     assert (measurement_base_01._q == generic_data_01._q).all()
-    assert measurement_base_01._theta == generic_data_01._theta
+    assert (measurement_base_01._theta == generic_data_01._theta).all()
     assert (measurement_base_01.q_vectors == generic_data_01.q_vectors).all()
     assert (measurement_base_01.intensity == generic_data_01.intensity).all()
     assert (measurement_base_01.intensity_e ==

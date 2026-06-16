@@ -30,10 +30,13 @@ def path_to_resources():
     """
     Returns the path to the resources folder.
     """
+    print(os.getcwd())
     if os.path.isdir("resources"):
         return "resources" + os.sep
     if os.path.isdir("tests") and os.path.isdir("src"):
         return "tests" + os.sep + "resources" + os.sep
+    if os.path.isdir("islatu/tests") and os.path.isdir("islatu/src"):
+        return "islatu/tests" + os.sep + "resources" + os.sep
     raise FileNotFoundError(
         "Couldn't locate the tests/resources directory. Make sure that " +
         "the pytest command is run from within the base islatu directory" +

@@ -226,6 +226,7 @@ def test_crop_02(scan2d_from_nxs_01: Scan2D, region_01: Region):
     Make sure that our cropped region has the correct size.
     """
     scan2d_from_nxs_01.crop(crop_to_region, region=region_01)
+    print('DEBUG - tests')
     assert (scan2d_from_nxs_01.images[0].shape[0]
             * scan2d_from_nxs_01.images[0].shape[1]) == region_01.num_pixels
 

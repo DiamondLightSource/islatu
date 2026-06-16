@@ -4,7 +4,7 @@ from os.path import basename, dirname, join, splitext, abspath
 
 from setuptools import find_packages
 from setuptools import setup
-
+ 
 
 THIS_DIRECTORY = abspath(dirname(__file__))
 with io.open(join(THIS_DIRECTORY, 'README.md')) as f:
@@ -29,7 +29,7 @@ REQUIREMENTS = [
 
 setup(
     name='islatu',
-    version='1.3.1',
+    version='1.4.0',
     license='MIT',
     description='A package for the reduction of reflectometry data.',
     author='Philip Mousley',
@@ -48,9 +48,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',

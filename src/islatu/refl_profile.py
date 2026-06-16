@@ -53,6 +53,11 @@ class Profile(Data):
         data = Data(intensity, intensity_e, energy, q_vectors=q_vectors)
 
         return cls(data, scans)
+    
+    def bkg_sub_and_crop(self,crop_function,crop_kwargs,bkg_sub_function,bkg_kwargs):
+        for scan in self.scans:
+            scan.background_and_crop(crop_function,crop_kwargs,bkg_sub_function,bkg_kwargs)
+        self.concatenate()
 
     def crop(self, crop_function, **kwargs):
         """
@@ -113,8 +118,8 @@ class Profile(Data):
                 The largest acceptable value of q. Defaults to inf Å.
         """
         for scan in self.scans:
-            print(scan_identifier, scan.metadata.src_path)
-            if scan_identifier in scan.metadata.src_path:
+            print(scan_identifier, scan.metadata.local_path)
+            if scan_identifier in scan.metadata.local_path:
                 scan.subsample_q(q_min, q_max)
         self.concatenate()
 
