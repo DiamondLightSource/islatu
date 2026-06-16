@@ -19,6 +19,7 @@ jobs:
         with:
           repository: DiamondLightSource/diffraction_utils
           path: diffraction_utils
+          ref: ${{ github.ref_name }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
