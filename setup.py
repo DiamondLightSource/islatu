@@ -1,5 +1,5 @@
 #latest version created: fix_pytest_workflow in islatu/
-import io
+latest version created: parsing_detector in islatu/
 from os.path import basename, dirname, join, splitext, abspath
 from glob import glob
 from setuptools import find_packages
