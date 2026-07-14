@@ -350,7 +350,7 @@ class ProcessArgs:
                 f"scans = {self.scan_numbers}\nyamlpath='{self.yaml_path}'\ndatapath='{self.data_path}'\noutfile='{self.output}'\nqsubdict={self.limit_q}\n"
             )
             f.write(
-                "i07reduce(scans, yamlpath, datapath,filename=outfile, q_subsample_dicts=qsubdict)"
+                "i07reduce_noload(scans, yamlpath, datapath,filename=outfile, q_subsample_dicts=qsubdict)"
             )
         # f.write(f"i07reduce({self.scan_numbers}, {self.yaml_path}, {self.data_path},\
         #      filename={self.output}, q_subsample_dicts={self.limit_q})")
