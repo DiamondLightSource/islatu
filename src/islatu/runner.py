@@ -477,7 +477,7 @@ class Reduction:
         software=Software(),
         input_files=None,
         data_state=DataState(),
-        parser=io.i07_nxs_parser,
+        parser=io.i07_nxs_parser_noload_diff,
         crop_function=cropping.crop_to_region,
         crop_kwargs=None,
         bkg_function=background.fit_gaussian_1d,
