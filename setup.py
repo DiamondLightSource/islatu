@@ -1,13 +1,12 @@
-#latest version created: fix_pytest_workflow in islatu/
-latest version created: parsing_detector in islatu/
-from os.path import basename, dirname, join, splitext, abspath
+# latest version created: fix_pytest_workflow in islatu/
+# latest version created: parsing_detector in islatu/
 from glob import glob
-from setuptools import find_packages
-from setuptools import setup
- 
+from os.path import abspath, basename, dirname, join, splitext
+
+from setuptools import find_packages, setup
 
 THIS_DIRECTORY = abspath(dirname(__file__))
-with io.open(join(THIS_DIRECTORY, 'README.md')) as f:
+with io.open(join(THIS_DIRECTORY, "README.md")) as f:
     LONG_DESCRIPTION = f.read()
 
 REQUIREMENTS = [
@@ -28,34 +27,34 @@ REQUIREMENTS = [
 ]
 
 setup(
-    name='islatu',
-    version='1.4.0',
-    license='MIT',
-    description='A package for the reduction of reflectometry data.',
-    author='Philip Mousley',
-    author_email='philip.mousley@diamond.ac.uk',
+    name="islatu",
+    version="1.4.0",
+    license="MIT",
+    description="A package for the reduction of reflectometry data.",
+    author="Philip Mousley",
+    author_email="philip.mousley@diamond.ac.uk",
     long_description=LONG_DESCRIPTION,
-    long_decription_content_type='text/markdown',
-    packages=find_packages('src'),
-    package_dir={'': 'src'},
-    py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
+    long_decription_content_type="text/markdown",
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
     zip_safe=False,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Chemistry',
-        'Topic :: Scientific/Engineering :: Physics'
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Topic :: Scientific/Engineering :: Physics",
     ],
     setup_requires=REQUIREMENTS,
-    install_requires=REQUIREMENTS
+    install_requires=REQUIREMENTS,
 )
