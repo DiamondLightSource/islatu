@@ -1,13 +1,12 @@
 # latest version created: fix_pytest_workflow in islatu/
 # latest version created: parsing_detector in islatu/
-import io
 from glob import glob
 from os.path import abspath, basename, dirname, join, splitext
 
 from setuptools import find_packages, setup
 
 THIS_DIRECTORY = abspath(dirname(__file__))
-with io.open(join(THIS_DIRECTORY, "README.md")) as f:
+with open(join(THIS_DIRECTORY, "README.md")) as f:
     LONG_DESCRIPTION = f.read()
 
 REQUIREMENTS = [
@@ -29,7 +28,7 @@ REQUIREMENTS = [
 
 setup(
     name="islatu",
-    version="1.4.0",
+    version="1.5.0",
     license="MIT",
     description="A package for the reduction of reflectometry data.",
     author="Philip Mousley",
