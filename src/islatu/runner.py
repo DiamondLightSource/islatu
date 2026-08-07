@@ -13,7 +13,6 @@ from datetime import datetime
 from os import path
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List
 
 try:
     from yaml import CLoader as Loader
@@ -23,10 +22,7 @@ import numpy as np
 from yaml import dump, load
 
 import islatu
-import islatu.background as background
-import islatu.corrections as corrections
-import islatu.cropping as cropping
-import islatu.io as io
+from islatu import background, corrections, cropping, io
 from islatu.config_loader import check_config_schema
 from islatu.debug import debug
 from islatu.io import i07_dat_to_dict_dataframe
@@ -78,7 +74,7 @@ class Measurement:
     """
 
     scheme: str = "q-dispersive"
-    q_range: List[str] = (str(-np.inf), str(np.inf))
+    q_range: list[str] = (str(-np.inf), str(np.inf))
     theta_axis_name: str = "dcdtheta"
     q_axis_name: str = "qdcd"
     transpose: bool = False
@@ -350,7 +346,7 @@ class ProcessArgs:
                 f"scans = {self.scan_numbers}\nyamlpath='{self.yaml_path}'\ndatapath='{self.data_path}'\noutfile='{self.output}'\nqsubdict={self.limit_q}\n"
             )
             f.write(
-                "i07reduce(scans, yamlpath, datapath,filename=outfile, q_subsample_dicts=qsubdict)"
+                "i07reduce_noload(scans, yamlpath, datapath,filename=outfile, q_subsample_dicts=qsubdict)"
             )
         # f.write(f"i07reduce({self.scan_numbers}, {self.yaml_path}, {self.data_path},\
         #      filename={self.output}, q_subsample_dicts={self.limit_q})")
@@ -477,7 +473,7 @@ class Reduction:
         software=Software(),
         input_files=None,
         data_state=DataState(),
-        parser=io.i07_nxs_parser,
+        parser=io.i07_nxs_parser_noload_diff,
         crop_function=cropping.crop_to_region,
         crop_kwargs=None,
         bkg_function=background.fit_gaussian_1d,
@@ -660,9 +656,7 @@ class Foreperson:
                 except TypeError:
                     pass
             else:
-                raise ValueError(
-                    "No sample size given in setup of {}.".format(self.yaml_file)
-                )
+                raise ValueError(f"No sample size given in setup of {self.yaml_file}.")
             if "beam width" in recipe["setup"].keys():
                 self.reduction.beam_width = make_tuple(recipe["setup"]["beam width"])
                 try:
@@ -810,7 +804,7 @@ def i07reduce(
             )
             return
         the_boss.reduction.crop_kwargs = {"region": roi}
-        debug.log(f"Crop ROI '{str(roi)}' generated from the .nxs file.")
+        debug.log(f"Crop ROI '{roi!s}' generated from the .nxs file.")
     elif "x_end" in the_boss.reduction.crop_kwargs:
         the_boss.reduction.crop_kwargs = {
             "region": Region(**the_boss.reduction.crop_kwargs)
@@ -928,9 +922,7 @@ def i07reduce(
     # Work out where to save the file.
     datetime_str = datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
     run_numbers.sort()
-    dat_filename = (
-        "XRR_{}_".format(run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
-    )
+    dat_filename = f"XRR_{run_numbers[0]}_" + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
         # Make sure that the processing directory exists.
         processing_path = path.join(the_boss.directory_path, "processing")
@@ -1019,7 +1011,7 @@ def i07reduce_noload(
             )
             return
         the_boss.reduction.crop_kwargs = {"region": roi}
-        debug.log(f"Crop ROI '{str(roi)}' generated from the .nxs file.")
+        debug.log(f"Crop ROI '{roi!s}' generated from the .nxs file.")
     elif "x_end" in the_boss.reduction.crop_kwargs:
         the_boss.reduction.crop_kwargs = {
             "region": Region(**the_boss.reduction.crop_kwargs)
@@ -1140,9 +1132,7 @@ def i07reduce_noload(
     # Work out where to save the file.
     datetime_str = datetime.now().strftime("%Y-%m-%d_%Hh%Mm%Ss")
     run_numbers.sort()
-    dat_filename = (
-        "XRR_{}_".format(run_numbers[0]) + yaml_pipeline_name + datetime_str + ".dat"
-    )
+    dat_filename = f"XRR_{run_numbers[0]}_" + yaml_pipeline_name + datetime_str + ".dat"
     if filename is None:
         # Make sure that the processing directory exists.
         processing_path = path.join(the_boss.directory_path, "processing")

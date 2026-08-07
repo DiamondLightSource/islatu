@@ -10,14 +10,12 @@ make use of the additional information provided by the area detector, and extra
 image manipulation methods are included in Scan2D.
 """
 
-from typing import List
-
 import h5py
 import numpy as np
 from diffraction_utils.io import I07Nexus
 from scipy.interpolate import splev
 
-import islatu.corrections as corrections
+from islatu import corrections
 from islatu.data import Data, MeasurementBase
 from islatu.debug import debug
 from islatu.image import Image
@@ -405,7 +403,7 @@ class Scan2D(Scan):
     """
 
     def __init__(
-        self, data: Data, metadata: Metadata, images: List[Image], remove_indices=None
+        self, data: Data, metadata: Metadata, images: list[Image], remove_indices=None
     ) -> None:
         super().__init__(data, metadata)
         self.images = images
