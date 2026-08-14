@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="kkr09nPyPxnX3kTvXgNE" name="Page-1">
-        <mxGraphModel dx="2150" dy="1944" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1582" dy="1781" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -165,7 +165,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <object label="i07reduce_noload" hedietLinkedDataV1_path="../../islatu/src/islatu/runner.py" hedietLinkedDataV1_start_col_x-num="0" hedietLinkedDataV1_start_line_x-num="948" hedietLinkedDataV1_end_col_x-num="21" hedietLinkedDataV1_end_line_x-num="949" id="37">
+                <object label="i07reduce_noload" hedietLinkedDataV1_path="../src/islatu/runner.py" hedietLinkedDataV1_start_col_x-num="0" hedietLinkedDataV1_start_line_x-num="949" hedietLinkedDataV1_end_col_x-num="21" hedietLinkedDataV1_end_line_x-num="949" id="37">
                     <mxCell style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                         <mxGeometry x="-720" y="-1060" width="120" height="32.89156626506025" as="geometry"/>
                     </mxCell>
