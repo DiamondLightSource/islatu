@@ -47,14 +47,17 @@ def match_overlap_resolution(data_df: pd.DataFrame):
         chunklist.append(data_df.loc[start:end].copy())
 
     drop_indices = np.array([])
-
+    chunk_drop_indices_list = []
+    if len(chunklist) <= 1:
+        return data_df
     for ind in np.arange(len(chunklist) - 1):
         overlap_q = chunklist[ind + 1]["q"].values[0]
         overlap_chunk_lower = chunklist[ind][chunklist[ind]["q"] >= overlap_q]
         overlap_chunk_upper = chunklist[ind + 1][
-            (overlap_chunk_lower["q"].values[-1] >= chunklist[ind + 1]["q"])
+            (chunklist[ind + 1]["q"] <= overlap_chunk_lower["q"].values[-1])
         ]
         if len(overlap_chunk_lower) <= 1 or len(overlap_chunk_upper) <= 1:
+            chunk_drop_indices_list.append(np.array([]))
             continue
 
         step_ratio = round(
@@ -65,6 +68,7 @@ def match_overlap_resolution(data_df: pd.DataFrame):
         lower_indices = overlap_chunk_lower.index.values
         chunk_drop_indices = lower_indices[~np.isin(lower_indices, matched_indices)]
         print(f"    removed indices for chunk {ind} = {chunk_drop_indices}")
+        chunk_drop_indices_list.append(chunk_drop_indices)
         drop_indices = np.append(drop_indices, chunk_drop_indices)
 
     return data_df.drop(drop_indices)
