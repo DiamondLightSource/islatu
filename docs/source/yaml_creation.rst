@@ -21,7 +21,13 @@ or have multiple subheadings for various related options e.g.
 
     make sure to use a double space indent for the subheadings
 
-Below is a list of sections that can be included in your islatu yaml file, and subheadings which are the available options within each section. 
+Below is a list of sections that can be included in your islatu yaml file, and subheadings which are the available options within each section. To copy a template yaml file, after loading in the islatu module using the following command:
+
+.. code-block:: bash
+
+    makeyaml
+
+This will create a copy of the template file in your home directory called 'copy_islatu.yaml'
 
 instrument
 -----------
