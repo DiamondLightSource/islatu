@@ -341,7 +341,7 @@ class ProcessArgs:
             if i > 1e7:
                 raise ValueError("naming counter hit limit therefore exiting ")
         with open(self.save_path, "x") as f:
-            f.write("from islatu.runner import i07reduce\n")
+            f.write("from islatu.runner import i07reduce_noload\n")
             f.write(
                 f"scans = {self.scan_numbers}\nyamlpath='{self.yaml_path}'\ndatapath='{self.data_path}'\noutfile='{self.output}'\nqsubdict={self.limit_q}\n"
             )
