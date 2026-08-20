@@ -82,32 +82,35 @@ Using HPC cluster for calculations
 
    **batch script from bash command line**
 
-      The section of code below is an example of the format which can be saved into a .sh file, or ran by pasting directly into a terminal. 
+      The section of code below is an example of the format which can be saved into a .sh file. 
 
       .. code-block:: bash  
 
-         PYTHON_SCRIPT='process_xrr.py'
-         SCANLIST=(540283 5400 540284)
-         DATADIR=/dls/i07/data/2024/si37592-1/
-         YAMLPATH=/dls/i07/data/2024/si37592-1/processing/00l/00l.yaml
-         OUTPATH=/dls/science/groups/das/ExampleData/i07/islatu_example_data/tests
-         
+         #!/bin/bash
+          
+         shopt -s expand_aliases
+
+         SCANLIST=(513084 "$(seq 513087 1 513089)")
+         DATADIR=/dls/science/groups/das/ExampleData/i07/islatu_example_data/si36936
+         YAMLPATH=/dls/science/groups/das/ExampleData/i07/islatu_example_data/yamls/si36936.yaml
+         OUTPATH=/dls/science/users/rpy65944/output
+
+         module load islatu
+
          for scan in  "${SCANLIST[@]}"; do
             echo "Starting processing for scan: $scan"
-            python $PYTHON_SCRIPT -d $DATADIR -y $YAMLPATH -o  $OUTPATH -N $scan -c
+            process_xrr -d $DATADIR -y $YAMLPATH -o  $OUTPATH -N $scan -c
             exit_code=$?
             echo "Python script for scan $scan exited with code $exit_code" || true
             if [ $exit_code -ne 0 ]; then
                echo "Error processing scan $scan, continuing with next scan"
             fi
             echo "Finished processing scan: $scan"
+
          done
-         
+
          echo "All scans processed"
       
-      
-         #alternative method of creating a sequence of scan numbers
-         SCANLIST=$(seq 1000 2 1018)
 
 
 Setting up XRR autoprocessing at Diamond
