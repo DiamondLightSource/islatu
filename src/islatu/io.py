@@ -11,8 +11,8 @@ class and its children.
 # pylint: disable=protected-access
 
 import os
-from typing import List
 from pathlib import Path
+
 import h5py
 import numpy as np
 import pandas as pd
@@ -260,7 +260,7 @@ def i07_nxs_parser_noload(file_path: str, remove_indices=None, adjustments=None)
 
 def i07_nxs_parser_noload_diff(file_path: str, remove_indices=None, adjustments=None):
     """
-    copy of i07_nxs_parser  that doesnt load all images at the start - only loads images when needed
+    copy of i07_nxs_parser  that doesnt load all images at the start - only loads images when needed,and correctly parse internal hdf5 paths using diffraction_utils options
     Parses a .nxs file acquired from the I07 beamline at diamond, returning an
     instance of Scan2D. This process involves loading the images contained in
     the .h5 file pointed at by the .nxs file, as well as retrieving the metadata
@@ -326,7 +326,7 @@ def i07_nxs_parser_noload_diff(file_path: str, remove_indices=None, adjustments=
 def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
     """
     Parses a .nxs file acquired from the I07 beamline at diamond, returning an
-    instance of Scan2D. This process involves loading the images contained in
+    instance of Scan2D. This process involves loading all of the images contained in
     the .h5 file pointed at by the .nxs file, as well as retrieving the metadata
     from the .nxs file that is relevant for XRR reduction.
 
@@ -339,8 +339,8 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
         well as the relevant metadata from the .nxs file.
     """
     # Use the magical parser class that does everything for us.
-    readpath= Path(file_path)
-    i07_nxs = I07Nexus(str(readpath),str(readpath.parent))
+    readpath = Path(file_path)
+    i07_nxs = I07Nexus(str(readpath), str(readpath.parent))
     detname = i07_nxs.detector_info.name
     if "attenuation_filters_moving" in i07_nxs.nx_entry[f"{detname}"].keys():
         try:
@@ -374,8 +374,10 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
     use_transpose = False
 
     images = load_images_from_h5(
-        i07_nxs.local_data_path +'/' +i07_nxs.raw_hdf5_path, i07_nxs.hdf5_internal_path, transpose=use_transpose
-        )
+        i07_nxs.local_data_path + "/" + i07_nxs.raw_hdf5_path,
+        i07_nxs.hdf5_internal_path,
+        transpose=use_transpose,
+    )
     # The dependent variable.
     rough_intensity = i07_nxs.default_signal
     rough_intensity_e = np.sqrt(rough_intensity)
@@ -429,7 +431,7 @@ def i07_nxs_parser(file_path: str, remove_indices=None, adjustments=None):
     return Scan2D(data, i07_nxs, images, remove_indices)
 
 
-def _try_to_find_files(filenames: List[str], additional_search_paths: List[str]):
+def _try_to_find_files(filenames: list[str], additional_search_paths: list[str]):
     """
     Check that data files exist if the file parsed by parser pointed to a
     separate file containing intensity information. If the intensity data
