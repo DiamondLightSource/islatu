@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="kkr09nPyPxnX3kTvXgNE" name="Page-1">
-        <mxGraphModel dx="1582" dy="1781" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2122" dy="2207" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -86,9 +86,9 @@
                     <mxGeometry x="-425" y="-485" width="183" height="30" as="geometry"/>
                 </mxCell>
                 <object label="i07reduce_noload" hedietLinkedDataV1_path="../../islatu/src/islatu/runner.py" hedietLinkedDataV1_start_col_x-num="0" hedietLinkedDataV1_start_line_x-num="949" hedietLinkedDataV1_end_col_x-num="21" hedietLinkedDataV1_end_line_x-num="949" id="32">
-                    <mxCell style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1" collapsed="1">
-                        <mxGeometry x="-390" y="-435" width="130" height="40" as="geometry">
-                            <mxRectangle x="-400" y="-590" width="140" height="120" as="alternateBounds"/>
+                    <mxCell style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                        <mxGeometry x="-390" y="-435" width="140" height="120" as="geometry">
+                            <mxRectangle x="-390" y="-435" width="130" height="40" as="alternateBounds"/>
                         </mxGeometry>
                     </mxCell>
                 </object>
@@ -291,9 +291,11 @@
                         </mxGeometry>
                     </mxCell>
                 </object>
-                <mxCell id="86" value="setup_recipe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="85" vertex="1">
-                    <mxGeometry y="30" width="140" height="30" as="geometry"/>
-                </mxCell>
+                <object label="setup_recipe" hedietLinkedDataV1_path="../src/islatu/runner.py" hedietLinkedDataV1_start_col_x-num="3" hedietLinkedDataV1_start_line_x-num="586" hedietLinkedDataV1_end_col_x-num="28" hedietLinkedDataV1_end_line_x-num="586" id="86">
+                    <mxCell style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="85" vertex="1">
+                        <mxGeometry y="30" width="140" height="30" as="geometry"/>
+                    </mxCell>
+                </object>
                 <object label="reduction" hedietLinkedDataV1_path="../../islatu/src/islatu/runner.py" hedietLinkedDataV1_start_col_x-num="13" hedietLinkedDataV1_start_line_x-num="565" hedietLinkedDataV1_end_col_x-num="22" hedietLinkedDataV1_end_line_x-num="565" id="87">
                     <mxCell style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="85" vertex="1">
                         <mxGeometry y="60" width="140" height="30" as="geometry"/>
@@ -319,9 +321,11 @@
                 <mxCell id="102" value="I07Nexus" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="101" vertex="1">
                     <mxGeometry y="30" width="170" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="103" value="returns scan2D_noload_diff" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="101" vertex="1">
-                    <mxGeometry y="60" width="170" height="30" as="geometry"/>
-                </mxCell>
+                <object label="returns scan2D_noload_diff" hedietLinkedDataV1_path="../src/islatu/scan.py" hedietLinkedDataV1_start_col_x-num="0" hedietLinkedDataV1_start_line_x-num="105" hedietLinkedDataV1_end_col_x-num="31" hedietLinkedDataV1_end_line_x-num="105" id="103">
+                    <mxCell style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="101" vertex="1">
+                        <mxGeometry y="60" width="170" height="30" as="geometry"/>
+                    </mxCell>
+                </object>
                 <mxCell id="104" value="Item 3" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="101" vertex="1">
                     <mxGeometry y="90" width="170" height="30" as="geometry"/>
                 </mxCell>
