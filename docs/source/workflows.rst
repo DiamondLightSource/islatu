@@ -118,7 +118,17 @@ Setting up XRR autoprocessing at Diamond
 ---------------------------------------------------
 
 There is now the option to setup processing jobs to happen exactly after your scans have finished collecting. 
-To do this you will need to edit your data collection macro to include the autoprocessing commands as detailed in the following example macro:
+
+.. note::
+
+   The autoprocessing functions are still being tested, and so you will need to firstly load in the autoprocessing functions, which is done by running the following script:
+
+   .. code-block:: bash
+
+      /dls/i07/scripts/gda-zocalo/test_islatu_zocalo.py
+
+
+This will give you access to the autoprocessing commands xrr_start() and xrr_end() which can be used to setup the autoprocessing of your XRR scans. Now you can edit your data collection macro to include the autoprocessing commands as detailed in the following example macro:
 
 .. code-block:: python
 
