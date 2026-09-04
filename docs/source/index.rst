@@ -28,7 +28,7 @@ As with any coding project, there are many ways to contribue. To report a bug or
 
 Contact us
 ----------------
-If you need to contact the developers about anything, please either `raise an issue on the github repository`_ if appropriate, or send an email to philip.mousley@diamond.ac.uk.
+If you need to contact the developers about anything, please either `raise an issue on the github repository`_ if appropriate, or send an email to dataanalysis@diamond.ac.uk.
 
 Contributors
 ------------
