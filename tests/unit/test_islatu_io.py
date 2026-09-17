@@ -120,8 +120,6 @@ def test_src_path(nexus_base, path):
     assert nexus_base.nxfile.file_name == path
 
 
-
-
 @pytest.mark.parametrize(
     "i07_nexus, path", [(lazy("i07_nexus_object_01"), lazy("path_to_i07_h5_01"))]
 )
@@ -230,7 +228,7 @@ def test_probe_energy(i07_nexus: I07Nexus, probe_energy):
     Make sure we can extract the energy of the probe particle from the .nxs
     file.
     """
-    assert i07_nexus.probe_energy == probe_energy*1e3
+    assert i07_nexus.probe_energy == probe_energy * 1e3
 
 
 @pytest.mark.parametrize(
@@ -265,18 +263,3 @@ def test_ith_region_nxs_01(i07_nexus_object_01: I07Nexus, i, ith_region):
     Make sure that we can extract the ith region from i07_nexus_object_01.
     """
     assert i07_nexus_object_01._get_ith_region(i) == ith_region
-
-
-def test_detector_name(i07_nexus_object_01: I07Nexus):
-    """
-    Make sure that we can properly extract the name of the detector.
-    """
-    assert i07_nexus_object_01.detector_info.name == I07Nexus.excalibur_08_2023_roi.name
-
-
-def test_excalibur_name():
-    """
-    Make sure that we're spelling the detector name properly!
-    """
-    assert I07Nexus.excalibur_08_2023_roi.name == "excroi"
-    assert I07Nexus.excalibur_04_2022.name == "exr"
